@@ -1,2 +1,3 @@
 # next-firebase-auth
-aa
+- Next.js
+- Firebase Auth
