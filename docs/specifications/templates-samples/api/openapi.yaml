@@ -1,0 +1,64 @@
+# /specs/api/openapi.yaml
+openapi: 3.0.0
+info:
+  title: User Dashboard API
+  version: 1.0.0
+  description: API endpoints for the User Dashboard and global search functionality.
+servers:
+  - url: https://api.yourcompany.com/v1
+    description: Production server
+
+paths:
+  /dashboard:
+    get:
+      summary: Get User Dashboard Data
+      description: Fetches all data required to render the user's dashboard, including account status and recent activity.
+      operationId: getDashboardData
+      responses:
+        '200':
+          description: A successful response with dashboard data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+        '401':
+          description: Unauthorized. Authentication is required.
+
+  /search:
+    get:
+      summary: Perform a Global Search
+      description: Performs a global search across different resources based on a user's query.
+      operationId: globalSearch
+      parameters:
+        - name: query
+          in: query
+          description: The search term entered by the user. Must be at least 3 characters long.
+          required: true
+          schema:
+            type: string
+            minLength: 3
+          example: "annual report"
+      responses:
+        '200':
+          description: A successful search response with a list of results.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          description: Bad Request. The 'query' parameter is missing or invalid.
+        '401':
+          description: Unauthorized. Authentication is required.
+
+components:
+  schemas:
+    DashboardResponse:
+      $ref: './components/schemas/dashboard-response.yaml'
+    AccountStatus:
+      $ref: './components/schemas/account-status.yaml'
+    ActivityItem:
+      $ref: './components/schemas/activity-item.yaml'
+    SearchResponse:
+      $ref: './components/schemas/search-response.yaml'
+    SearchResultItem:
+      $ref: './components/schemas/search-result-item.yaml'

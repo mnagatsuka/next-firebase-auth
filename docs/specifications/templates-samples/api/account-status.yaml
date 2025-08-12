@@ -1,0 +1,12 @@
+# /specs/api/components/schemas/account-status.yaml
+type: object
+properties:
+  subscription:
+    type: string
+    description: The user's current subscription plan.
+    example: "Pro Plan"
+  renewalDate:
+    type: string
+    format: date
+    description: The renewal date of the user's subscription.
+    example: "2025-12-31"

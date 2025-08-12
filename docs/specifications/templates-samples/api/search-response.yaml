@@ -1,0 +1,13 @@
+# /specs/api/components/schemas/search-response.yaml
+type: object
+properties:
+  status:
+    type: string
+    enum: [success, error]
+  data:
+    type: object
+    properties:
+      results:
+        type: array
+        items:
+          $ref: './search-result-item.yaml' # References another schema file

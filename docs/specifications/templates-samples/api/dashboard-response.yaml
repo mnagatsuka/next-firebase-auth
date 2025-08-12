@@ -1,0 +1,15 @@
+# /specs/api/components/schemas/dashboard-response.yaml
+type: object
+properties:
+  status:
+    type: string
+    enum: [success, error]
+  data:
+    type: object
+    properties:
+      accountStatus:
+        $ref: './account-status.yaml' # References another schema file
+      recentActivity:
+        type: array
+        items:
+          $ref: './activity-item.yaml' # References another schema file
