@@ -1,0 +1,47 @@
+get:
+  summary: Get Blog Posts
+  description: Fetches a paginated list of blog posts for the home page.
+  operationId: getBlogPosts
+  parameters:
+    - $ref: '../components/parameters/pagination.yaml#/page'
+    - $ref: '../components/parameters/pagination.yaml#/limit'
+  responses:
+    '200':
+      description: A successful response with paginated blog posts.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/blog-post-list-response.yaml'
+          examples:
+            default:
+              $ref: '../components/examples/blog-post-list-response.yaml'
+    '400':
+      $ref: '../components/responses/bad-request.yaml'
+
+post:
+  summary: Create Blog Post
+  description: Creates a new blog post.
+  operationId: createBlogPost
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/create-post-request.yaml'
+        examples:
+          default:
+            $ref: '../components/examples/create-post-request.yaml'
+  responses:
+    '201':
+      description: Blog post created successfully.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/blog-post-response.yaml'
+          examples:
+            default:
+              $ref: '../components/examples/blog-post-response.yaml'
+    '400':
+      $ref: '../components/responses/bad-request.yaml'
+    '401':
+      $ref: '../components/responses/unauthorized.yaml'

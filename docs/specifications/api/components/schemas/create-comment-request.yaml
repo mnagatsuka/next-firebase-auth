@@ -1,0 +1,13 @@
+type: object
+properties:
+  content:
+    type: string
+    description: Content of the comment
+    example: "Great article! Very helpful."
+  author:
+    type: string
+    description: Name of the comment author
+    example: "Jane Smith"
+required:
+  - content
+  - author

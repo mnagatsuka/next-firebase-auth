@@ -1,0 +1,25 @@
+summary: Paginated blog posts response
+value:
+  status: "success"
+  data:
+    posts:
+      - id: "post-123"
+        title: "Getting Started with Next.js"
+        excerpt: "Learn the basics of Next.js in this comprehensive guide covering SSR, SSG, and CSR."
+        author: "John Doe"
+        publishedAt: "2024-01-15T10:30:00Z"
+      - id: "post-124"
+        title: "Advanced React Patterns"
+        excerpt: "Explore advanced React patterns including hooks, context, and state management techniques."
+        author: "Jane Smith"
+        publishedAt: "2024-01-14T09:15:00Z"
+      - id: "post-125"
+        title: "TypeScript Best Practices"
+        excerpt: "Learn TypeScript best practices for building scalable and maintainable applications."
+        author: "Bob Johnson"
+        publishedAt: "2024-01-13T14:45:00Z"
+    pagination:
+      page: 1
+      limit: 10
+      total: 45
+      hasNext: true

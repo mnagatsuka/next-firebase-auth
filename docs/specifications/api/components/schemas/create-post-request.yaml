@@ -1,0 +1,22 @@
+type: object
+properties:
+  title:
+    type: string
+    description: Title of the blog post
+    example: "Getting Started with Next.js"
+  content:
+    type: string
+    description: Full content of the blog post in markdown format
+    example: "# Introduction\n\nNext.js is a powerful React framework..."
+  excerpt:
+    type: string
+    description: Short summary or excerpt of the blog post
+    example: "Learn the basics of Next.js in this comprehensive guide."
+  status:
+    type: string
+    enum: [draft, published]
+    description: Status of the blog post
+    example: "draft"
+required:
+  - title
+  - content

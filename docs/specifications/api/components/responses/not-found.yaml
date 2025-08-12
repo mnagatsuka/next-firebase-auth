@@ -1,0 +1,8 @@
+description: Resource not found.
+content:
+  application/json:
+    schema:
+      $ref: '../schemas/error.yaml'
+    examples:
+      default:
+        $ref: '../examples/error-404.yaml'

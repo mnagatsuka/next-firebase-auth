@@ -1,0 +1,7 @@
+summary: Not Found error
+value:
+  status: "error"
+  error:
+    code: "NOT_FOUND"
+    message: "Blog post not found"
+    details: "The requested blog post with ID 'post-123' does not exist"

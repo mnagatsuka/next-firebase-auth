@@ -1,0 +1,29 @@
+type: object
+properties:
+  id:
+    type: string
+    description: Unique identifier for the blog post
+    example: "post-123"
+  title:
+    type: string
+    description: Title of the blog post
+    example: "Getting Started with Next.js"
+  excerpt:
+    type: string
+    description: Short summary or excerpt of the blog post
+    example: "Learn the basics of Next.js in this comprehensive guide."
+  author:
+    type: string
+    description: Author of the blog post
+    example: "John Doe"
+  publishedAt:
+    type: string
+    format: date-time
+    description: Timestamp when the blog post was published
+    example: "2024-01-15T10:30:00Z"
+required:
+  - id
+  - title
+  - excerpt
+  - author
+  - publishedAt

@@ -1,0 +1,15 @@
+type: object
+properties:
+  status:
+    type: string
+    enum: [success, error]
+    description: Response status
+    example: "success"
+  data:
+    type: array
+    items:
+      $ref: './comment.yaml'
+    description: Array of comments for the blog post
+required:
+  - status
+  - data

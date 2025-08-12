@@ -1,0 +1,80 @@
+openapi: 3.0.0
+info:
+  title: Blog Post API
+  version: 1.0.0
+  description: API endpoints for the blog post application, supporting post management and comments.
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: http://localhost:3000/api
+    description: Development server
+
+paths:
+  /posts:
+    $ref: './paths/posts.yaml'
+  /posts/{id}:
+    $ref: './paths/posts@{id}.yaml'
+  /posts/{id}/comments:
+    $ref: './paths/posts@{id}@comments.yaml'
+
+components:
+  parameters:
+    page:
+      $ref: './components/parameters/pagination.yaml#/page'
+    limit:
+      $ref: './components/parameters/pagination.yaml#/limit'
+    postId:
+      $ref: './components/parameters/post-id.yaml'
+      
+  responses:
+    BadRequest:
+      $ref: './components/responses/bad-request.yaml'
+    Unauthorized:
+      $ref: './components/responses/unauthorized.yaml'
+    NotFound:
+      $ref: './components/responses/not-found.yaml'
+      
+  schemas:
+    Error:
+      $ref: './components/schemas/error.yaml'
+    BlogPost:
+      $ref: './components/schemas/blog-post.yaml'
+    BlogPostSummary:
+      $ref: './components/schemas/blog-post-summary.yaml'
+    BlogPostResponse:
+      $ref: './components/schemas/blog-post-response.yaml'
+    BlogPostListResponse:
+      $ref: './components/schemas/blog-post-list-response.yaml'
+    Comment:
+      $ref: './components/schemas/comment.yaml'
+    CommentsResponse:
+      $ref: './components/schemas/comments-response.yaml'
+    CreatePostRequest:
+      $ref: './components/schemas/create-post-request.yaml'
+    CreateCommentRequest:
+      $ref: './components/schemas/create-comment-request.yaml'
+      
+  examples:
+    BlogPost:
+      $ref: './components/examples/blog-post.yaml'
+    BlogPostSummary:
+      $ref: './components/examples/blog-post-summary.yaml'
+    BlogPostResponse:
+      $ref: './components/examples/blog-post-response.yaml'
+    BlogPostListResponse:
+      $ref: './components/examples/blog-post-list-response.yaml'
+    Comment:
+      $ref: './components/examples/comment.yaml'
+    CommentsResponse:
+      $ref: './components/examples/comments-response.yaml'
+    CreatePostRequest:
+      $ref: './components/examples/create-post-request.yaml'
+    CreateCommentRequest:
+      $ref: './components/examples/create-comment-request.yaml'
+    Error400:
+      $ref: './components/examples/error-400.yaml'
+    Error401:
+      $ref: './components/examples/error-401.yaml'
+    Error404:
+      $ref: './components/examples/error-404.yaml'

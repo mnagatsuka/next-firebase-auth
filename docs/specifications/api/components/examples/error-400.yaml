@@ -1,0 +1,7 @@
+summary: Bad Request error
+value:
+  status: "error"
+  error:
+    code: "VALIDATION_ERROR"
+    message: "The request data is invalid"
+    details: "Title field is required and must be at least 1 character long"

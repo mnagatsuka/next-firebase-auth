@@ -1,0 +1,29 @@
+type: object
+properties:
+  id:
+    type: string
+    description: Unique identifier for the comment
+    example: "comment-456"
+  content:
+    type: string
+    description: Content of the comment
+    example: "Great article! Very helpful."
+  author:
+    type: string
+    description: Name of the comment author
+    example: "Jane Smith"
+  createdAt:
+    type: string
+    format: date-time
+    description: Timestamp when the comment was created
+    example: "2024-01-15T14:20:00Z"
+  postId:
+    type: string
+    description: ID of the blog post this comment belongs to
+    example: "post-123"
+required:
+  - id
+  - content
+  - author
+  - createdAt
+  - postId

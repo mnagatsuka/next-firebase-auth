@@ -1,0 +1,7 @@
+name: id
+in: path
+required: true
+description: Unique identifier for the blog post
+schema:
+  type: string
+example: "post-123"

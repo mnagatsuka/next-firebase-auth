@@ -1,0 +1,12 @@
+type: object
+properties:
+  status:
+    type: string
+    enum: [success, error]
+    description: Response status
+    example: "success"
+  data:
+    $ref: './blog-post.yaml'
+required:
+  - status
+  - data

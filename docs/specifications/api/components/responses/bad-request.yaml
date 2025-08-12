@@ -1,0 +1,8 @@
+description: Bad Request. The request data is invalid.
+content:
+  application/json:
+    schema:
+      $ref: '../schemas/error.yaml'
+    examples:
+      default:
+        $ref: '../examples/error-400.yaml'

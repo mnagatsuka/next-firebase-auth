@@ -1,0 +1,8 @@
+description: Unauthorized. Authentication is required.
+content:
+  application/json:
+    schema:
+      $ref: '../schemas/error.yaml'
+    examples:
+      default:
+        $ref: '../examples/error-401.yaml'

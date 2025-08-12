@@ -1,0 +1,28 @@
+type: object
+properties:
+  status:
+    type: string
+    enum: [error]
+    description: Response status indicating an error
+    example: "error"
+  error:
+    type: object
+    properties:
+      code:
+        type: string
+        description: Error code for programmatic handling
+        example: "VALIDATION_ERROR"
+      message:
+        type: string
+        description: Human-readable error message
+        example: "The request data is invalid"
+      details:
+        type: string
+        description: Additional error details (optional)
+        example: "Title field is required"
+    required:
+      - code
+      - message
+required:
+  - status
+  - error

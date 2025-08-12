@@ -1,0 +1,7 @@
+summary: Unauthorized error
+value:
+  status: "error"
+  error:
+    code: "UNAUTHORIZED"
+    message: "Authentication is required"
+    details: "Please provide a valid authentication token"
