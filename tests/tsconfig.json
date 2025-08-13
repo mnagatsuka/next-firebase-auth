@@ -1,0 +1,15 @@
+{
+  "extends": "../frontend/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@tests/*": ["./*"],
+      "@storybook/addon-vitest/vitest-plugin": ["../frontend/node_modules/@storybook/addon-vitest/dist/vitest-plugin/index.d.ts"],
+      "@storybook/addon-a11y/preview": ["../frontend/node_modules/@storybook/addon-a11y/dist/preview.d.ts"],
+      "@storybook/nextjs-vite": ["../frontend/node_modules/@storybook/nextjs-vite/dist/index.d.ts"]
+    },
+    "types": ["vitest/globals", "@testing-library/jest-dom"]
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}
