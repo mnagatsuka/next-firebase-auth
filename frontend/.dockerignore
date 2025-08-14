@@ -1,0 +1,16 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Misc
+.DS_Store
+.env.local
+.env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

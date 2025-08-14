@@ -7,8 +7,10 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      - /app/.pnpm-store
     environment:
       NODE_ENV: development
+    command: pnpm exec next dev -H 0.0.0.0 -p 3000
   storybook:
     build: .
     ports:
@@ -16,4 +18,5 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      - /app/.pnpm-store
     command: pnpm storybook
