@@ -356,39 +356,12 @@ Environment files:
 * `.env.test`  Testing environment
 * `.env.production`  Production environment
 
-Example `.env`:
+*Complete environment variable examples and configuration patterns are detailed in [04_configuration.md](./04_configuration.md).*
 
-```bash
-# Application
-PROJECT_NAME="My Backend Project"
-VERSION="0.1.0"
-DEBUG=false
-ENVIRONMENT="development"
-
-# API
-API_V1_STR="/api/v1"
-ALLOWED_HOSTS=["http://localhost:3000"]
-
-# AWS
-AWS_REGION="us-east-1"
-AWS_ACCESS_KEY_ID=""
-AWS_SECRET_ACCESS_KEY=""
-
-# Firebase
-FIREBASE_PROJECT_ID=""
-FIREBASE_PRIVATE_KEY=""
-FIREBASE_CLIENT_EMAIL=""
-
-# Database
-DYNAMODB_TABLE_PREFIX="dev"
-```
-
-**Rules:**
-
-* Do **not** commit `.env.local` or production secrets.
-* Document all required variables in `README.md`.
-* Use Pydantic Settings for type-safe environment variable loading.
-* Provide sensible defaults for development.
+**Key principles:**
+- Use Pydantic Settings for type-safe configuration loading
+- Never commit secrets or sensitive data
+- Follow the patterns established in the configuration guidelines
 
 
 ## 10. Directory Structure Setup

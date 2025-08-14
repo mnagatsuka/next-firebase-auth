@@ -1,13 +1,15 @@
-# 3. Directory Structure & Module Boundaries
+# 3. Directory Structure & Organization
 
-This section defines the **directory structure** and **module organization** for Python + FastAPI projects using **Clean Architecture** principles with **hexagonal ports/adapters** pattern.
+Simple layered architecture for Python + FastAPI applications with clear separation of concerns.
 
-Our goals are:
-- Maintain clear separation of concerns across architectural layers
-- Enforce dependency direction (inward dependencies only)
-- Enable testability and maintainability through proper boundaries
-- Follow Clean Architecture and Domain-Driven Design principles
+## Overview
 
+Use a straightforward layered approach:
+- API layer handles HTTP requests and responses
+- Application layer coordinates business operations  
+- Domain layer contains business entities and rules
+- Infrastructure layer manages external dependencies
+- Shared layer provides common utilities
 
 ## 1. Overall Project Structure
 
@@ -16,24 +18,21 @@ project-root/
 ├── backend/
 │   ├── src/
 │   │   └── app/
-│   │       ├── api/           # Transport Layer (FastAPI routers, request/response mappers)
-│   │       ├── application/   # Use Cases/Services, Orchestrations, Ports (interfaces)
-│   │       ├── domain/        # Entities, Value Objects, Domain Services, Domain Events
-│   │       ├── infra/         # Adapters: DynamoDB repos, S3 gateways, HTTP clients, Firebase verification
-│   │       └── shared/        # Cross-cutting: config, errors, logging, time, ULID/UUID
+│   │       ├── api/           # FastAPI routes and request/response handling
+│   │       ├── application/   # Application services (see 08_application.md)
+│   │       ├── domain/        # Business entities and domain logic (see 07_domain.md)
+│   │       ├── infra/         # Database, external services (see 09_infrastructure.md)
+│   │       └── shared/        # Configuration, utilities, and shared code
 │   ├── pyproject.toml
 │   └── .env
 ├── tests/
 │   └── backend/
-│       ├── unit/              # Domain & Application tests
-│       ├── integration/       # Infrastructure adapter tests
+│       ├── unit/              # Fast, isolated tests
+│       ├── integration/       # Tests with real adapters
 │       └── e2e/              # End-to-end API tests
 ├── docs/
-│   └── specifications/
-│       └── api/              # OpenAPI specifications
 └── .venv/
 ```
-
 
 ## 2. Layer Structure Details
 
@@ -41,161 +40,100 @@ project-root/
 ```
 api/
 ├── __init__.py
-├── router.py              # Main API router
-├── dependencies.py        # FastAPI dependencies
-├── middleware.py          # Custom middleware
-└── v1/
-    ├── __init__.py
-    ├── posts.py          # Posts endpoints
-    ├── comments.py       # Comments endpoints
-    └── auth.py           # Authentication endpoints
+├── main.py               # FastAPI app setup
+├── dependencies.py       # FastAPI dependencies (auth, database)
+├── users.py             # User endpoints
+├── auth.py              # Authentication endpoints
+└── health.py            # Health check endpoints
 ```
 
 ### Application Layer (`backend/src/app/application/`)
 ```
 application/
 ├── __init__.py
-├── ports/                 # Interfaces/Protocols
+├── services/            # Application services
 │   ├── __init__.py
-│   ├── repositories.py    # Repository interfaces
-│   ├── services.py        # External service interfaces
-│   └── events.py         # Event publisher interfaces
-├── use_cases/            # Application services
-│   ├── __init__.py
-│   ├── create_post.py    # Use case implementations
-│   └── get_posts.py      
-├── dto/                  # Data Transfer Objects
-│   ├── __init__.py
-│   └── posts.py         
-└── exceptions.py         # Application-specific exceptions
+│   ├── user_service.py
+│   └── auth_service.py
+└── exceptions.py        # Application exceptions
 ```
 
 ### Domain Layer (`backend/src/app/domain/`)
 ```
 domain/
 ├── __init__.py
-├── entities/             # Domain entities
-│   ├── __init__.py
-│   ├── post.py          
-│   └── comment.py       
-├── value_objects/        # Value objects
-│   ├── __init__.py
-│   ├── post_id.py       
-│   └── email.py         
-├── services/            # Domain services
-│   ├── __init__.py
-│   └── post_service.py  
-├── events/              # Domain events
-│   ├── __init__.py
-│   └── post_created.py  
-└── exceptions.py        # Domain-specific exceptions
+├── entities.py          # Domain entities
+├── services.py          # Business logic services
+└── exceptions.py        # Domain exceptions
 ```
 
 ### Infrastructure Layer (`backend/src/app/infra/`)
 ```
 infra/
 ├── __init__.py
-├── repositories/         # Data access implementations
+├── repositories/        # Data access implementations
 │   ├── __init__.py
-│   └── dynamodb_posts.py 
-├── services/            # External service adapters
+│   ├── user_repository.py
+│   └── memory_repository.py  # For testing
+├── adapters/           # External service adapters
 │   ├── __init__.py
-│   ├── firebase_auth.py 
-│   └── s3_storage.py    
-├── clients/             # HTTP clients for external APIs
-│   ├── __init__.py
-│   └── analytics_client.py 
-└── config/              # Infrastructure configuration
-    ├── __init__.py
-    └── aws.py          
+│   ├── firebase_auth.py
+│   ├── s3_storage.py
+│   └── http_client.py
+└── config.py           # Infrastructure configuration
 ```
 
 ### Shared Layer (`backend/src/app/shared/`)
 ```
 shared/
 ├── __init__.py
-├── config/              # Application configuration
-│   ├── __init__.py
-│   └── settings.py      # Pydantic settings
-├── exceptions/          # Common exception types
-│   ├── __init__.py
-│   └── base.py         
-├── utils/               # Utility functions
-│   ├── __init__.py
-│   ├── time.py         # Time utilities
-│   └── ids.py          # ID generation (ULID/UUID)
-└── constants.py         # Application constants
+├── config.py           # Application settings
+├── exceptions.py       # Common exceptions
+├── security.py         # Security utilities
+└── utils.py           # Helper functions
 ```
-
 
 ## 3. Test Structure (`tests/backend/`)
 
-Tests mirror the source structure:
-
 ```
 tests/backend/
-├── unit/                # Fast, isolated tests
+├── unit/               # Fast, isolated tests
 │   ├── domain/         # Domain logic tests
-│   └── application/    # Use case tests
+│   └── application/    # Application service tests
 ├── integration/        # Tests with real adapters
 │   └── infra/         # Repository and service tests
 ├── e2e/               # End-to-end API tests
-│   └── api/
-│       └── v1/
+│   └── api/           # API endpoint tests
 ├── fixtures/          # Test data and factories
 └── conftest.py       # Pytest configuration
 ```
 
+## 4. Component Placement Guidelines
 
-## 4. Module Placement Guidelines
+**What goes where:**
+- **API Routes**: `api/` directory, grouped by feature
+- **Business Logic**: `application/services/` for coordination, `domain/` for core rules
+- **Data Access**: `infra/repositories/` for database operations
+- **External Services**: `infra/adapters/` for third-party integrations
+- **Configuration**: `shared/config.py`
+- **Common Utilities**: `shared/utils.py`
 
-### Where to Place Different Components
+## 5. Simple Dependency Rules
 
-- **Routers**: `api/v1/` - Group by domain/resource
-- **Schemas (DTOs)**: 
-  - API DTOs: `api/v1/` (co-located with routers)
-  - Application DTOs: `application/dto/`
-- **Services**: 
-  - Use cases: `application/use_cases/`
-  - Domain services: `domain/services/`
-- **Repositories**: 
-  - Interfaces: `application/ports/`
-  - Implementations: `infra/repositories/`
-- **Adapters**: `infra/services/` and `infra/clients/`
+Keep dependencies flowing in one direction:
+- `api` → `application` → `domain`
+- `infra` → `application` and `domain`
+- `shared` ← all layers (for common utilities)
 
-
-## 5. Dependency Direction Rules
-
-Dependencies must flow inward only:
-
-```
-API → Application → Domain
- ↓         ↓
-Infrastructure → Application (via interfaces)
-```
-
-**Allowed:**
-- `api` → `application`, `shared`
-- `application` → `domain`, `shared`
-- `domain` → `shared` (minimal)
-- `infra` → `application` (interfaces), `domain`, `shared`
-
-**Forbidden:**
-- `domain` → `application`, `api`, `infra`
-- `application` → `api`, `infra` (except interfaces)
-- Any circular dependencies
-
-**Enforcement:**
-Use `import-linter` in CI to verify dependency rules automatically.
-
+**Avoid:**
+- Domain depending on infrastructure or API layers
+- Circular dependencies between any layers
 
 ## 6. File Naming Conventions
 
-- **Snake_case** for all Python files and directories
+- **snake_case** for all files and directories
 - **Descriptive names** that indicate purpose
-- **Plural for collections** (`entities/`, `repositories/`)
-- **Singular for individual concepts** (`post.py`, `user.py`)
-- **Interface suffix** for protocols (`_repository.py`, `_service.py`)
+- **Singular for entities** (`user.py`, `post.py`)
+- **Plural for collections** (`users.py` for user endpoints)
 
-
-By following this structure, each layer has clear responsibilities and the codebase remains maintainable and testable.
+This structure keeps code organized while remaining simple enough for small to medium applications.
