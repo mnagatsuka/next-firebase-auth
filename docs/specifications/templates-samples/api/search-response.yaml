@@ -1,4 +1,4 @@
-# /specs/api/components/schemas/search-response.yaml
+# /specs/api/components/schemas/search-response.yml
 type: object
 properties:
   status:
@@ -10,4 +10,4 @@ properties:
       results:
         type: array
         items:
-          $ref: './search-result-item.yaml' # References another schema file
+          $ref: "./search-result-item.yml" # References another schema file

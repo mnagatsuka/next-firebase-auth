@@ -175,7 +175,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.PROJECT_NAME,
         version=settings.VERSION,
-        openapi_url=f"{settings.API_V1_STR}/openapi.json",
+        openapi_url=f"{settings.API_V1_STR}/openapi.yml",
         docs_url=f"{settings.API_V1_STR}/docs",
         redoc_url=f"{settings.API_V1_STR}/redoc",
     )
@@ -212,10 +212,10 @@ Set up pre-commit hooks for automated code quality checks.
 # Add pre-commit as dev dependency
 uv add --dev pre-commit
 
-# Create .pre-commit-config.yaml
+# Create .pre-commit-config.yml
 ```
 
-Example `.pre-commit-config.yaml`:
+Example `.pre-commit-config.yml`:
 
 ```yaml
 repos:

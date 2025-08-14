@@ -1,4 +1,4 @@
-# /specs/api/openapi.yaml
+# /specs/api/openapi.yml
 openapi: 3.0.0
 info:
   title: User Dashboard API
@@ -15,13 +15,13 @@ paths:
       description: Fetches all data required to render the user's dashboard, including account status and recent activity.
       operationId: getDashboardData
       responses:
-        '200':
+        "200":
           description: A successful response with dashboard data.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DashboardResponse'
-        '401':
+                $ref: "#/components/schemas/DashboardResponse"
+        "401":
           description: Unauthorized. Authentication is required.
 
   /search:
@@ -39,26 +39,26 @@ paths:
             minLength: 3
           example: "annual report"
       responses:
-        '200':
+        "200":
           description: A successful search response with a list of results.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SearchResponse'
-        '400':
+                $ref: "#/components/schemas/SearchResponse"
+        "400":
           description: Bad Request. The 'query' parameter is missing or invalid.
-        '401':
+        "401":
           description: Unauthorized. Authentication is required.
 
 components:
   schemas:
     DashboardResponse:
-      $ref: './components/schemas/dashboard-response.yaml'
+      $ref: "./components/schemas/dashboard-response.yml"
     AccountStatus:
-      $ref: './components/schemas/account-status.yaml'
+      $ref: "./components/schemas/account-status.yml"
     ActivityItem:
-      $ref: './components/schemas/activity-item.yaml'
+      $ref: "./components/schemas/activity-item.yml"
     SearchResponse:
-      $ref: './components/schemas/search-response.yaml'
+      $ref: "./components/schemas/search-response.yml"
     SearchResultItem:
-      $ref: './components/schemas/search-result-item.yaml'
+      $ref: "./components/schemas/search-result-item.yml"

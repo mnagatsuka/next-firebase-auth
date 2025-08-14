@@ -1,4 +1,4 @@
-# /specs/api/components/schemas/activity-item.yaml
+# /specs/api/components/schemas/activity-item.yml
 type: object
 properties:
   description:

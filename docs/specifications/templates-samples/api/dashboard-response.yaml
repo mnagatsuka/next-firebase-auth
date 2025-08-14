@@ -1,4 +1,4 @@
-# /specs/api/components/schemas/dashboard-response.yaml
+# /specs/api/components/schemas/dashboard-response.yml
 type: object
 properties:
   status:
@@ -8,8 +8,8 @@ properties:
     type: object
     properties:
       accountStatus:
-        $ref: './account-status.yaml' # References another schema file
+        $ref: "./account-status.yml" # References another schema file
       recentActivity:
         type: array
         items:
-          $ref: './activity-item.yaml' # References another schema file
+          $ref: "./activity-item.yml" # References another schema file

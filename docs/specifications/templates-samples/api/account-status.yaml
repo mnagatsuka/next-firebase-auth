@@ -1,4 +1,4 @@
-# /specs/api/components/schemas/account-status.yaml
+# /specs/api/components/schemas/account-status.yml
 type: object
 properties:
   subscription:

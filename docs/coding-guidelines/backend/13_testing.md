@@ -598,7 +598,7 @@ class TestOpenAPIContracts:
         self.client = TestClient(app)
         
         # Load OpenAPI spec
-        spec_path = Path("backend/api/openapi.yaml")
+        spec_path = Path("backend/api/openapi.yml")
         with open(spec_path) as f:
             self.openapi_spec = yaml.safe_load(f)
 

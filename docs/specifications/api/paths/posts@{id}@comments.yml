@@ -3,46 +3,46 @@ get:
   description: Fetches all comments for a specific blog post.
   operationId: getPostComments
   parameters:
-    - $ref: '../components/parameters/post-id.yaml'
+    - $ref: "../components/parameters/post-id.yml"
   responses:
-    '200':
+    "200":
       description: A successful response with post comments.
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/comments-response.yaml'
+            $ref: "../components/schemas/comments-response.yml"
           examples:
             default:
-              $ref: '../components/examples/comments-response.yaml'
-    '404':
-      $ref: '../components/responses/not-found.yaml'
+              $ref: "../components/examples/comments-response.yml"
+    "404":
+      $ref: "../components/responses/not-found.yml"
 
 post:
   summary: Create Comment
   description: Creates a new comment on a specific blog post.
   operationId: createComment
   parameters:
-    - $ref: '../components/parameters/post-id.yaml'
+    - $ref: "../components/parameters/post-id.yml"
   requestBody:
     required: true
     content:
       application/json:
         schema:
-          $ref: '../components/schemas/create-comment-request.yaml'
+          $ref: "../components/schemas/create-comment-request.yml"
         examples:
           default:
-            $ref: '../components/examples/create-comment-request.yaml'
+            $ref: "../components/examples/create-comment-request.yml"
   responses:
-    '201':
+    "201":
       description: Comment created successfully.
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/blog-post-response.yaml'
+            $ref: "../components/schemas/blog-post-response.yml"
           examples:
             default:
-              $ref: '../components/examples/blog-post-response.yaml'
-    '400':
-      $ref: '../components/responses/bad-request.yaml'
-    '404':
-      $ref: '../components/responses/not-found.yaml'
+              $ref: "../components/examples/blog-post-response.yml"
+    "400":
+      $ref: "../components/responses/bad-request.yml"
+    "404":
+      $ref: "../components/responses/not-found.yml"

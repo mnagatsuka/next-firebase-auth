@@ -2,7 +2,7 @@ description: Resource not found.
 content:
   application/json:
     schema:
-      $ref: '../schemas/error.yaml'
+      $ref: "../schemas/error.yml"
     examples:
       default:
-        $ref: '../examples/error-404.yaml'
+        $ref: "../examples/error-404.yml"

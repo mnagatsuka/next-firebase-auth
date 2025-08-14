@@ -15,27 +15,27 @@ We organize OpenAPI specifications in `docs/specifications/api/` with component 
 
 ```
 docs/specifications/api/
-├── openapi.yaml                 # Main OpenAPI spec (entry point)
+├── openapi.yml                 # Main OpenAPI spec (entry point)
 ├── components/                  # Reusable components
 │   ├── schemas/                # Data models
-│   │   ├── blog-post.yaml
-│   │   ├── comment.yaml
-│   │   └── error.yaml
+│   │   ├── blog-post.yml
+│   │   ├── comment.yml
+│   │   └── error.yml
 │   ├── responses/              # Reusable responses
-│   │   ├── success-response.yaml
-│   │   ├── error-response.yaml
-│   │   └── pagination-response.yaml
+│   │   ├── success-response.yml
+│   │   ├── error-response.yml
+│   │   └── pagination-response.yml
 │   ├── parameters/             # Reusable parameters
-│   │   ├── pagination.yaml
-│   │   └── post-id.yaml
+│   │   ├── pagination.yml
+│   │   └── post-id.yml
 │   └── examples/               # Example data (matches MSW handlers)
-│       ├── blog-post-list.yaml
-│       ├── blog-post.yaml
-│       └── error-responses.yaml
+│       ├── blog-post-list.yml
+│       ├── blog-post.yml
+│       └── error-responses.yml
 └── paths/                      # API endpoints
-    ├── posts.yaml              # /api/posts
-    ├── posts@{id}.yaml         # /api/posts/{id}
-    └── posts@{id}@comments.yaml # /api/posts/{id}/comments
+    ├── posts.yml              # /api/posts
+    ├── posts@{id}.yml         # /api/posts/{id}
+    └── posts@{id}@comments.yml # /api/posts/{id}/comments
 ```
 
 **Rules:**
@@ -50,8 +50,8 @@ docs/specifications/api/
 
 ### Step 1: Design API Contract with Frontend Patterns in Mind
 
-```yaml
-# paths/posts.yaml - Designed for both RSC and TanStack Query
+```yml
+# paths/posts.yml - Designed for both RSC and TanStack Query
 /posts:
   get:
     summary: List blog posts
@@ -113,7 +113,7 @@ docs/specifications/api/
 ```bash
 # Generate TypeScript types from OpenAPI spec
 openapi-generator generate \
-  -i docs/specifications/api/openapi.yaml \
+  -i docs/specifications/api/openapi.yml \
   -g typescript-fetch \
   -o frontend/src/lib/api/generated/ \
   --additional-properties=typescriptThreePlus=true
@@ -325,9 +325,9 @@ async def get_posts(
 
 ### Spectral Configuration for Full-Stack
 
-Create `.spectral.yaml` at project root:
+Create `.spectral.yml` at project root:
 
-```yaml
+```yml
 extends: ["@stoplight/spectral-oas"]
 rules:
   # Standard OpenAPI rules
@@ -367,12 +367,12 @@ rules:
 
 ```bash
 # Lint OpenAPI specification
-spectral lint docs/specifications/api/openapi.yaml
+spectral lint docs/specifications/api/openapi.yml
 
 # Check for breaking changes
 oasdiff breaking \
-  docs/specifications/api/openapi.yaml \
-  origin/main:docs/specifications/api/openapi.yaml
+  docs/specifications/api/openapi.yml \
+  origin/main:docs/specifications/api/openapi.yml
 
 # Validate MSW handlers match OpenAPI
 node scripts/validate-msw-contract.js
@@ -512,8 +512,8 @@ async def get_posts(response: Response, page: int = 1):
 
 ### Consistent Error Format
 
-```yaml
-# components/schemas/api-error.yaml
+```yml
+# components/schemas/api-error.yml
 ApiError:
   type: object
   required: [status, error]
@@ -598,7 +598,7 @@ async def api_exception_handler(request, exc: ApiError):
 
 ### Automated CI Checks
 
-```yaml
+```yml
 # .github/workflows/api-governance.yml
 name: API Governance
 on:
@@ -618,8 +618,8 @@ jobs:
       - name: Check OpenAPI breaking changes
         run: |
           oasdiff breaking \
-            docs/specifications/api/openapi.yaml \
-            origin/main:docs/specifications/api/openapi.yaml
+            docs/specifications/api/openapi.yml \
+            origin/main:docs/specifications/api/openapi.yml
       
       - name: Validate MSW handlers match OpenAPI
         run: |
@@ -629,7 +629,7 @@ jobs:
         run: |
           cd frontend
           openapi-generator generate \
-            -i ../docs/specifications/api/openapi.yaml \
+            -i ../docs/specifications/api/openapi.yml \
             -g typescript-fetch \
             -o src/lib/api/generated/
 ```
@@ -654,11 +654,11 @@ cd frontend && pnpm dev
 
 ```bash
 # Validate OpenAPI spec
-spectral lint docs/specifications/api/openapi.yaml
+spectral lint docs/specifications/api/openapi.yml
 
 # Generate TypeScript types
 cd frontend && openapi-generator generate \
-  -i ../docs/specifications/api/openapi.yaml \
+  -i ../docs/specifications/api/openapi.yml \
   -g typescript-fetch \
   -o src/lib/api/generated/
 

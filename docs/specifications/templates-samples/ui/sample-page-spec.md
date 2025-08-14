@@ -65,7 +65,7 @@ This section outlines the API endpoints this page interacts with. For complete r
 - Fetches all data required to render the dashboard's primary components.
 
 #### API Spec Reference
-- See the `dashboard` endpoint in the [OpenAPI spec](https://www.google.com/search?q=path/to/your/openapi.yaml).
+- See the `dashboard` endpoint in the [OpenAPI spec](https://www.google.com/search?q=path/to/your/openapi.yml).
 
   
 ### `GET /api/v1/search`
@@ -74,4 +74,4 @@ This section outlines the API endpoints this page interacts with. For complete r
 - Performs a global search based on the user's input.
 
 #### API Spec Reference
-- See the `search` endpoint in the [OpenAPI spec](https://www.google.com/search?q=path/to/your/openapi.yaml).
+- See the `search` endpoint in the [OpenAPI spec](https://www.google.com/search?q=path/to/your/openapi.yml).

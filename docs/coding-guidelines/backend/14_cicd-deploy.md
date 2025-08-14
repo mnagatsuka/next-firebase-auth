@@ -33,7 +33,7 @@ Simple deployment workflow using AWS SAM and Lambda Web Adapter:
 ### Basic SAM Template
 
 ```yaml
-# backend/template.yaml
+# backend/template.yml
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: FastAPI Backend with Lambda Web Adapter
@@ -612,7 +612,7 @@ scripts/deploy.sh dev        # Deploy to specific environment
 
 ```
 backend/
-├── template.yaml           # SAM template
+├── template.yml           # SAM template
 ├── samconfig.toml          # SAM configuration
 ├── run.sh                  # Lambda Web Adapter run script
 ├── pyproject.toml          # Python dependencies

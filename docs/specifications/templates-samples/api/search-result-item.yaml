@@ -1,4 +1,4 @@
-# /specs/api/components/schemas/search-result-item.yaml
+# /specs/api/components/schemas/search-result-item.yml
 type: object
 properties:
   id:

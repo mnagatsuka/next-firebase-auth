@@ -665,7 +665,7 @@ def create_user(data: UserCreationData) -> User:
 ### Pre-commit Configuration
 
 ```yaml
-# .pre-commit-config.yaml
+# .pre-commit-config.yml
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.1.8

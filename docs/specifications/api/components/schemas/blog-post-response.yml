@@ -6,7 +6,7 @@ properties:
     description: Response status
     example: "success"
   data:
-    $ref: './blog-post.yaml'
+    $ref: "./blog-post.yml"
 required:
   - status
   - data

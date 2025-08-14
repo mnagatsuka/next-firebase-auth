@@ -1,0 +1,50 @@
+get:
+  summary: Get Single Blog Post
+  description: Fetches the details of a single blog post by its ID.
+  operationId: getBlogPostById
+  parameters:
+    - $ref: "../components/parameters/post-id.yml"
+  responses:
+    "200":
+      description: A successful response with blog post details.
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas/blog-post-response.yml"
+          examples:
+            default:
+              $ref: "../components/examples/blog-post-response.yml"
+    "404":
+      $ref: "../components/responses/not-found.yml"
+
+put:
+  summary: Update Blog Post
+  description: Updates an existing blog post by its ID.
+  operationId: updateBlogPost
+  parameters:
+    - $ref: "../components/parameters/post-id.yml"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../components/schemas/create-post-request.yml"
+        examples:
+          default:
+            $ref: "../components/examples/create-post-request.yml"
+  responses:
+    "200":
+      description: Blog post updated successfully.
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas/blog-post-response.yml"
+          examples:
+            default:
+              $ref: "../components/examples/blog-post-response.yml"
+    "400":
+      $ref: "../components/responses/bad-request.yml"
+    "401":
+      $ref: "../components/responses/unauthorized.yml"
+    "404":
+      $ref: "../components/responses/not-found.yml"
