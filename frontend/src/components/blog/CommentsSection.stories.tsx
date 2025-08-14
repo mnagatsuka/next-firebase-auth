@@ -35,6 +35,10 @@ const mockComments = [
 ]
 
 export const WithComments: Story = {
+  args: {
+    comments: mockComments,
+    isLoading: false,
+  },
   parameters: {
     msw: {
       handlers: [
@@ -73,6 +77,10 @@ export const WithComments: Story = {
 }
 
 export const NoComments: Story = {
+  args: {
+    comments: [],
+    isLoading: false,
+  },
   parameters: {
     msw: {
       handlers: [
@@ -96,6 +104,10 @@ export const NoComments: Story = {
 }
 
 export const Loading: Story = {
+  args: {
+    comments: [],
+    isLoading: true,
+  },
   parameters: {
     msw: {
       handlers: [
@@ -108,6 +120,10 @@ export const Loading: Story = {
 }
 
 export const ErrorState: Story = {
+  args: {
+    comments: [],
+    isLoading: false,
+  },
   parameters: {
     msw: {
       handlers: [

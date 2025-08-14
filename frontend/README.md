@@ -20,6 +20,16 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Building with Docker Compose
+
+To build the Docker images for both the application and Storybook, run the following command from the `frontend` directory:
+
+```bash
+docker compose build
+```
+
+This command builds the necessary images without starting the containers.
+
 ## Running Storybook
 
 To run Storybook using Docker Compose, follow these steps:

@@ -42,6 +42,9 @@ const mockPosts = [
 ]
 
 export const Default: Story = {
+  args: {
+    posts: mockPosts,
+  },
   parameters: {
     msw: {
       handlers: [
@@ -65,6 +68,9 @@ export const Default: Story = {
 }
 
 export const Empty: Story = {
+  args: {
+    posts: [],
+  },
   parameters: {
     msw: {
       handlers: [
@@ -88,6 +94,10 @@ export const Empty: Story = {
 }
 
 export const Loading: Story = {
+  args: {
+    posts: [],
+    isLoading: true,
+  },
   parameters: {
     msw: {
       handlers: [
@@ -100,6 +110,9 @@ export const Loading: Story = {
 }
 
 export const ErrorState: Story = {
+  args: {
+    posts: [],
+  },
   parameters: {
     msw: {
       handlers: [

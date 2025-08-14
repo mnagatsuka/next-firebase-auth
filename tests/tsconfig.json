@@ -3,8 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@/*": ["../frontend/src/*"],
       "@tests/*": ["./*"],
-      "@storybook/addon-vitest/vitest-plugin": ["../frontend/node_modules/@storybook/addon-vitest/dist/vitest-plugin/index.d.ts"],
+      
       "@storybook/addon-a11y/preview": ["../frontend/node_modules/@storybook/addon-a11y/dist/preview.d.ts"],
       "@storybook/nextjs-vite": ["../frontend/node_modules/@storybook/nextjs-vite/dist/index.d.ts"]
     },
