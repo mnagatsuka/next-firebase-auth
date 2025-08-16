@@ -1,9 +1,6 @@
 import '../src/app/globals.css'
 import type { Preview } from '@storybook/nextjs-vite'
-import { setupWorker } from 'msw/browser'
-
-// Create a single MSW worker instance
-const worker = setupWorker()
+import { worker } from '@/mocks/browser'
 
 const preview: Preview = {
   parameters: {

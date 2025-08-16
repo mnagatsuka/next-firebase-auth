@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react"
 
 export interface PostCardProps {
   /** Unique post identifier */
@@ -31,11 +32,17 @@ export function PostCard({
   tags = [],
   onReadMore 
 }: PostCardProps) {
-  const formattedDate = new Date(publishedAt).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
+  const [formattedDate, setFormattedDate] = useState<string | null>(null)
+
+  useEffect(() => {
+    setFormattedDate(
+      new Date(publishedAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    )
+  }, [publishedAt])
 
   return (
     <Card className="h-full">
@@ -56,7 +63,7 @@ export function PostCard({
           </Link>
         </CardTitle>
         <CardDescription>
-          By {author} • {formattedDate}
+          By {author} {formattedDate && `• ${formattedDate}`}
         </CardDescription>
       </CardHeader>
       <CardContent>

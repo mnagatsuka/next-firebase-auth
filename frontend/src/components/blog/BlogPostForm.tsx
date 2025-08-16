@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { X } from "lucide-react"
+import { X, Loader2 } from "lucide-react"
 
 export interface BlogPostFormData {
   title: string
@@ -188,14 +188,28 @@ export function BlogPostForm({
               onClick={() => handleSubmit("draft")}
               disabled={isLoading || !formData.title.trim()}
             >
-              Save Draft
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Saving...
+                </>
+              ) : (
+                "Save Draft"
+              )}
             </Button>
             <Button
               type="button"
               onClick={() => handleSubmit("published")}
               disabled={isLoading || !formData.title.trim() || !formData.content.trim()}
             >
-              Publish
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Publishing...
+                </>
+              ) : (
+                "Publish"
+              )}
             </Button>
           </div>
         </div>

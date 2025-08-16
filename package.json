@@ -1,6 +1,8 @@
 {
+  "packageManager": "pnpm@10.14.0",
   "devDependencies": {
-    "msw": "^2.10.4",
+    "@orval/msw": "^6.20.0",
+    "@redocly/cli": "^2.0.5",
     "@tanstack/react-query": "^5.85.0",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
@@ -11,11 +13,22 @@
     "@vitest/browser": "^3.2.4",
     "@vitest/coverage-v8": "^3.2.4",
     "jsdom": "^26.1.0",
+    "msw": "^2.10.4",
+    "orval": "^7.11.2",
     "playwright": "^1.54.2",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit --project frontend/tsconfig.json && tsc --noEmit --project tests/tsconfig.json"
+    "typecheck": "tsc --noEmit --project frontend/tsconfig.json && tsc --noEmit --project tests/tsconfig.json",
+    "oas:lint": "pnpm exec redocly lint docs/specifications/api/openapi.yml",
+    "oas:bundle": "mkdir -p openapi/dist && pnpm exec redocly bundle docs/specifications/api/openapi.yml --output openapi/dist/openapi.yml",
+    "oas:serve": "pnpm exec redocly preview --product=redoc --project-dir=. --port=8081",
+    "oas:build": "pnpm exec redocly build-docs openapi/dist/openapi.yml --output openapi/dist/redoc.html",
+    "orval": "orval --config orval.config.ts",
+    "orval:watch": "orval --config orval.config.ts --watch"
+  },
+  "volta": {
+    "node": "22.12.0"
   }
 }

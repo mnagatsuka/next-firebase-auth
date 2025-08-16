@@ -14,3 +14,10 @@ docker-compose.yml
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnp.*
+.next
+dist
+
+# Git
+.git
+.gitignore

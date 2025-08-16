@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge"
+import { formatBlogPostDate } from "@/lib/utils/date"
 
 export interface BlogPostContentProps {
   /** Post title */
@@ -23,11 +24,7 @@ export function BlogPostContent({
   tags = [],
   readingTime
 }: BlogPostContentProps) {
-  const formattedDate = new Date(publishedAt).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
+  const formattedDate = formatBlogPostDate(publishedAt)
 
   return (
     <article className="max-w-4xl mx-auto">

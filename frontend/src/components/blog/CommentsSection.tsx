@@ -5,50 +5,40 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-
-export interface Comment {
-  id: string
-  content: string
-  author: string
-  createdAt: string
-}
+import { useGetPostComments, useCreateComment } from "@/lib/api/generated/client"
+import { formatBlogPostDate } from "@/lib/utils/date"
 
 export interface CommentsSectionProps {
-  /** Array of comments to display */
-  comments: Comment[]
-  /** Loading state for comments */
-  isLoading?: boolean
-  /** Loading state for form submission */
-  isSubmitting?: boolean
-  /** Callback for adding new comment */
-  onAddComment?: (author: string, content: string) => void
+  /** Post ID to fetch comments for */
+  postId: string
 }
 
-export function CommentsSection({
-  comments,
-  isLoading = false,
-  isSubmitting = false,
-  onAddComment
-}: CommentsSectionProps) {
+
+export function CommentsSection({ postId }: CommentsSectionProps) {
   const [newComment, setNewComment] = useState("")
   const [authorName, setAuthorName] = useState("")
 
-  const handleSubmit = () => {
-    if (newComment.trim() && authorName.trim()) {
-      onAddComment?.(authorName.trim(), newComment.trim())
-      setNewComment("")
-      setAuthorName("")
-    }
-  }
+  const { data: commentsResponse, isLoading } = useGetPostComments(postId)
+  const createCommentMutation = useCreateComment()
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+  const comments = commentsResponse?.data || []
+
+  const handleSubmit = async () => {
+    if (newComment.trim() && authorName.trim()) {
+      try {
+        await createCommentMutation.mutateAsync({
+          id: postId,
+          data: {
+            author: authorName.trim(),
+            content: newComment.trim()
+          }
+        })
+        setNewComment("")
+        setAuthorName("")
+      } catch (error) {
+        console.error("Failed to add comment:", error)
+      }
+    }
   }
 
   return (
@@ -66,20 +56,20 @@ export function CommentsSection({
                 placeholder="Your name"
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
-                disabled={isSubmitting}
+                disabled={createCommentMutation.isPending}
               />
               <Textarea
                 placeholder="Write your comment..."
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                disabled={isSubmitting}
+                disabled={createCommentMutation.isPending}
                 rows={4}
               />
               <Button
                 onClick={handleSubmit}
-                disabled={isSubmitting || !newComment.trim() || !authorName.trim()}
+                disabled={createCommentMutation.isPending || !newComment.trim() || !authorName.trim()}
               >
-                {isSubmitting ? "Posting..." : "Post Comment"}
+                {createCommentMutation.isPending ? "Posting..." : "Post Comment"}
               </Button>
             </div>
           </div>
@@ -105,7 +95,7 @@ export function CommentsSection({
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <span className="font-medium text-foreground">{comment.author}</span>
                     <span>•</span>
-                    <span>{formatDate(comment.createdAt)}</span>
+                    <span>{formatBlogPostDate(comment.createdAt)}</span>
                   </div>
                   <p className="text-sm leading-relaxed">{comment.content}</p>
                 </div>

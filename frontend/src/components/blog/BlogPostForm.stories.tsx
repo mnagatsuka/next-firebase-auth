@@ -23,7 +23,7 @@ export const CreateNew: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post('/api/posts', async ({ request }) => {
+        http.post('/posts', async ({ request }) => {
           const body = await request.json() as any
           return HttpResponse.json({
             status: 'success',
@@ -46,7 +46,7 @@ export const EditExisting: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/posts/:id', () => {
+        http.get('/posts/:id', () => {
           return HttpResponse.json({
             status: 'success',
             data: {
@@ -62,7 +62,7 @@ export const EditExisting: Story = {
             }
           })
         }),
-        http.put('/api/posts/:id', async ({ request }) => {
+        http.put('/posts/:id', async ({ request }) => {
           const body = await request.json() as any
           return HttpResponse.json({
             status: 'success',
@@ -85,7 +85,7 @@ export const SaveError: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post('/api/posts', () => {
+        http.post('/posts', () => {
           return HttpResponse.json({
             status: 'error',
             error: {
@@ -103,7 +103,7 @@ export const ServerError: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post('/api/posts', () => {
+        http.post('/posts', () => {
           return HttpResponse.json({
             status: 'error',
             error: {

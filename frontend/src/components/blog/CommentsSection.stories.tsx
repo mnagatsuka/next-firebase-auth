@@ -10,7 +10,7 @@ const meta: Meta<typeof CommentsSection> = {
   },
   tags: ['autodocs'],
   argTypes: {
-    onAddComment: { action: 'comment-added' },
+    postId: { control: 'text' },
   },
 }
 
@@ -36,27 +36,18 @@ const mockComments = [
 
 export const WithComments: Story = {
   args: {
-    comments: mockComments,
-    isLoading: false,
+    postId: 'post-123',
   },
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/posts/:id/comments', () => {
+        http.get('/posts/:id/comments', () => {
           return HttpResponse.json({
             status: 'success',
-            data: {
-              comments: mockComments,
-              pagination: {
-                page: 1,
-                limit: 10,
-                total: 2,
-                hasNext: false,
-              },
-            },
+            data: mockComments
           })
         }),
-        http.post('/api/posts/:id/comments', async ({ request }) => {
+        http.post('/posts/:id/comments', async ({ request }) => {
           const body = await request.json() as { author: string; content: string }
           return HttpResponse.json({
             status: 'success',
@@ -78,24 +69,15 @@ export const WithComments: Story = {
 
 export const NoComments: Story = {
   args: {
-    comments: [],
-    isLoading: false,
+    postId: 'post-empty',
   },
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/posts/:id/comments', () => {
+        http.get('/posts/:id/comments', () => {
           return HttpResponse.json({
             status: 'success',
-            data: {
-              comments: [],
-              pagination: {
-                page: 1,
-                limit: 10,
-                total: 0,
-                hasNext: false,
-              },
-            },
+            data: []
           })
         }),
       ],
@@ -105,13 +87,12 @@ export const NoComments: Story = {
 
 export const Loading: Story = {
   args: {
-    comments: [],
-    isLoading: true,
+    postId: 'post-loading',
   },
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/posts/:id/comments', () => {
+        http.get('/posts/:id/comments', () => {
           return new Promise(() => {}) // Never resolves to simulate loading
         }),
       ],
@@ -121,13 +102,12 @@ export const Loading: Story = {
 
 export const ErrorState: Story = {
   args: {
-    comments: [],
-    isLoading: false,
+    postId: 'post-error',
   },
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/posts/:id/comments', () => {
+        http.get('/posts/:id/comments', () => {
           return HttpResponse.json({
             status: 'error',
             error: {

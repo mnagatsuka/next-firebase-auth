@@ -48,7 +48,7 @@ export const Default: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/posts', () => {
+        http.get('/posts', () => {
           return HttpResponse.json({
             status: 'success',
             data: {
@@ -74,7 +74,7 @@ export const Empty: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/posts', () => {
+        http.get('/posts', () => {
           return HttpResponse.json({
             status: 'success',
             data: {
@@ -101,7 +101,7 @@ export const Loading: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/posts', () => {
+        http.get('/posts', () => {
           return new Promise(() => {}) // Never resolves to simulate loading
         }),
       ],
@@ -116,7 +116,7 @@ export const ErrorState: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/posts', () => {
+        http.get('/posts', () => {
           return HttpResponse.json({
             status: 'error',
             error: {
