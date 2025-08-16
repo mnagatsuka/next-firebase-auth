@@ -25,10 +25,10 @@ class FetchError extends Error {
 }
 
 /**
- * Universal fetcher that works for client components, server components, and API routes
+ * Universal customFetch that works for client components, server components, and API routes
  * Handles JSON responses with consistent error handling and type safety
  */
-export async function fetcher<T = any>(
+export async function customFetch<T = any>(
   url: string,
   options: FetcherOptions = {}
 ): Promise<T> {
@@ -133,7 +133,7 @@ export async function fetcher<T = any>(
  * GET request wrapper
  */
 export function get<T = any>(url: string, options?: FetcherOptions): Promise<T> {
-  return fetcher<T>(url, { ...options, method: "GET" });
+  return customFetch<T>(url, { ...options, method: "GET" });
 }
 
 /**
@@ -144,7 +144,7 @@ export function post<T = any>(
   data?: any,
   options?: FetcherOptions
 ): Promise<T> {
-  return fetcher<T>(url, {
+  return customFetch<T>(url, {
     ...options,
     method: "POST",
     body: data ? JSON.stringify(data) : undefined,
@@ -159,7 +159,7 @@ export function put<T = any>(
   data?: any,
   options?: FetcherOptions
 ): Promise<T> {
-  return fetcher<T>(url, {
+  return customFetch<T>(url, {
     ...options,
     method: "PUT",
     body: data ? JSON.stringify(data) : undefined,
@@ -174,7 +174,7 @@ export function patch<T = any>(
   data?: any,
   options?: FetcherOptions
 ): Promise<T> {
-  return fetcher<T>(url, {
+  return customFetch<T>(url, {
     ...options,
     method: "PATCH",
     body: data ? JSON.stringify(data) : undefined,
@@ -188,11 +188,11 @@ export function del<T = any>(
   url: string,
   options?: FetcherOptions
 ): Promise<T> {
-  return fetcher<T>(url, { ...options, method: "DELETE" });
+  return customFetch<T>(url, { ...options, method: "DELETE" });
 }
 
 /**
- * Type-safe fetcher with automatic type inference for API responses
+ * Type-safe customFetch with automatic type inference for API responses
  */
 export const api = {
   get,
@@ -200,7 +200,7 @@ export const api = {
   put,
   patch,
   delete: del,
-  fetcher,
+  customFetch,
 } as const;
 
 export { FetchError };

@@ -17,7 +17,7 @@ export default defineConfig({
         type: "msw",
         delay: false,
         useExamples: true,
-        generateEachHttpStatus: true,
+        generateEachHttpStatus: false,
       },
       override: {
         query: {
@@ -37,8 +37,9 @@ export default defineConfig({
         },
       },
     },
-    hooks: {
-      afterAllFilesWrite: "cd frontend && npx @biomejs/biome format --write src/lib/api/generated/",
-    },
+    // Hooks disabled in CI/sandbox to avoid networked formatter
+    // hooks: {
+    //   afterAllFilesWrite: "cd frontend && npx @biomejs/biome format --write src/lib/api/generated/",
+    // },
   },
 });

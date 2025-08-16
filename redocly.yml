@@ -1,8 +1,10 @@
 apis:
   main:
-    root: docs/specifications/api/openapi.yml
+    root: docs/specifications/api/openapi/openapi.yml
 
-# Preserve components in the bundled output to avoid excessive inline schemas
-# that can cause duplicate type generation in Orval.
 bundle:
   dereferenceInlineSchema: false
+
+lint:
+  extends:
+    - recommended

@@ -22,11 +22,11 @@ Authorization: Bearer <firebase-id-token>
  * OpenAPI spec version: 1.0.0
  */
 
-export interface ErrorDetail {
-  /** Error code for programmatic handling */
-  code: string;
-  /** Human-readable error message */
-  message: string;
-  /** Additional error details (optional) */
-  details?: string;
-}
+export type GetPostCommentsParams = {
+/**
+ * Maximum number of comments to return
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+};

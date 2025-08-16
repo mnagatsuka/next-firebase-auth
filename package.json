@@ -1,6 +1,7 @@
 {
   "packageManager": "pnpm@10.14.0",
   "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.22.0",
     "@orval/msw": "^6.20.0",
     "@redocly/cli": "^2.0.5",
     "@tanstack/react-query": "^5.85.0",
@@ -20,13 +21,15 @@
     "vitest": "^3.2.4"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit --project frontend/tsconfig.json && tsc --noEmit --project tests/tsconfig.json",
-    "oas:lint": "pnpm exec redocly lint docs/specifications/api/openapi.yml",
-    "oas:bundle": "mkdir -p openapi/dist && pnpm exec redocly bundle docs/specifications/api/openapi.yml --output openapi/dist/openapi.yml",
-    "oas:serve": "pnpm exec redocly preview --product=redoc --project-dir=. --port=8081",
-    "oas:build": "pnpm exec redocly build-docs openapi/dist/openapi.yml --output openapi/dist/redoc.html",
-    "orval": "orval --config orval.config.ts",
-    "orval:watch": "orval --config orval.config.ts --watch"
+    "typecheck": "tsc --noEmit --project frontend/tsconfig.json && tsc --noEmit --project tests/frontend/tsconfig.json",
+    "oas:lint": "pnpm exec redocly lint docs/specifications/api/openapi/openapi.yml",
+    "oas:bundle": "mkdir -p openapi/dist && pnpm exec redocly bundle docs/specifications/api/openapi/openapi.yml --remove-unused-components -o openapi/dist/openapi.yml",
+    "oas:docs:project": "redocly preview --product=redoc --project-dir=./ --port=8081",
+    "oas:docs:api": "pnpm oas:bundle && pnpm exec redocly build-docs openapi/dist/openapi.yml -o openapi/dist/index.html && open openapi/dist/index.html",
+    "oas:be": "pnpm oas:bundle &&openapi-generator-cli generate -c openapi-generator.config.json",
+    "oas:be:skip": "pnpm oas:bundle &&openapi-generator-cli generate -c openapi-generator.config.json --skip-validate-spec",
+    "oas:fe": "pnpm oas:bundle && orval --config orval.config.ts",
+    "oas:fe:watch": "pnpm oas:bundle && orval --config orval.config.ts --watch"
   },
   "volta": {
     "node": "22.12.0"
