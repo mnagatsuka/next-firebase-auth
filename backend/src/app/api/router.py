@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 from app.api.routes import posts_router
+from app.api.routes.comments import comments_router
 
 api_router = APIRouter()
 
@@ -13,3 +14,4 @@ async def health_check():
 
 # Include route modules
 api_router.include_router(posts_router)
+api_router.include_router(comments_router)

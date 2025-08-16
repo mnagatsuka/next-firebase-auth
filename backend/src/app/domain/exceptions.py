@@ -24,3 +24,18 @@ class UnauthorizedPostAccessError(DomainError):
 class PostValidationError(DomainError):
     """Raised when post data fails domain validation."""
     pass
+
+
+class CommentNotFoundError(DomainError):
+    """Raised when a comment cannot be found."""
+    pass
+
+
+class CommentValidationError(DomainError):
+    """Raised when comment data fails domain validation."""
+    pass
+
+
+class UnauthorizedCommentAccessError(DomainError):
+    """Raised when a user tries to access/modify a comment they don't have permission for."""
+    pass
