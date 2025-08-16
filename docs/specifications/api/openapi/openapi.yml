@@ -88,15 +88,14 @@ components:
       $ref: './components/responses/not-found.yml'
       
   schemas:
-    # Core data models
     BlogPost:
       $ref: './components/schemas/blog-post.yml'
     BlogPostSummary:
       $ref: './components/schemas/blog-post-summary.yml'
     Comment:
       $ref: './components/schemas/comment.yml'
-
-    # Request/Response models
+    BlogPostListData:
+      $ref: './components/schemas/blog-post-list-data.yml'
     CreatePostRequest:
       $ref: './components/schemas/create-post-request.yml'
     CreateCommentRequest:
@@ -107,8 +106,6 @@ components:
       $ref: './components/schemas/blog-post-list-response.yml'
     CommentsResponse:
       $ref: './components/schemas/comments-response.yml'
-
-    # Common types
     Error:
       $ref: './components/schemas/error.yml'
     ErrorDetail:

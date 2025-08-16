@@ -2,7 +2,7 @@ description: Bad Request. The request data is invalid.
 content:
   application/json:
     schema:
-      $ref: '../schemas/error.yml'
+      $ref: '../../openapi.yml#/components/schemas/Error'
     examples:
       default:
         $ref: '../examples/error-400.yml'

@@ -33,7 +33,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/blog-post-list-response.yml"
+            $ref: "../openapi.yml#/components/schemas/BlogPostListResponse"
           examples:
             default:
               $ref: "../components/examples/blog-post-list-response.yml"
@@ -44,7 +44,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/error.yml"
+            $ref: "../openapi.yml#/components/schemas/Error"
 
 post:
   tags:
@@ -64,7 +64,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../components/schemas/create-post-request.yml"
+          $ref: "../openapi.yml#/components/schemas/CreatePostRequest"
         examples:
           default:
             $ref: "../components/examples/create-post-request.yml"
@@ -81,7 +81,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/blog-post-response.yml"
+            $ref: "../openapi.yml#/components/schemas/BlogPostResponse"
           examples:
             default:
               $ref: "../components/examples/blog-post-response.yml"
@@ -94,10 +94,10 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/error.yml"
+            $ref: "../openapi.yml#/components/schemas/Error"
     "500":
       description: Internal server error
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/error.yml"
+            $ref: "../openapi.yml#/components/schemas/Error"

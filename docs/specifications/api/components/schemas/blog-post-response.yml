@@ -1,9 +1,0 @@
-type: object
-properties:
-  status:
-    $ref: "./api-response-status.yml"
-  data:
-    $ref: "./blog-post.yml"
-required:
-  - status
-  - data

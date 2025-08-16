@@ -1,4 +1,4 @@
-# 17. Do's and Don'ts Checklist
+# 17. Example Practices
 
 This section provides **practical examples** of recommended practices and common pitfalls to avoid in Python + FastAPI backend development. It includes **concrete code examples**, **pre-PR self-review checklist**, and **common anti-patterns** to help maintain code quality and consistency.
 

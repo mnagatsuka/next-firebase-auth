@@ -1,11 +1,11 @@
 type: object
 properties:
   status:
-    $ref: "./api-response-status.yml"
+    $ref: "../../openapi.yml#/components/schemas/ApiResponseStatus"
   data:
     type: array
     items:
-      $ref: "./comment.yml"
+      $ref: "../../openapi.yml#/components/schemas/Comment"
     description: Array of comments for the blog post
 required:
   - status

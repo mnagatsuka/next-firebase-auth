@@ -4,9 +4,23 @@ Simple schema definition and validation patterns for Python + FastAPI applicatio
 
 ## Overview
 
-- Use Pydantic models for request/response validation
+- Use Pydantic `BaseModel` for API request/response validation
+- Use `@dataclass` for domain entities (not BaseModel)
 - Keep validation rules simple and focused on data integrity  
 - Provide clear error messages for validation failures
+
+## BaseModel vs Dataclass Usage
+
+**Use Pydantic BaseModel for:**
+- API request/response models
+- Data validation at application boundaries
+- Generated OpenAPI models
+- Serialization/deserialization needs
+
+**Use dataclass for:**
+- Domain entities with business logic
+- Internal data structures without API concerns
+- Framework-independent code
 
 ## 1. Request/Response Models
 

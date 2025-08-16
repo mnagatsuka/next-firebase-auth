@@ -26,7 +26,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/comments-response.yml"
+            $ref: "../openapi.yml#/components/schemas/CommentsResponse"
           examples:
             default:
               $ref: "../components/examples/comments-response.yml"
@@ -37,7 +37,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/error.yml"
+            $ref: "../openapi.yml#/components/schemas/Error"
 
 post:
   tags:
@@ -59,7 +59,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../components/schemas/create-comment-request.yml"
+          $ref: "../openapi.yml#/components/schemas/CreateCommentRequest"
         examples:
           default:
             $ref: "../components/examples/create-comment-request.yml"
@@ -76,7 +76,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/comment.yml"
+            $ref: "../openapi.yml#/components/schemas/Comment"
           examples:
             default:
               $ref: "../components/examples/comment.yml"
@@ -91,10 +91,10 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/error.yml"
+            $ref: "../openapi.yml#/components/schemas/Error"
     "500":
       description: Internal server error
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/error.yml"
+            $ref: "../openapi.yml#/components/schemas/Error"

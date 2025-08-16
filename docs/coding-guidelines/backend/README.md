@@ -121,7 +121,7 @@ Simple coding guidelines for Python + FastAPI backend development. These guideli
 - DynamoDB single-table patterns (PK/SK, GSIs, entity composition)
 - Item versioning and optimistic concurrency control
 
-## 17. Do's and Don'ts Checklist
+## 17. Example Practices
 
 - [17_example-practices.md](./17_example-practices.md)
 - Recommended practices

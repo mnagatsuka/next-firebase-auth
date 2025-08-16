@@ -16,7 +16,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/blog-post-response.yml"
+            $ref: "../openapi.yml#/components/schemas/BlogPostResponse"
           examples:
             default:
               $ref: "../components/examples/blog-post-response.yml"
@@ -27,7 +27,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/error.yml"
+            $ref: "../openapi.yml#/components/schemas/Error"
 
 put:
   tags:
@@ -49,7 +49,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../components/schemas/create-post-request.yml"
+          $ref: "../openapi.yml#/components/schemas/CreatePostRequest"
         examples:
           default:
             $ref: "../components/examples/create-post-request.yml"
@@ -59,7 +59,7 @@ put:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/blog-post-response.yml"
+            $ref: "../openapi.yml#/components/schemas/BlogPostResponse"
           examples:
             default:
               $ref: "../components/examples/blog-post-response.yml"
@@ -72,7 +72,7 @@ put:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/error.yml"
+            $ref: "../openapi.yml#/components/schemas/Error"
     "404":
       $ref: "../components/responses/not-found.yml"
     "422":
@@ -80,13 +80,13 @@ put:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/error.yml"
+            $ref: "../openapi.yml#/components/schemas/Error"
     "500":
       description: Internal server error
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/error.yml"
+            $ref: "../openapi.yml#/components/schemas/Error"
 
 delete:
   tags:
@@ -112,7 +112,7 @@ delete:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/error.yml"
+            $ref: "../openapi.yml#/components/schemas/Error"
     "404":
       $ref: "../components/responses/not-found.yml"
     "500":
@@ -120,4 +120,4 @@ delete:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/error.yml"
+            $ref: "../openapi.yml#/components/schemas/Error"

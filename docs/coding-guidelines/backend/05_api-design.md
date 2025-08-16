@@ -9,7 +9,75 @@ Simple REST API design patterns for Python + FastAPI applications.
 - Provide clear error responses
 - Use FastAPI's built-in documentation features
 
-## 1. Basic REST API Design
+## 1. API Models: BaseModel vs Dataclass
+
+### When to Use Pydantic BaseModel
+
+**Use Pydantic `BaseModel` for API layer models:**
+
+- **API Request/Response Models**: Generated from OpenAPI or manual API contracts
+- **Data Validation**: Input validation and serialization at API boundaries
+- **HTTP-Specific Concerns**: Status codes, headers, API responses
+- **Generated Models**: OpenAPI Generator creates BaseModel classes
+
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+from enum import Enum
+
+class ApiResponseStatus(str, Enum):
+    SUCCESS = "success"
+    ERROR = "error"
+
+class CreatePostRequest(BaseModel):
+    """API request model for creating posts."""
+    title: str = Field(..., min_length=1, max_length=200)
+    content: str = Field(..., min_length=1)
+    excerpt: str = Field(..., max_length=500)
+
+class BlogPostResponse(BaseModel):
+    """API response model for blog posts."""
+    status: ApiResponseStatus
+    data: Optional["ApiBlogPost"] = None
+    error: Optional[str] = None
+```
+
+### When to Use Dataclass
+
+**Use `@dataclass` for domain entities:**
+
+- **Domain Layer**: Business entities with pure business logic
+- **No Serialization**: Focus on business rules, not API concerns
+- **Framework Independence**: Domain should not depend on web frameworks
+
+```python
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+
+class PostStatus(Enum):
+    DRAFT = "draft"
+    PUBLISHED = "published"
+
+@dataclass
+class BlogPost:
+    """Domain entity - pure business logic."""
+    id: str
+    title: str
+    content: str
+    # Business methods, no serialization concerns
+```
+
+### Layer Separation
+
+```
+API Layer (BaseModel)     ←→ Application Layer ←→ Domain Layer (dataclass)
+   ↓ HTTP/JSON                    ↓ Orchestration        ↓ Business Logic
+CreatePostRequest                 PostService            BlogPost
+BlogPostResponse                  Validation             Business Rules
+```
+
+## 2. Basic REST API Design
 
 ### HTTP Methods & Resource Patterns
 
@@ -37,6 +105,7 @@ Simple FastAPI endpoint examples:
 
 ```python
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
 from app.models.user import User, UserCreate, UserUpdate
 from app.services.user_service import UserService
 

@@ -1,0 +1,9 @@
+type: object
+properties:
+  status:
+    $ref: "../../openapi.yml#/components/schemas/ApiResponseStatus"
+  data:
+    $ref: "../../openapi.yml#/components/schemas/BlogPostListData"
+required:
+  - status
+  - data

@@ -6,7 +6,7 @@ properties:
     description: Response status indicating an error
     example: "error"
   error:
-    $ref: "./error-detail.yml"
+    $ref: "../../openapi.yml#/components/schemas/ErrorDetail"
 required:
   - status
   - error

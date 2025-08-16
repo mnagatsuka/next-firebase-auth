@@ -1,0 +1,9 @@
+type: object
+properties:
+  posts:
+    type: array
+    items:
+      $ref: "../../openapi.yml#/components/schemas/BlogPostSummary"
+    description: Array of blog post summaries
+  pagination:
+    $ref: "../../openapi.yml#/components/schemas/Pagination"
