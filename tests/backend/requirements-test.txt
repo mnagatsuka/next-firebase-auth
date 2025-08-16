@@ -1,0 +1,6 @@
+# Note: Test dependencies are now managed in root pyproject.toml
+# To install test dependencies, run from project root:
+# uv sync --dev
+
+# This file is kept for reference but dependencies should be 
+# managed through the root pyproject.toml [project.optional-dependencies.dev] section
