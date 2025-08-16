@@ -1,0 +1,17 @@
+# OpenAPI Generator Ignore File
+# 
+# We commit generated source code (models, APIs) but ignore temporary files
+# See: https://openapi-generator.tech/docs/customization/#ignore-file-format
+
+# Ignore generator metadata and temporary files
+.openapi-generator/
+.openapi-generator-ignore
+
+# Ignore shell scripts for git operations
+git_push.sh
+
+# Keep all source code files:
+# - models/ (Pydantic models - we use these extensively)
+# - apis/ (base API classes - we inherit from these) 
+# - main.py, security_api.py (reference implementations)
+# - README.md, requirements.txt (documentation and deps)

@@ -1,10 +1,15 @@
+"""Main API router."""
+
 from fastapi import APIRouter
-
-from . import health, posts
-
+from app.api.routes import posts_router
 
 api_router = APIRouter()
 
-# Mount feature routers
-api_router.include_router(health.router, tags=["health"])
-api_router.include_router(posts.router)
+# Health check endpoint
+@api_router.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    return {"status": "healthy", "message": "API is running"}
+
+# Include route modules
+api_router.include_router(posts_router)

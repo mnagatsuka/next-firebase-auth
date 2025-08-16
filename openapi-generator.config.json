@@ -1,0 +1,16 @@
+{
+  "generatorName": "python-fastapi",
+  "inputSpec": "openapi/dist/openapi.yml",
+  "outputDir": "backend/src/app/generated/",
+  "globalProperty": {
+    "apis": "true",
+    "models": "true",
+    "supportingFiles": "true",
+    "apiTests": "true",
+    "modelTests": "true"
+  },
+  "additionalProperties": {
+    "packageName": "generated_fastapi_server",
+    "projectName": "generated-fastapi-server"
+  }
+}

@@ -19,7 +19,7 @@ It is intended for both **human developers** and **AI-based tools** to ensure co
 - next.config typing & structure  
 
 ## 3. Directory Structure & Routing
-- [03_routing.md](./routing.md)
+- [03_routing.md](./03_routing.md)
 - Directory structure best practice
 - App Router usage (`/app` directory)  
 - File conventions (`layout.tsx`, `page.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`)  
@@ -98,23 +98,31 @@ It is intended for both **human developers** and **AI-based tools** to ensure co
 - E2E testing tools (Playwright)  
 - Testing Server Actions and Route Handlers  
 
-## 15. Performance Best Practices
-- [15_performance-optimization.md](./15_performance-optimization.md)
+## 15. API Mocking
+- [15_api-mocking.md](./15_api-mocking.md)
+- MSW (Mock Service Worker) setup and configuration
+- Orval code generation from OpenAPI specifications
+- Environment-specific mocking strategies
+- Integration with testing and Storybook
+- Best practices for handler composition
+
+## 16. Performance Best Practices
+- [16_performance-optimization.md](./16_performance-optimization.md)
 - Minimizing client JS  
 - Streaming strategies  
 - Image/font optimization  
 - Avoiding unnecessary dynamic rendering  
 
-## 16. Storybook & UI Development
-- [16_storybook.md](./16_storybook.md)
+## 17. Storybook & UI Development
+- [17_storybook.md](./17_storybook.md)
 - Setting up Storybook in a Next.js project  
 - Writing stories for components and pages  
 - Using Storybook for visual regression testing  
 - Integrating with design systems and Figma  
 - Best practices for organizing stories and decorators  
 
-## 17. Deployment on Vercel
-- [17_vercel-deployment.md](./17_vercel-deployment.md)
+## 18. Deployment on Vercel
+- [18_vercel-deployment.md](./18_vercel-deployment.md)
 - Connecting Git repository to Vercel  
 - Environment variables management (`.env.local`, `.env.production`)  
 - Build settings and output configuration  
@@ -122,9 +130,7 @@ It is intended for both **human developers** and **AI-based tools** to ensure co
 - Using Vercel analytics and monitoring  
 - Common pitfalls and troubleshooting tips  
 
-## 18. Do’s and Don’ts Checklist
-- [18_example-practices.md](./18_example-practices.md)
+## 19. Example Practices
+- [19_example-practices.md](./19_example-practices.md)
 - Recommended practices  
-- Common pitfalls to avoid  
-
-accessibility
+- Common pitfalls to avoid

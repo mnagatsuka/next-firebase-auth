@@ -1,0 +1,1131 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: api-support@example.com
+    name: API Support
+    url: https://github.com/your-org/blog-api
+  description: |
+    A comprehensive API for managing blog posts and comments with Firebase Authentication integration.
+
+    This API supports:
+    - Blog post creation, retrieval, and management
+    - Comment management on blog posts
+    - User authentication via Firebase Auth
+    - Pagination and filtering capabilities
+
+    ## Authentication
+
+    All endpoints require Firebase Authentication unless otherwise specified.
+    Include the Firebase ID token in the Authorization header:
+
+    ```
+    Authorization: Bearer <firebase-id-token>
+    ```
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://example.com/terms
+  title: Blog Post API
+  version: 1.0.0
+servers:
+- description: API server
+  url: "https://api.{environment}.myapp.test/v1"
+  variables:
+    environment:
+      default: prod
+      description: The environment to use
+      enum:
+      - prod
+      - dev
+      - staging
+security:
+- firebaseAuth: []
+tags:
+- description: Blog post management operations
+  name: posts
+- description: Comment management operations
+  name: comments
+paths:
+  /posts:
+    get:
+      description: |
+        Retrieves a paginated list of published blog posts.
+
+        This endpoint supports pagination and returns blog post summaries
+        optimized for listing views (homepage, archives, etc.).
+      operationId: getBlogPosts
+      parameters:
+      - description: Page number for pagination
+        example: 1
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+        style: form
+      - description: Number of items per page
+        example: 10
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 10
+          maximum: 50
+          minimum: 1
+          type: integer
+        style: form
+      - description: Filter posts by status
+        explode: true
+        in: query
+        name: status
+        required: false
+        schema:
+          default: published
+          enum:
+          - published
+          - draft
+          type: string
+        style: form
+      - description: Filter posts by author name
+        explode: true
+        in: query
+        name: author
+        required: false
+        schema:
+          example: John Doe
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/blog-post-list-response"
+              schema:
+                $ref: "#/components/schemas/blog-post-list-response"
+          description: Successfully retrieved paginated blog posts
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Internal server error
+      security: []
+      summary: Get Blog Posts
+      tags:
+      - posts
+    post:
+      description: |
+        Creates a new blog post. Requires authentication.
+
+        The author field will be automatically set based on the authenticated user.
+        Posts are created in 'draft' status by default.
+      operationId: createBlogPost
+      requestBody:
+        content:
+          application/json:
+            examples:
+              default:
+                $ref: "#/components/examples/create-post-request"
+            schema:
+              $ref: "#/components/schemas/create-post-request"
+        description: Blog post data
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/blog-post-response"
+              schema:
+                $ref: "#/components/schemas/blog-post-response"
+          description: Blog post created successfully
+          headers:
+            Location:
+              description: URL of the created blog post
+              explode: false
+              schema:
+                example: /api/v1/posts/post-123
+                format: uri
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Validation error
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Internal server error
+      security:
+      - firebaseAuth: []
+      summary: Create Blog Post
+      tags:
+      - posts
+  /posts/{id}:
+    delete:
+      description: |
+        Deletes a blog post by its ID. Requires authentication.
+
+        Only the author of the post or users with admin privileges can delete a post.
+        This action is irreversible.
+      operationId: deleteBlogPost
+      parameters:
+      - description: Unique identifier for the blog post
+        example: post-123
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Blog post deleted successfully
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Forbidden - insufficient permissions
+        "404":
+          $ref: "#/components/responses/not-found"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Internal server error
+      security:
+      - firebaseAuth: []
+      summary: Delete Blog Post
+      tags:
+      - posts
+    get:
+      description: |
+        Retrieves detailed information about a specific blog post by its ID.
+
+        Returns the complete blog post including content, metadata, and author information.
+      operationId: getBlogPostById
+      parameters:
+      - description: Unique identifier for the blog post
+        example: post-123
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/blog-post-response"
+              schema:
+                $ref: "#/components/schemas/blog-post-response"
+          description: Successfully retrieved blog post details
+        "404":
+          $ref: "#/components/responses/not-found"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Internal server error
+      security: []
+      summary: Get Single Blog Post
+      tags:
+      - posts
+    put:
+      description: |
+        Updates an existing blog post by its ID. Requires authentication.
+
+        Only the author of the post or users with admin privileges can update a post.
+        Partial updates are supported - only provided fields will be updated.
+      operationId: updateBlogPost
+      parameters:
+      - description: Unique identifier for the blog post
+        example: post-123
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            examples:
+              default:
+                $ref: "#/components/examples/create-post-request"
+            schema:
+              $ref: "#/components/schemas/create-post-request"
+        description: Updated blog post data
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/blog-post-response"
+              schema:
+                $ref: "#/components/schemas/blog-post-response"
+          description: Blog post updated successfully
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Forbidden - insufficient permissions
+        "404":
+          $ref: "#/components/responses/not-found"
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Validation error
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Internal server error
+      security:
+      - firebaseAuth: []
+      summary: Update Blog Post
+      tags:
+      - posts
+  /posts/{id}/comments:
+    get:
+      description: |
+        Retrieves all comments for a specific blog post.
+
+        Comments are returned in chronological order (oldest first).
+        This endpoint is public and does not require authentication.
+      operationId: getPostComments
+      parameters:
+      - description: Unique identifier for the blog post
+        example: post-123
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Maximum number of comments to return
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 50
+          maximum: 100
+          minimum: 1
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/comments-response"
+              schema:
+                $ref: "#/components/schemas/comments-response"
+          description: Successfully retrieved post comments
+        "404":
+          $ref: "#/components/responses/not-found"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Internal server error
+      security: []
+      summary: Get Post Comments
+      tags:
+      - comments
+    post:
+      description: |
+        Creates a new comment on a specific blog post. Requires authentication.
+
+        The author field will be automatically set based on the authenticated user.
+        Comments are moderated and may not appear immediately.
+      operationId: createComment
+      parameters:
+      - description: Unique identifier for the blog post
+        example: post-123
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            examples:
+              default:
+                $ref: "#/components/examples/create-comment-request"
+            schema:
+              $ref: "#/components/schemas/create-comment-request"
+        description: Comment data
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/comment"
+              schema:
+                $ref: "#/components/schemas/comment"
+          description: Comment created successfully
+          headers:
+            Location:
+              description: URL of the created comment
+              explode: false
+              schema:
+                example: /api/v1/posts/post-123/comments/comment-456
+                format: uri
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "404":
+          $ref: "#/components/responses/not-found"
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Validation error
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Internal server error
+      security:
+      - firebaseAuth: []
+      summary: Create Comment
+      tags:
+      - comments
+components:
+  examples:
+    blog-post-list-response:
+      summary: Paginated blog posts response
+      value:
+        status: success
+        data:
+          posts:
+          - id: post-123
+            title: Getting Started with Next.js
+            excerpt: "Learn the basics of Next.js in this comprehensive guide covering\
+              \ SSR, SSG, and CSR."
+            author: John Doe
+            publishedAt: 2024-01-15T10:30:00Z
+          - id: post-124
+            title: Advanced React Patterns
+            excerpt: "Explore advanced React patterns including hooks, context, and\
+              \ state management techniques."
+            author: Jane Smith
+            publishedAt: 2024-01-14T09:15:00Z
+          - id: post-125
+            title: TypeScript Best Practices
+            excerpt: Learn TypeScript best practices for building scalable and maintainable
+              applications.
+            author: Bob Johnson
+            publishedAt: 2024-01-13T14:45:00Z
+          pagination:
+            page: 1
+            limit: 10
+            total: 45
+            hasNext: true
+    error-400:
+      summary: Bad Request error
+      value:
+        status: error
+        error:
+          code: VALIDATION_ERROR
+          message: The request data is invalid
+          details: Title field is required and must be at least 1 character long
+    create-post-request:
+      summary: Create blog post request
+      value:
+        title: Getting Started with Next.js
+        content: |
+          # Introduction
+
+          Next.js is a powerful React framework that enables you to build full-stack web applications by extending the latest React features.
+
+          ## Key Features
+
+          - **Server-Side Rendering (SSR)**: Pre-render pages on the server
+          - **Static Site Generation (SSG)**: Generate static HTML at build time
+          - **Client-Side Rendering (CSR)**: Render pages in the browser
+          - **API Routes**: Build API endpoints within your Next.js app
+
+          ## Getting Started
+
+          To create a new Next.js project, run:
+
+          ```bash
+          npx create-next-app@latest my-app
+          cd my-app
+          npm run dev
+          ```
+
+          Your application will be available at `http://localhost:3000`.
+
+          ## Conclusion
+
+          Next.js provides a great developer experience with many features out of the box. It's perfect for building modern web applications.
+        excerpt: "Learn the basics of Next.js in this comprehensive guide covering\
+          \ SSR, SSG, and CSR."
+        status: published
+    blog-post-response:
+      summary: Single blog post response
+      value:
+        status: success
+        data:
+          id: post-123
+          title: Getting Started with Next.js
+          content: |
+            # Introduction
+
+            Next.js is a powerful React framework that enables you to build full-stack web applications by extending the latest React features.
+
+            ## Key Features
+
+            - **Server-Side Rendering (SSR)**: Pre-render pages on the server
+            - **Static Site Generation (SSG)**: Generate static HTML at build time
+            - **Client-Side Rendering (CSR)**: Render pages in the browser
+            - **API Routes**: Build API endpoints within your Next.js app
+
+            ## Getting Started
+
+            To create a new Next.js project, run:
+
+            ```bash
+            npx create-next-app@latest my-app
+            cd my-app
+            npm run dev
+            ```
+
+            Your application will be available at `http://localhost:3000`.
+
+            ## Conclusion
+
+            Next.js provides a great developer experience with many features out of the box. It's perfect for building modern web applications.
+          excerpt: "Learn the basics of Next.js in this comprehensive guide covering\
+            \ SSR, SSG, and CSR."
+          author: John Doe
+          publishedAt: 2024-01-15T10:30:00Z
+          status: published
+    error-401:
+      summary: Unauthorized error
+      value:
+        status: error
+        error:
+          code: UNAUTHORIZED
+          message: Authentication is required
+          details: Please provide a valid authentication token
+    error-404:
+      summary: Not Found error
+      value:
+        status: error
+        error:
+          code: NOT_FOUND
+          message: Blog post not found
+          details: The requested blog post with ID 'post-123' does not exist
+    comments-response:
+      summary: Comments list response
+      value:
+        status: success
+        data:
+        - id: comment-456
+          content: Great article! Very helpful explanation of Next.js features. I
+            especially liked the section on SSR vs SSG.
+          author: Jane Smith
+          createdAt: 2024-01-15T14:20:00Z
+          postId: post-123
+        - id: comment-457
+          content: Thanks for sharing this! The code examples are really clear and
+            easy to follow.
+          author: Mike Wilson
+          createdAt: 2024-01-15T16:45:00Z
+          postId: post-123
+        - id: comment-458
+          content: Could you write a follow-up article about Next.js deployment strategies?
+          author: Sarah Davis
+          createdAt: 2024-01-16T08:30:00Z
+          postId: post-123
+    create-comment-request:
+      summary: Create comment request
+      value:
+        content: Great article! Very helpful explanation of Next.js features. I especially
+          liked the section on SSR vs SSG.
+        author: Jane Smith
+    comment:
+      summary: Blog post comment
+      value:
+        id: comment-456
+        content: Great article! Very helpful explanation of Next.js features. I especially
+          liked the section on SSR vs SSG.
+        author: Jane Smith
+        createdAt: 2024-01-15T14:20:00Z
+        postId: post-123
+    blog-post:
+      summary: Complete blog post example
+      value:
+        id: post-123
+        title: Getting Started with Next.js
+        content: |
+          # Introduction
+
+          Next.js is a powerful React framework that enables you to build full-stack web applications by extending the latest React features.
+
+          ## Key Features
+
+          - **Server-Side Rendering (SSR)**: Pre-render pages on the server
+          - **Static Site Generation (SSG)**: Generate static HTML at build time
+          - **Client-Side Rendering (CSR)**: Render pages in the browser
+          - **API Routes**: Build API endpoints within your Next.js app
+
+          ## Getting Started
+
+          To create a new Next.js project, run:
+
+          ```bash
+          npx create-next-app@latest my-app
+          cd my-app
+          npm run dev
+          ```
+
+          Your application will be available at `http://localhost:3000`.
+
+          ## Conclusion
+
+          Next.js provides a great developer experience with many features out of the box. It's perfect for building modern web applications.
+        excerpt: "Learn the basics of Next.js in this comprehensive guide covering\
+          \ SSR, SSG, and CSR."
+        author: John Doe
+        publishedAt: 2024-01-15T10:30:00Z
+        status: published
+    blog-post-summary:
+      summary: Blog post summary for list views
+      value:
+        id: post-123
+        title: Getting Started with Next.js
+        excerpt: "Learn the basics of Next.js in this comprehensive guide covering\
+          \ SSR, SSG, and CSR."
+        author: John Doe
+        publishedAt: 2024-01-15T10:30:00Z
+  parameters:
+    page:
+      description: Page number for pagination
+      example: 1
+      explode: true
+      in: query
+      name: page
+      required: false
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+      style: form
+    limit:
+      description: Number of items per page
+      example: 10
+      explode: true
+      in: query
+      name: limit
+      required: false
+      schema:
+        default: 10
+        maximum: 50
+        minimum: 1
+        type: integer
+      style: form
+    post-id:
+      description: Unique identifier for the blog post
+      example: post-123
+      explode: false
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      style: simple
+  responses:
+    bad-request:
+      content:
+        application/json:
+          examples:
+            default:
+              $ref: "#/components/examples/error-400"
+          schema:
+            $ref: "#/components/schemas/error"
+      description: Bad Request. The request data is invalid.
+    unauthorized:
+      content:
+        application/json:
+          examples:
+            default:
+              $ref: "#/components/examples/error-401"
+          schema:
+            $ref: "#/components/schemas/error"
+      description: Unauthorized. Authentication is required.
+    not-found:
+      content:
+        application/json:
+          examples:
+            default:
+              $ref: "#/components/examples/error-404"
+          schema:
+            $ref: "#/components/schemas/error"
+      description: Resource not found.
+  schemas:
+    api-response-status:
+      description: Response status
+      enum:
+      - success
+      - error
+      example: success
+      title: api-response-status
+      type: string
+    blog-post-summary:
+      example:
+        publishedAt: 2024-01-15T10:30:00Z
+        author: John Doe
+        id: post-123
+        title: Getting Started with Next.js
+        excerpt: Learn the basics of Next.js in this comprehensive guide.
+      properties:
+        id:
+          description: Unique identifier for the blog post
+          example: post-123
+          title: id
+          type: string
+        title:
+          description: Title of the blog post
+          example: Getting Started with Next.js
+          title: title
+          type: string
+        excerpt:
+          description: Short summary or excerpt of the blog post
+          example: Learn the basics of Next.js in this comprehensive guide.
+          title: excerpt
+          type: string
+        author:
+          description: Author of the blog post
+          example: John Doe
+          title: author
+          type: string
+        publishedAt:
+          description: Timestamp when the blog post was published
+          example: 2024-01-15T10:30:00Z
+          format: date-time
+          title: publishedAt
+          type: string
+      required:
+      - author
+      - excerpt
+      - id
+      - publishedAt
+      - title
+      title: blog-post-summary
+      type: object
+    pagination:
+      example:
+        total: 45
+        limit: 10
+        hasNext: true
+        page: 1
+      properties:
+        page:
+          description: Current page number
+          example: 1
+          title: page
+          type: integer
+        limit:
+          description: Number of posts per page
+          example: 10
+          title: limit
+          type: integer
+        total:
+          description: Total number of posts
+          example: 45
+          title: total
+          type: integer
+        hasNext:
+          description: Whether there are more pages
+          example: true
+          title: hasNext
+          type: boolean
+      required:
+      - hasNext
+      - limit
+      - page
+      - total
+      title: pagination
+      type: object
+    blog-post-list-data:
+      example:
+        pagination:
+          total: 45
+          limit: 10
+          hasNext: true
+          page: 1
+        posts:
+        - publishedAt: 2024-01-15T10:30:00Z
+          author: John Doe
+          id: post-123
+          title: Getting Started with Next.js
+          excerpt: Learn the basics of Next.js in this comprehensive guide.
+        - publishedAt: 2024-01-15T10:30:00Z
+          author: John Doe
+          id: post-123
+          title: Getting Started with Next.js
+          excerpt: Learn the basics of Next.js in this comprehensive guide.
+      properties:
+        posts:
+          description: Array of blog post summaries
+          items:
+            $ref: "#/components/schemas/blog-post-summary"
+          title: posts
+          type: array
+        pagination:
+          $ref: "#/components/schemas/pagination"
+      title: blog-post-list-data
+      type: object
+    blog-post-list-response:
+      example:
+        data:
+          pagination:
+            total: 45
+            limit: 10
+            hasNext: true
+            page: 1
+          posts:
+          - publishedAt: 2024-01-15T10:30:00Z
+            author: John Doe
+            id: post-123
+            title: Getting Started with Next.js
+            excerpt: Learn the basics of Next.js in this comprehensive guide.
+          - publishedAt: 2024-01-15T10:30:00Z
+            author: John Doe
+            id: post-123
+            title: Getting Started with Next.js
+            excerpt: Learn the basics of Next.js in this comprehensive guide.
+        status: success
+      properties:
+        status:
+          $ref: "#/components/schemas/api-response-status"
+        data:
+          $ref: "#/components/schemas/blog-post-list-data"
+      required:
+      - data
+      - status
+      title: blog-post-list-response
+      type: object
+    error-detail:
+      example:
+        code: VALIDATION_ERROR
+        details: Title field is required
+        message: The request data is invalid
+      properties:
+        code:
+          description: Error code for programmatic handling
+          example: VALIDATION_ERROR
+          title: code
+          type: string
+        message:
+          description: Human-readable error message
+          example: The request data is invalid
+          title: message
+          type: string
+        details:
+          description: Additional error details (optional)
+          example: Title field is required
+          title: details
+          type: string
+      required:
+      - code
+      - message
+      title: error-detail
+      type: object
+    error:
+      example:
+        error:
+          code: VALIDATION_ERROR
+          details: Title field is required
+          message: The request data is invalid
+        status: error
+      properties:
+        status:
+          description: Response status indicating an error
+          enum:
+          - error
+          example: error
+          title: status
+          type: string
+        error:
+          $ref: "#/components/schemas/error-detail"
+      required:
+      - error
+      - status
+      title: error
+      type: object
+    create-post-request:
+      properties:
+        title:
+          description: Title of the blog post
+          example: Getting Started with Next.js
+          title: title
+          type: string
+        content:
+          description: Full content of the blog post in markdown format
+          example: |-
+            # Introduction
+
+            Next.js is a powerful React framework...
+          title: content
+          type: string
+        excerpt:
+          description: Short summary or excerpt of the blog post
+          example: Learn the basics of Next.js in this comprehensive guide.
+          title: excerpt
+          type: string
+        status:
+          description: Status of the blog post
+          enum:
+          - draft
+          - published
+          example: draft
+          title: status
+          type: string
+      required:
+      - content
+      - title
+      title: create-post-request
+      type: object
+    blog-post:
+      example:
+        publishedAt: 2024-01-15T10:30:00Z
+        author: John Doe
+        id: post-123
+        title: Getting Started with Next.js
+        excerpt: Learn the basics of Next.js in this comprehensive guide.
+        content: |-
+          # Introduction
+
+          Next.js is a powerful React framework...
+        status: published
+      properties:
+        id:
+          description: Unique identifier for the blog post
+          example: post-123
+          title: id
+          type: string
+        title:
+          description: Title of the blog post
+          example: Getting Started with Next.js
+          title: title
+          type: string
+        content:
+          description: Full content of the blog post in markdown format
+          example: |-
+            # Introduction
+
+            Next.js is a powerful React framework...
+          title: content
+          type: string
+        excerpt:
+          description: Short summary or excerpt of the blog post
+          example: Learn the basics of Next.js in this comprehensive guide.
+          title: excerpt
+          type: string
+        author:
+          description: Author of the blog post
+          example: John Doe
+          title: author
+          type: string
+        publishedAt:
+          description: Timestamp when the blog post was published
+          example: 2024-01-15T10:30:00Z
+          format: date-time
+          title: publishedAt
+          type: string
+        status:
+          description: Current status of the blog post
+          enum:
+          - draft
+          - published
+          example: published
+          title: status
+          type: string
+      required:
+      - author
+      - content
+      - excerpt
+      - id
+      - publishedAt
+      - status
+      - title
+      title: blog-post
+      type: object
+    blog-post-response:
+      example:
+        data:
+          publishedAt: 2024-01-15T10:30:00Z
+          author: John Doe
+          id: post-123
+          title: Getting Started with Next.js
+          excerpt: Learn the basics of Next.js in this comprehensive guide.
+          content: |-
+            # Introduction
+
+            Next.js is a powerful React framework...
+          status: published
+        status: success
+      properties:
+        status:
+          $ref: "#/components/schemas/api-response-status"
+        data:
+          $ref: "#/components/schemas/blog-post"
+      required:
+      - data
+      - status
+      title: blog-post-response
+      type: object
+    comment:
+      example:
+        createdAt: 2024-01-15T14:20:00Z
+        author: Jane Smith
+        id: comment-456
+        postId: post-123
+        content: Great article! Very helpful.
+      properties:
+        id:
+          description: Unique identifier for the comment
+          example: comment-456
+          title: id
+          type: string
+        content:
+          description: Content of the comment
+          example: Great article! Very helpful.
+          title: content
+          type: string
+        author:
+          description: Name of the comment author
+          example: Jane Smith
+          title: author
+          type: string
+        createdAt:
+          description: Timestamp when the comment was created
+          example: 2024-01-15T14:20:00Z
+          format: date-time
+          title: createdAt
+          type: string
+        postId:
+          description: ID of the blog post this comment belongs to
+          example: post-123
+          title: postId
+          type: string
+      required:
+      - author
+      - content
+      - createdAt
+      - id
+      - postId
+      title: comment
+      type: object
+    comments-response:
+      example:
+        data:
+        - createdAt: 2024-01-15T14:20:00Z
+          author: Jane Smith
+          id: comment-456
+          postId: post-123
+          content: Great article! Very helpful.
+        - createdAt: 2024-01-15T14:20:00Z
+          author: Jane Smith
+          id: comment-456
+          postId: post-123
+          content: Great article! Very helpful.
+        status: success
+      properties:
+        status:
+          $ref: "#/components/schemas/api-response-status"
+        data:
+          description: Array of comments for the blog post
+          items:
+            $ref: "#/components/schemas/comment"
+          title: data
+          type: array
+      required:
+      - data
+      - status
+      title: comments-response
+      type: object
+    create-comment-request:
+      properties:
+        content:
+          description: Content of the comment
+          example: Great article! Very helpful.
+          title: content
+          type: string
+        author:
+          description: Name of the comment author
+          example: Jane Smith
+          title: author
+          type: string
+      required:
+      - author
+      - content
+      title: create-comment-request
+      type: object
+  securitySchemes:
+    firebaseAuth:
+      bearerFormat: JWT
+      description: "Firebase Authentication JWT token. \n\nObtain this token from\
+        \ Firebase Auth SDK and include it in the Authorization header:\n`Authorization:\
+        \ Bearer <firebase-id-token>`\n\nThe token contains user information and is\
+        \ validated server-side.\n"
+      scheme: bearer
+      type: http
