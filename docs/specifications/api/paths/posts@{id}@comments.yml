@@ -1,12 +1,28 @@
 get:
+  tags:
+    - comments
   summary: Get Post Comments
-  description: Fetches all comments for a specific blog post.
+  description: |
+    Retrieves all comments for a specific blog post.
+    
+    Comments are returned in chronological order (oldest first).
+    This endpoint is public and does not require authentication.
   operationId: getPostComments
+  security: [] # Public endpoint - no authentication required
   parameters:
     - $ref: "../components/parameters/post-id.yml"
+    - name: limit
+      in: query
+      description: Maximum number of comments to return
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
   responses:
     "200":
-      description: A successful response with post comments.
+      description: Successfully retrieved post comments
       content:
         application/json:
           schema:
@@ -16,15 +32,30 @@ get:
               $ref: "../components/examples/comments-response.yml"
     "404":
       $ref: "../components/responses/not-found.yml"
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas/error.yml"
 
 post:
+  tags:
+    - comments
   summary: Create Comment
-  description: Creates a new comment on a specific blog post.
+  description: |
+    Creates a new comment on a specific blog post. Requires authentication.
+    
+    The author field will be automatically set based on the authenticated user.
+    Comments are moderated and may not appear immediately.
   operationId: createComment
+  security:
+    - firebaseAuth: []
   parameters:
     - $ref: "../components/parameters/post-id.yml"
   requestBody:
     required: true
+    description: Comment data
     content:
       application/json:
         schema:
@@ -34,15 +65,36 @@ post:
             $ref: "../components/examples/create-comment-request.yml"
   responses:
     "201":
-      description: Comment created successfully.
+      description: Comment created successfully
+      headers:
+        Location:
+          description: URL of the created comment
+          schema:
+            type: string
+            format: uri
+            example: "/api/v1/posts/post-123/comments/comment-456"
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/blog-post-response.yml"
+            $ref: "../components/schemas/comment.yml"
           examples:
             default:
-              $ref: "../components/examples/blog-post-response.yml"
+              $ref: "../components/examples/comment.yml"
     "400":
       $ref: "../components/responses/bad-request.yml"
+    "401":
+      $ref: "../components/responses/unauthorized.yml"
     "404":
       $ref: "../components/responses/not-found.yml"
+    "422":
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas/error.yml"
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas/error.yml"

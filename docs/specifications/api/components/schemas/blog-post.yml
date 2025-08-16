@@ -34,5 +34,7 @@ required:
   - id
   - title
   - content
+  - excerpt
   - author
+  - publishedAt
   - status

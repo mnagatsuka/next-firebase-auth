@@ -1,12 +1,18 @@
 get:
+  tags:
+    - posts
   summary: Get Single Blog Post
-  description: Fetches the details of a single blog post by its ID.
+  description: |
+    Retrieves detailed information about a specific blog post by its ID.
+    
+    Returns the complete blog post including content, metadata, and author information.
   operationId: getBlogPostById
+  security: [] # Public endpoint - no authentication required
   parameters:
     - $ref: "../components/parameters/post-id.yml"
   responses:
     "200":
-      description: A successful response with blog post details.
+      description: Successfully retrieved blog post details
       content:
         application/json:
           schema:
@@ -16,15 +22,30 @@ get:
               $ref: "../components/examples/blog-post-response.yml"
     "404":
       $ref: "../components/responses/not-found.yml"
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas/error.yml"
 
 put:
+  tags:
+    - posts
   summary: Update Blog Post
-  description: Updates an existing blog post by its ID.
+  description: |
+    Updates an existing blog post by its ID. Requires authentication.
+    
+    Only the author of the post or users with admin privileges can update a post.
+    Partial updates are supported - only provided fields will be updated.
   operationId: updateBlogPost
+  security:
+    - firebaseAuth: []
   parameters:
     - $ref: "../components/parameters/post-id.yml"
   requestBody:
     required: true
+    description: Updated blog post data
     content:
       application/json:
         schema:
@@ -34,7 +55,7 @@ put:
             $ref: "../components/examples/create-post-request.yml"
   responses:
     "200":
-      description: Blog post updated successfully.
+      description: Blog post updated successfully
       content:
         application/json:
           schema:
@@ -46,5 +67,57 @@ put:
       $ref: "../components/responses/bad-request.yml"
     "401":
       $ref: "../components/responses/unauthorized.yml"
+    "403":
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas/error.yml"
     "404":
       $ref: "../components/responses/not-found.yml"
+    "422":
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas/error.yml"
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas/error.yml"
+
+delete:
+  tags:
+    - posts
+  summary: Delete Blog Post
+  description: |
+    Deletes a blog post by its ID. Requires authentication.
+    
+    Only the author of the post or users with admin privileges can delete a post.
+    This action is irreversible.
+  operationId: deleteBlogPost
+  security:
+    - firebaseAuth: []
+  parameters:
+    - $ref: "../components/parameters/post-id.yml"
+  responses:
+    "204":
+      description: Blog post deleted successfully
+    "401":
+      $ref: "../components/responses/unauthorized.yml"
+    "403":
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas/error.yml"
+    "404":
+      $ref: "../components/responses/not-found.yml"
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas/error.yml"

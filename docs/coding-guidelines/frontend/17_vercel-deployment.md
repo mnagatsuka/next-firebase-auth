@@ -100,7 +100,7 @@ Default build settings for Next.js projects on Vercel:
 **Solution:** Redeploy after updating environment variables in Vercel; ensure the correct environment scope.
 
 **Problem:** Build fails due to missing dependencies
-**Solution:** Check `pnpm-lock.yml` is committed; run `pnpm install --frozen-lockfile` locally before pushing.
+**Solution:** Check `pnpm-lock.yaml` is committed; run `pnpm install --frozen-lockfile` locally before pushing.
 
 **Problem:** Functions not running as expected
 **Solution:** Check the **Runtime Logs** in Vercel dashboard; ensure server actions and API routes are compatible with the target runtime (Edge or Node).

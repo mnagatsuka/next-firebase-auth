@@ -1,14 +1,53 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   title: Blog Post API
   version: 1.0.0
-  description: API endpoints for the blog post application, supporting post management and comments.
+  description: |
+    A comprehensive API for managing blog posts and comments with Firebase Authentication integration.
+    
+    This API supports:
+    - Blog post creation, retrieval, and management
+    - Comment management on blog posts
+    - User authentication via Firebase Auth
+    - Pagination and filtering capabilities
+    
+    ## Authentication
+    
+    All endpoints require Firebase Authentication unless otherwise specified.
+    Include the Firebase ID token in the Authorization header:
+    
+    ```
+    Authorization: Bearer <firebase-id-token>
+    ```
+  contact:
+    name: API Support
+    url: https://github.com/your-org/blog-api
+    email: api-support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://example.com/terms
 
 servers:
-  - url: https://api.example.com/v1
-    description: Production server
-  - url: http://localhost:3000/api
-    description: Development server
+  - url: https://api.{environment}.myapp.test/v1
+    description: API server
+    variables:
+      environment:
+        default: prod
+        enum:
+          - prod
+          - dev
+          - staging
+        description: The environment to use
+
+security:
+  - firebaseAuth: []
+
+tags:
+  - name: posts
+    description: Blog post management operations
+  - name: comments
+    description: Comment management operations
 
 paths:
   /posts:
@@ -19,6 +58,19 @@ paths:
     $ref: './paths/posts@{id}@comments.yml'
 
 components:
+  securitySchemes:
+    firebaseAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Firebase Authentication JWT token. 
+        
+        Obtain this token from Firebase Auth SDK and include it in the Authorization header:
+        `Authorization: Bearer <firebase-id-token>`
+        
+        The token contains user information and is validated server-side.
+
   parameters:
     page:
       $ref: './components/parameters/pagination.yml#/page'
@@ -36,24 +88,35 @@ components:
       $ref: './components/responses/not-found.yml'
       
   schemas:
-    Error:
-      $ref: './components/schemas/error.yml'
+    # Core data models
     BlogPost:
       $ref: './components/schemas/blog-post.yml'
     BlogPostSummary:
       $ref: './components/schemas/blog-post-summary.yml'
-    BlogPostResponse:
-      $ref: './components/schemas/blog-post-response.yml'
-    BlogPostListResponse:
-      $ref: './components/schemas/blog-post-list-response.yml'
     Comment:
       $ref: './components/schemas/comment.yml'
-    CommentsResponse:
-      $ref: './components/schemas/comments-response.yml'
+
+    # Request/Response models
     CreatePostRequest:
       $ref: './components/schemas/create-post-request.yml'
     CreateCommentRequest:
       $ref: './components/schemas/create-comment-request.yml'
+    BlogPostResponse:
+      $ref: './components/schemas/blog-post-response.yml'
+    BlogPostListResponse:
+      $ref: './components/schemas/blog-post-list-response.yml'
+    CommentsResponse:
+      $ref: './components/schemas/comments-response.yml'
+
+    # Common types
+    Error:
+      $ref: './components/schemas/error.yml'
+    ErrorDetail:
+      $ref: './components/schemas/error-detail.yml'
+    ApiResponseStatus:
+      $ref: './components/schemas/api-response-status.yml'
+    Pagination:
+      $ref: './components/schemas/pagination.yml'
       
   examples:
     BlogPost:
@@ -72,9 +135,9 @@ components:
       $ref: './components/examples/create-post-request.yml'
     CreateCommentRequest:
       $ref: './components/examples/create-comment-request.yml'
-    Error400:
+    BadRequestError:
       $ref: './components/examples/error-400.yml'
-    Error401:
+    UnauthorizedError:
       $ref: './components/examples/error-401.yml'
-    Error404:
+    NotFoundError:
       $ref: './components/examples/error-404.yml'

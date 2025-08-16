@@ -1,37 +1,9 @@
 type: object
 properties:
   status:
-    type: string
-    enum: [success, error]
-    description: Response status
-    example: "success"
+    $ref: "./api-response-status.yml"
   data:
-    type: object
-    properties:
-      posts:
-        type: array
-        items:
-          $ref: "./blog-post-summary.yml"
-        description: Array of blog post summaries
-      pagination:
-        type: object
-        properties:
-          page:
-            type: integer
-            description: Current page number
-            example: 1
-          limit:
-            type: integer
-            description: Number of posts per page
-            example: 10
-          total:
-            type: integer
-            description: Total number of posts
-            example: 45
-          hasNext:
-            type: boolean
-            description: Whether there are more pages
-            example: true
+    $ref: "./blog-post-list-data.yml"
 required:
   - status
   - data

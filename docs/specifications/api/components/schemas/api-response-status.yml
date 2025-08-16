@@ -1,0 +1,4 @@
+type: string
+enum: [success, error]
+description: Response status
+example: "success"

@@ -1,10 +1,7 @@
 type: object
 properties:
   status:
-    type: string
-    enum: [success, error]
-    description: Response status
-    example: "success"
+    $ref: "./api-response-status.yml"
   data:
     $ref: "./blog-post.yml"
 required:

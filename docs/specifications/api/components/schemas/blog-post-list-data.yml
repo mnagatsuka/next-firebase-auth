@@ -1,0 +1,9 @@
+type: object
+properties:
+  posts:
+    type: array
+    items:
+      $ref: "./blog-post-summary.yml"
+    description: Array of blog post summaries
+  pagination:
+    $ref: "./pagination.yml"
