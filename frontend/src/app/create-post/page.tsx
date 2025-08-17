@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { BlogPostForm, BlogPostFormData } from "@/components/blog/BlogPostForm"
-import { getBlogPostById } from "@/lib/api/generated/client"
+import { getBlogPostById, createBlogPost } from "@/lib/api/generated/client"
 import { toast } from "sonner"
 
 export default function CreatePostPage() {
@@ -48,14 +48,19 @@ export default function CreatePostPage() {
     try {
       setIsLoading(true)
       
-      // TODO: Implement API calls when backend is ready
       if (postId) {
-        // PUT /api/posts/{id} for updates
+        // TODO: Implement update functionality when PUT endpoint is ready
         console.log("Would update post:", postId, formData)
         toast.success("Post updated successfully!")
       } else {
-        // POST /api/posts for creation
-        console.log("Would create post:", formData)
+        // Create new post
+        const response = await createBlogPost({
+          title: formData.title,
+          content: formData.content,
+          excerpt: formData.excerpt || "",
+          status: formData.status as "draft" | "published"
+        })
+        console.log("Created post:", response)
         toast.success("Post published successfully!")
       }
       
@@ -73,14 +78,19 @@ export default function CreatePostPage() {
     try {
       setIsLoading(true)
       
-      // TODO: Implement API calls when backend is ready
       if (postId) {
-        // PUT /api/posts/{id} for updates
+        // TODO: Implement update functionality when PUT endpoint is ready
         console.log("Would update draft:", postId, formData)
         toast.success("Draft updated successfully!")
       } else {
-        // POST /api/posts for creation
-        console.log("Would save draft:", formData)
+        // Save as draft
+        const response = await createBlogPost({
+          title: formData.title,
+          content: formData.content,
+          excerpt: formData.excerpt || "",
+          status: "draft"
+        })
+        console.log("Saved draft:", response)
         toast.success("Draft saved successfully!")
       }
     } catch (error: any) {

@@ -33,7 +33,9 @@ export async function customFetch<T = any>(
   options: FetcherOptions = {}
 ): Promise<T> {
   const {
-    baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000",
+    baseURL = typeof window === 'undefined' 
+      ? process.env.API_BASE_URL || "http://backend:8000"  // Server-side: use Docker network
+      : process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",  // Client-side: use localhost
     timeout = 10000,
     headers = {},
     ...fetchOptions
