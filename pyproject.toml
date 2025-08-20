@@ -64,7 +64,7 @@ known-first-party = ["app"]
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = "-ra -q --strict-markers --strict-config --tb=short"
-testpaths = ["tests/backend"]
+testpaths = ["backend/tests"]
 pythonpath = ["backend/src"]
 asyncio_mode = "auto"
 markers = [

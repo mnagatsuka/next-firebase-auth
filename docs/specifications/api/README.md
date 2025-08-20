@@ -14,11 +14,13 @@ By keeping our API specifications here, we ensure consistency, enable automated 
 ├── paths/
 │   ├── posts.yml
 │   ├── posts@{id}.yml
-│   └── posts@{id}@comments.yml
+│   ├── posts@{id}@comments.yml
+│   └── users@{uid}@posts.yml
 └── components/
     ├── parameters/
     │   ├── pagination.yml
-    │   └── post-id.yml
+    │   ├── post-id.yml
+    │   └── user-id.yml
     ├── responses/
     │   ├── bad-request.yml
     │   ├── unauthorized.yml
@@ -154,8 +156,8 @@ cd backend
 uv run --active uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # Test endpoints
-curl http://localhost:8000/api/v1/health
-curl "http://localhost:8000/api/v1/posts?page=1&limit=10"
+curl http://localhost:8000/health
+curl "http://localhost:8000/posts?page=1&limit=10"
 ```
 
 ### Local Installation (Project Scripts)
@@ -165,12 +167,10 @@ Add these scripts to your `package.json` for convenience:
 ```json
 {
   "scripts": {
-    "docs:lint": "npx @redocly/cli lint docs/specifications/api/openapi/openapi.yml",
-    "docs:build": "npx @redocly/cli bundle docs/specifications/api/openapi/openapi.yml --output temp-openapi.yml",
-    "docs:serve": "npm run docs:build && npx redoc-cli serve temp-openapi.yml",
-    "docs:dev": "npm run docs:lint && npm run docs:serve",
-    "docs:clean": "rm -f temp-openapi.yml",
-    "docs:validate": "npx @redocly/cli lint docs/specifications/api/openapi/openapi.yml"
+    "oas:lint": "pnpm exec redocly lint docs/specifications/api/openapi/openapi.yml",
+    "oas:bundle": "mkdir -p openapi/dist && pnpm exec redocly bundle docs/specifications/api/openapi/openapi.yml --remove-unused-components -o openapi/dist/openapi.yml",
+    "oas:docs:project": "redocly preview --product=redoc --project-dir=./ --port=8081",
+    "oas:docs:api": "pnpm oas:bundle && pnpm exec redocly build-docs openapi/dist/openapi.yml -o openapi/dist/index.html && open openapi/dist/index.html",
   }
 }
 ```

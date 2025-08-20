@@ -29,7 +29,7 @@ info:
   termsOfService: https://example.com/terms
 
 servers:
-  - url: https://api.{environment}.myapp.test/v1
+  - url: https://api.{environment}.myapp.test
     description: API server
     variables:
       environment:
@@ -56,6 +56,8 @@ paths:
     $ref: './paths/posts@{id}.yml'
   /posts/{id}/comments:
     $ref: './paths/posts@{id}@comments.yml'
+  /users/{uid}/posts:
+    $ref: './paths/users@{uid}@posts.yml'
 
 components:
   securitySchemes:
@@ -78,6 +80,8 @@ components:
       $ref: './components/parameters/pagination.yml#/limit'
     postId:
       $ref: './components/parameters/post-id.yml'
+    userId:
+      $ref: './components/parameters/user-id.yml'
       
   responses:
     BadRequest:

@@ -21,9 +21,15 @@ properties:
     format: date-time
     description: Timestamp when the blog post was published
     example: "2024-01-15T10:30:00Z"
+  status:
+    type: string
+    enum: [draft, published]
+    description: Current status of the blog post
+    example: "published"
 required:
   - id
   - title
   - excerpt
   - author
   - publishedAt
+  - status

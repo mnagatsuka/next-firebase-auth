@@ -37,6 +37,10 @@ get:
           examples:
             default:
               $ref: "../components/examples/blog-post-list-response.yml"
+            page2:
+              $ref: "../components/examples/blog-post-list-response-page2.yml"
+            limit1:
+              $ref: "../components/examples/blog-post-list-response-limit1.yml"
     "400":
       $ref: "../components/responses/bad-request.yml"
     "500":
@@ -77,7 +81,7 @@ post:
           schema:
             type: string
             format: uri
-            example: "/api/v1/posts/post-123"
+            example: "/posts/post-123"
       content:
         application/json:
           schema:

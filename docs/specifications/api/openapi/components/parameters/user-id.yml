@@ -1,0 +1,8 @@
+name: uid
+in: path
+required: true
+description: Firebase Authentication user ID (UID)
+schema:
+  type: string
+example: "u_abc123"
+

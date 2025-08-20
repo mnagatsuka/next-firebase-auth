@@ -1,0 +1,54 @@
+get:
+  tags:
+    - posts
+  summary: Get Posts For User
+  description: |
+    Retrieves a paginated list of blog posts owned by the specified user (identified by Firebase `uid`).
+
+    Requires Firebase Authentication. The caller must be the same user as `{uid}` or have admin permissions.
+
+    Supports filtering by `status`. When `status` is omitted, returns all posts for the user
+    (both `published` and `draft`).
+  operationId: getUserPosts
+  security:
+    - firebaseAuth: []
+  parameters:
+    - $ref: "../components/parameters/user-id.yml"
+    - $ref: "../components/parameters/pagination.yml#/page"
+    - $ref: "../components/parameters/pagination.yml#/limit"
+    - name: status
+      in: query
+      description: Optional status filter for user-owned posts
+      required: false
+      schema:
+        type: string
+        enum: [published, draft]
+  responses:
+    "200":
+      description: Successfully retrieved user-owned blog posts
+      content:
+        application/json:
+          schema:
+            $ref: "../openapi.yml#/components/schemas/BlogPostListResponse"
+          examples:
+            default:
+              $ref: "../components/examples/blog-post-list-response.yml"
+    "400":
+      $ref: "../components/responses/bad-request.yml"
+    "401":
+      $ref: "../components/responses/unauthorized.yml"
+    "403":
+      description: Forbidden - user does not have access to this resource
+      content:
+        application/json:
+          schema:
+            $ref: "../openapi.yml#/components/schemas/Error"
+    "404":
+      $ref: "../components/responses/not-found.yml"
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "../openapi.yml#/components/schemas/Error"
+

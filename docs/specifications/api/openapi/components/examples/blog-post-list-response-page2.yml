@@ -1,0 +1,10 @@
+summary: Paginated blog posts response page 2
+value:
+  status: "success"
+  data:
+    posts: []  # Empty for page 2 since we only have 3 posts total
+    pagination:
+      page: 2
+      limit: 5
+      total: 3
+      hasNext: false

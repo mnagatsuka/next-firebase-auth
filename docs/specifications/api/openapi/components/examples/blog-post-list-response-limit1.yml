@@ -1,0 +1,15 @@
+summary: Paginated blog posts response with limit 1
+value:
+  status: "success"
+  data:
+    posts:
+      - id: "post-123"
+        title: "Getting Started with Next.js"
+        excerpt: "Learn the basics of Next.js in this comprehensive guide covering SSR, SSG, and CSR."
+        author: "John Doe"
+        publishedAt: "2024-01-15T10:30:00Z"
+    pagination:
+      page: 1
+      limit: 1
+      total: 3
+      hasNext: true

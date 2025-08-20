@@ -39,7 +39,7 @@ This section defines the unique behavior and logic that integrates the component
 
 #### Behavior
 1. Describe the first step of the interaction (e.g., "Client-side validation is performed").
-2. Describe subsequent steps, including API calls (e.g., `POST /api/data`), state changes, loading indicators, error handling, and navigation.
+2. Describe subsequent steps, including API calls (e.g., `POST /data`), state changes, loading indicators, error handling, and navigation.
 3. *Use numbered lists for clarity.*
 
 #### Component Reference
@@ -50,7 +50,7 @@ This section defines the unique behavior and logic that integrates the component
 
 This section outlines the API endpoints this page interacts with. For complete request and response schemas, refer to the **OpenAPI spec**.
 
-### `[HTTP METHOD] /api/v1/[endpoint]`
+### `[HTTP METHOD] /[endpoint]`
 
 #### Description
 - Describe what data this endpoint provides or modifies, and its purpose for this page.

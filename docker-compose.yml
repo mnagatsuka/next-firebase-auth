@@ -1,0 +1,127 @@
+services:
+  # Local AWS emulation via LocalStack
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+      # - "4510-4559:4510-4559" # optional service range
+    env_file:
+      - ./backend/.env.local
+    # environment:
+      # - SERVICES=dynamodb,s3
+      # - DEBUG=1
+      # - PERSISTENCE=1
+      # # Pass table names so the init script picks them up
+      # - APP_DYNAMODB_TABLE_POSTS=${APP_DYNAMODB_TABLE_POSTS}
+      # - APP_DYNAMODB_TABLE_COMMENTS=${APP_DYNAMODB_TABLE_COMMENTS}
+    volumes:
+      - localstack-data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./backend/scripts/localstack-init.sh:/etc/localstack/init/ready.d/init-aws.sh
+    networks:
+      - app-network
+
+  # Backend API service
+  backend:
+    build: 
+      context: .
+      dockerfile: ./backend/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env.local
+    # environment:
+      # - APP_ENVIRONMENT=${APP_ENVIRONMENT}
+      # - APP_DEBUG=${APP_DEBUG}
+      # - APP_AWS_ENDPOINT_URL=${APP_AWS_ENDPOINT_URL}
+      # - APP_AWS_REGION=${APP_AWS_REGION}
+      # - APP_AWS_ACCESS_KEY_ID=${APP_AWS_ACCESS_KEY_ID}
+      # - APP_AWS_SECRET_ACCESS_KEY=${APP_AWS_SECRET_ACCESS_KEY}
+      # - APP_DYNAMODB_TABLE_POSTS=${APP_DYNAMODB_TABLE_POSTS}
+      # - APP_DYNAMODB_TABLE_COMMENTS=${APP_DYNAMODB_TABLE_COMMENTS}
+      # - APP_REPOSITORY_PROVIDER=${APP_REPOSITORY_PROVIDER}
+      # - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://frontend:3000,http://localhost:6006}
+    volumes:
+      - ./backend:/app/backend
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+      - /app/.venv/c
+    networks:
+      - app-network
+    depends_on:
+      - localstack
+    restart: unless-stopped
+
+  # Frontend Next.js service
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env.local
+    # environment:
+      # - NODE_ENV=${NODE_ENV:-development}
+      # - CHOKIDAR_USEPOLLING=true
+      # - WATCHPACK_POLLING=true
+      # - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+      # - NEXT_PUBLIC_API_MOCKING=${NEXT_PUBLIC_API_MOCKING:-enabled}
+      # - API_BASE_URL=${API_BASE_URL:-http://backend:8000}
+    volumes:
+      # Mount source files to match Dockerfile structure
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/package.json:/app/package.json
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - ./frontend/next.config.ts:/app/next.config.ts
+      - ./tsconfig.base.json:/tsconfig.base.json
+      # Exclude node_modules and build artifacts
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - app-network
+    # depends_on:
+    #   - backend
+    restart: unless-stopped
+
+  # Storybook service
+  storybook:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    ports:
+      - "6006:6006"
+    env_file:
+      - ./frontend/.env.local
+    # environment:
+    #   - NODE_ENV=${NODE_ENV:-development}
+    #   - CHOKIDAR_USEPOLLING=true
+    #   - WATCHPACK_POLLING=true
+    #   - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    #   - NEXT_PUBLIC_API_MOCKING=${NEXT_PUBLIC_API_MOCKING:-enabled}
+    #   - API_BASE_URL=${API_BASE_URL:-http://backend:8000}
+    volumes:
+      # Mount source files to match Dockerfile structure
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/.storybook:/app/.storybook
+      - ./frontend/package.json:/app/package.json
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - ./frontend/next.config.ts:/app/next.config.ts
+      - ./tsconfig.base.json:/tsconfig.base.json
+      # Exclude node_modules and build artifacts
+      - /app/node_modules
+      - /app/.next
+    command: pnpm storybook -- --host 0.0.0.0
+    networks:
+      - app-network
+    # depends_on:
+    #   - backend
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+volumes:
+  localstack-data:

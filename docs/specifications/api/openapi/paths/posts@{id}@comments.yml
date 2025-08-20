@@ -72,7 +72,7 @@ post:
           schema:
             type: string
             format: uri
-            example: "/api/v1/posts/post-123/comments/comment-456"
+            example: "/posts/post-123/comments/comment-456"
       content:
         application/json:
           schema:
