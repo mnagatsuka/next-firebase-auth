@@ -27,8 +27,8 @@ export interface Comment {
   id: string;
   /** Content of the comment */
   content: string;
-  /** Name of the comment author */
-  author: string;
+  /** Firebase User UID of the comment author */
+  userId: string;
   /** Timestamp when the comment was created */
   createdAt: string;
   /** ID of the blog post this comment belongs to */

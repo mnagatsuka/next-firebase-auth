@@ -39,7 +39,7 @@ class InMemoryCommentRepository:
         """Find comments by author."""
         comments = [
             comment for comment in self._comments.values() 
-            if comment.author == author
+            if comment.user_id == author
         ]
         # Sort by creation time (newest first)
         comments.sort(key=lambda c: c.created_at, reverse=True)
@@ -93,7 +93,7 @@ class DynamoDBCommentRepository:
         return {
             "id": comment.id,
             "content": comment.content,
-            "author": comment.author,
+            "user_id": comment.user_id,
             "post_id": comment.post_id,
             "created_at": comment.created_at.isoformat() if comment.created_at else None,
         }
@@ -110,7 +110,7 @@ class DynamoDBCommentRepository:
         return Comment(
             id=item["id"],
             content=item.get("content", ""),
-            author=item.get("author", ""),
+            user_id=item.get("user_id") or item.get("author", ""),
             post_id=item.get("post_id", ""),
             created_at=parse_dt(item.get("created_at")),
         )
@@ -150,7 +150,7 @@ class DynamoDBCommentRepository:
 
         try:
             resp = self._table.scan(
-                FilterExpression=Attr("author").eq(author)
+                FilterExpression=Attr("user_id").eq(author) | Attr("author").eq(author)
             )
         except ClientError:
             return []

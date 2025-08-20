@@ -25,6 +25,7 @@ stateDiagram-v2
 
     state "Blog Management" as Management {
         MyPostsPage: User-scoped posts list
+        FavoritesPage: Favorited posts list
         CreatePostPage: New post form
         EditPostPage: Edit post form
     }
@@ -33,8 +34,10 @@ stateDiagram-v2
     PostDetailPage --> HomePage: Navigates back
 
     HomePage --> MyPostsPage: Clicks "My Posts" (Header)
+    HomePage --> FavoritesPage: Clicks "Favorites" (Header)
     MyPostsPage --> PostDetailPage: Clicks a post
     MyPostsPage --> CreatePostPage: Clicks "Create Post"
+    FavoritesPage --> PostDetailPage: Clicks a post
 
     HomePage --> CreatePostPage: Clicks "Create Post"
     PostDetailPage --> EditPostPage: Clicks "Edit"
@@ -46,6 +49,7 @@ stateDiagram-v2
     EditPostPage --> PostDetailPage: Action cancelled
 
     PostDetailPage --> MyPostsPage: Navigates back (from My Posts)
+    PostDetailPage --> FavoritesPage: Navigates back (from Favorites)
 ```
 
 ## Transition Animation Details
@@ -58,8 +62,10 @@ This transition is used for navigating between primary pages at the same hierarc
 - **Use Cases**:
     - `HomePage` -> `PostDetailPage`
     - `HomePage` -> `MyPostsPage` (Header nav)
+    - `HomePage` -> `FavoritesPage` (Header nav)
     - `MyPostsPage` -> `PostDetailPage`
     - `MyPostsPage` -> `CreatePostPage`
+    - `FavoritesPage` -> `PostDetailPage`
     - `PostDetailPage` -> `EditPostPage`
 
 ```mermaid
@@ -112,7 +118,7 @@ sequenceDiagram
 
 ### 3. Auth Initialization (My Posts)
 
-This covers the automatic anonymous sign-in used by `MyPostsPage` when a user is not authenticated.
+This covers the automatic anonymous sign-in used by `MyPostsPage` and `FavoritesPage` when a user is not authenticated.
 
 - **Description**: If no auth session exists, initialize anonymous sign-in before fetching user-scoped posts. During initialization, show a lightweight loading state for the list area; the page chrome (Header/Footer) remains interactive.
 
@@ -123,7 +129,7 @@ sequenceDiagram
     participant Auth
     participant API
 
-    User->>UI: Navigate to MyPostsPage
+    User->>UI: Navigate to MyPostsPage / FavoritesPage
     UI->>Auth: Ensure session (anonymous if needed)
     alt No session
         Auth-->>UI: Anonymous user created
@@ -141,3 +147,4 @@ sequenceDiagram
 - **CSS**: Define transition properties and animations in the global CSS file to ensure consistency and reusability.
 - **Accessibility**: Ensure that animations do not negatively impact users with motion sensitivity. A `prefers-reduced-motion` media query should be used to disable or simplify animations for these users.
 - **Header Navigation**: Add a persistent `My Posts` item to the global `Header`. The Home → My Posts transition uses the standard slide-in animation.
+- **Header Navigation**: `My Posts` appears in the global `Header` only for authenticated non-anonymous users. The Home → My Posts transition uses the standard slide-in animation. `Favorites` is available to all users (including anonymous).

@@ -60,7 +60,7 @@ async def create_comment(
         get_token_firebaseAuth
     ),
 ) -> Comment:
-    """Creates a new comment on a specific blog post. Requires authentication.  The author field will be automatically set based on the authenticated user. Comments are moderated and may not appear immediately. """
+    """Creates a new comment on a specific blog post. Requires authentication.  The userId will be automatically set based on the authenticated user&#39;s Firebase UID. Comments are moderated and may not appear immediately. """
     if not BaseCommentsApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseCommentsApi.subclasses[0]().create_comment(id, create_comment_request)

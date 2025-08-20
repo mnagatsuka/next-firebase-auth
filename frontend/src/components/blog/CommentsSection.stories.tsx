@@ -31,27 +31,27 @@ export const WithComments: Story = {
 							data: [
 								{
 									id: "comment-1",
-									postId: params.id,
-									author: "Alice Johnson",
+                            postId: params.id,
+                            userId: "uid_alice",
 									content:
 										"Great article! Very helpful for beginners. I learned a lot from the examples you provided.",
 									createdAt: "2024-01-16T08:30:00Z",
 								},
-								{
-									id: "comment-2",
-									postId: params.id,
-									author: "Bob Wilson",
-									content:
-										"Thanks for sharing this. Looking forward to more content like this. The explanations were very clear.",
-									createdAt: "2024-01-16T10:15:00Z",
-								},
-								{
-									id: "comment-3",
-									postId: params.id,
-									author: "Carol Davis",
-									content: "Excellent post! Could you write a follow-up about advanced topics?",
-									createdAt: "2024-01-16T14:22:00Z",
-								},
+                        {
+                            id: "comment-2",
+                            postId: params.id,
+                            userId: "uid_bob",
+                            content:
+                                "Thanks for sharing this. Looking forward to more content like this. The explanations were very clear.",
+                            createdAt: "2024-01-16T10:15:00Z",
+                        },
+                        {
+                            id: "comment-3",
+                            postId: params.id,
+                            userId: "uid_carol",
+                            content: "Excellent post! Could you write a follow-up about advanced topics?",
+                            createdAt: "2024-01-16T14:22:00Z",
+                        },
 							],
 						});
 					}
@@ -59,14 +59,14 @@ export const WithComments: Story = {
 					return HttpResponse.json({ status: "success", data: [] });
 				}),
 				http.post("*/posts/:id/comments", async ({ request, params }) => {
-					const body = (await request.json()) as { author: string; content: string };
+                    const body = (await request.json()) as { content: string };
 					return HttpResponse.json(
 						{
-							id: `comment-${Date.now()}`,
-							postId: params.id,
-							author: body.author,
-							content: body.content,
-							createdAt: new Date().toISOString(),
+                        id: `comment-${Date.now()}`,
+                        postId: params.id,
+                        userId: "uid_mock",
+                        content: body.content,
+                        createdAt: new Date().toISOString(),
 						},
 						{ status: 201 },
 					);
@@ -152,13 +152,13 @@ export const ManyComments: Story = {
 		msw: {
 			handlers: [
 				http.get("*/posts/post-many-comments/comments", ({ params }) => {
-					const manyComments = Array.from({ length: 8 }, (_, i) => ({
-						id: `comment-${i + 1}`,
-						postId: params.id,
-						author: `User ${i + 1}`,
-						content: `This is comment number ${i + 1}. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`,
-						createdAt: new Date(Date.now() - i * 60 * 60 * 1000).toISOString(), // Each comment 1 hour apart
-					}));
+                    const manyComments = Array.from({ length: 8 }, (_, i) => ({
+                        id: `comment-${i + 1}`,
+                        postId: params.id,
+                        userId: `uid_user_${i + 1}`,
+                        content: `This is comment number ${i + 1}. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`,
+                        createdAt: new Date(Date.now() - i * 60 * 60 * 1000).toISOString(), // Each comment 1 hour apart
+                    }));
 
 					return HttpResponse.json({
 						status: "success",

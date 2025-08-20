@@ -3,13 +3,13 @@
 ## 1. Page Overview
 
 ### Description
-- Displays only the current user’s blog posts (including anonymous users). If a visitor is not authenticated, the app performs automatic anonymous sign-in, then loads posts linked to that anonymous user identity. This page is highly interactive and uses Client-Side Rendering (CSR).
+- Displays only the current user’s blog posts. This page is available to authenticated non-anonymous users only. Anonymous users cannot access this page.
 
 ### URL
 - `/my/posts`
 
 ### Access
-- Public (auto anonymous sign-in if unauthenticated). Content is user-specific.
+- Authenticated (non-anonymous) users only. Anonymous users are redirected (e.g., to Home or Signup).
 
 ## 2. Layout and Structure
 
@@ -48,7 +48,7 @@ This page composes existing, reusable components. For component prop-level detai
 - Page mounts at `/my/posts`.
 
 #### Behavior
-1. Ensure a Firebase auth session exists; if none, perform anonymous sign-in.
+1. Verify user is authenticated and non-anonymous; if anonymous, redirect.
 2. Obtain the current user ID (`uid`) from auth state.
 3. Read querystring for `page`, `limit`, and `status` (optional) to initialize UI state.
 4. Fetch the first page of posts for `uid` using the selected status filter (default: All).
@@ -100,7 +100,7 @@ This page composes existing, reusable components. For component prop-level detai
 - User clicks an “Edit” action on a list item.
 
 #### Behavior
-- Navigate to `/create-post?id=[id]` to edit the existing post.
+- Navigate to `/create-post?id=[id]` to edit the existing post (only for non-anonymous users).
 
 #### Component Reference
 - `PostRow`/`PostCard`.

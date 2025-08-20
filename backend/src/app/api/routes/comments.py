@@ -31,19 +31,19 @@ async def create_comment(
 ) -> Comment:
     """Create a new comment on a specific blog post. Requires authentication."""
     try:
-        # Use authenticated user's information as author
-        author = current_user.get_identity()
+        # Use authenticated user's UID as userId
+        user_id = current_user.get_identity()
         
         comment_data = await comment_service.create_comment(
             post_id=id,
             content=create_comment_request.content,
-            author=author
+            user_id=user_id
         )
         
         return Comment(
             id=comment_data["id"],
             content=comment_data["content"],
-            author=comment_data["author"],
+            userId=comment_data["userId"],
             createdAt=comment_data["createdAt"],
             postId=comment_data["postId"]
         )
@@ -76,7 +76,7 @@ async def get_post_comments(
             comments.append(Comment(
                 id=comment_data["id"],
                 content=comment_data["content"],
-                author=comment_data["author"],
+                userId=comment_data["userId"],
                 createdAt=comment_data["createdAt"],
                 postId=comment_data["postId"]
             ))

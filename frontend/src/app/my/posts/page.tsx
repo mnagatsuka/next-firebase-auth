@@ -1,12 +1,14 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PostList } from "@/components/blog/PostList";
 import { BlogPagination } from "@/components/blog/BlogPagination";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetUserPosts } from "@/lib/api/generated/client";
 
 export default function MyPostsPage() {
+  const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const params = useSearchParams();
 
@@ -19,6 +21,21 @@ export default function MyPostsPage() {
 
   const posts = data?.data?.posts ?? [];
   const pagination = data?.data?.pagination ?? { page, limit: 10, total: 0, hasNext: false };
+
+  // Redirect anonymous users away from My Posts (not available for anon)
+  useEffect(() => {
+    if (!authLoading && user?.isAnonymous) {
+      router.replace("/");
+    }
+  }, [authLoading, user?.isAnonymous, router]);
+
+  if (authLoading || user?.isAnonymous) {
+    return (
+      <div className="flex justify-center items-center min-h-[40vh]">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -38,7 +55,7 @@ export default function MyPostsPage() {
             isLoading={isLoading}
             emptyMessage="No posts yet."
             showStatus
-            actions="view-and-edit"
+            actions={user?.isAnonymous ? "view-only" : "view-and-edit"}
           />
 
           <BlogPagination

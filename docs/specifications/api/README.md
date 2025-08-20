@@ -15,7 +15,9 @@ By keeping our API specifications here, we ensure consistency, enable automated 
 │   ├── posts.yml
 │   ├── posts@{id}.yml
 │   ├── posts@{id}@comments.yml
-│   └── users@{uid}@posts.yml
+│   ├── posts@{id}@favorite.yml
+│   ├── users@{uid}@posts.yml
+│   └── users@{uid}@favorites.yml
 └── components/
     ├── parameters/
     │   ├── pagination.yml
@@ -54,7 +56,7 @@ By keeping our API specifications here, we ensure consistency, enable automated 
 ```
 
 ### `openapi/openapi.yml`
-This is the main entry point for the API specification. It references all paths and components using `$ref` to maintain a clean, modular structure. The API integrates with Firebase Authentication and supports blog post management with commenting functionality.
+This is the main entry point for the API specification. It references all paths and components using `$ref` to maintain a clean, modular structure. The API integrates with Firebase Authentication and supports blog post management with commenting functionality. Anonymous users are supported via Firebase anonymous auth for favoriting posts; creating posts requires a non-anonymous (normal) login.
 
 ### `openapi-schema-guideline.md`
 Contains detailed guidelines for maintaining consistent schema structure and naming conventions across the API specification. **Read this before modifying any schema files** - it covers essential patterns to prevent duplication errors and ensure clean code generation.

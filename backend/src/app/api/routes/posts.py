@@ -20,7 +20,7 @@ from generated_fastapi_server.models.pagination import Pagination
 from generated_fastapi_server.models.api_response_status import ApiResponseStatus
 
 from app.application.services.posts_service import PostApplicationService
-from app.shared.dependencies import get_post_application_service
+from app.shared.dependencies import get_post_application_service, get_favorite_application_service
 from app.shared.auth import AuthenticatedUser, get_current_user_optional, require_authenticated_user, require_non_anonymous_user
 from app.shared.response_utils import normalize_published_at
 from app.application.exceptions import ValidationError, NotFoundError, ForbiddenError, ApplicationError, AuthenticationError
@@ -93,12 +93,21 @@ async def create_blog_post(
 )
 async def get_blog_post_by_id(
     id: str,
-    post_service: PostApplicationService = Depends(get_post_application_service)
+    post_service: PostApplicationService = Depends(get_post_application_service),
+    current_user: Optional[AuthenticatedUser] = Depends(get_current_user_optional),
+    favorite_service = Depends(get_favorite_application_service),
 ) -> BlogPostResponse:
     """Get a blog post by its ID."""
     try:
         post_data = await post_service.get_post_by_id(id)
         
+        is_favorited = False
+        if current_user is not None:
+            try:
+                is_favorited = await favorite_service.is_favorited(current_user.get_identity(), id)
+            except Exception:
+                is_favorited = False
+
         api_post = ApiBlogPost(
             id=post_data["id"],
             title=post_data["title"],
@@ -106,7 +115,8 @@ async def get_blog_post_by_id(
             excerpt=post_data["excerpt"],
             author=post_data["author"],
             publishedAt=normalize_published_at(post_data["publishedAt"]),
-            status=post_data["status"]
+            status=post_data["status"],
+            isFavorited=is_favorited
         )
         
         return BlogPostResponse(
@@ -238,6 +248,87 @@ async def update_blog_post(
         raise HTTPException(status_code=400, detail=e.message)
     except AuthenticationError as e:
         raise HTTPException(status_code=401, detail=e.message)
+    except ApplicationError as e:
+        raise HTTPException(status_code=500, detail=e.message)
+
+
+@posts_router.post(
+    "/{id}/favorite",
+    status_code=204,
+    responses={
+        204: {"description": "Post favorited"},
+        401: {"model": Error, "description": "Unauthorized. Authentication is required."},
+        404: {"model": Error, "description": "Blog post not found"},
+        500: {"model": Error, "description": "Internal server error"},
+    },
+    summary="Add Post to Favorites",
+)
+async def favorite_post(
+    id: str,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    favorite_service = Depends(get_favorite_application_service),
+):
+    try:
+        await favorite_service.add_favorite(current_user.get_identity(), id)
+        return None
+    except NotFoundError:
+        raise HTTPException(status_code=404, detail="Blog post not found")
+    except ApplicationError as e:
+        raise HTTPException(status_code=500, detail=e.message)
+
+
+@posts_router.delete(
+    "/{id}/favorite",
+    status_code=204,
+    responses={
+        204: {"description": "Post unfavorited"},
+        401: {"model": Error, "description": "Unauthorized. Authentication is required."},
+        500: {"model": Error, "description": "Internal server error"},
+    },
+    summary="Remove Post from Favorites",
+)
+async def unfavorite_post(
+    id: str,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    favorite_service = Depends(get_favorite_application_service),
+):
+    try:
+        await favorite_service.remove_favorite(current_user.get_identity(), id)
+        return None
+    except ApplicationError as e:
+        raise HTTPException(status_code=500, detail=e.message)
+async def favorite_post(
+    id: str,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    favorite_service = Depends(get_favorite_application_service),
+):
+    try:
+        await favorite_service.add_favorite(current_user.get_identity(), id)
+        return None
+    except NotFoundError:
+        raise HTTPException(status_code=404, detail="Blog post not found")
+    except ApplicationError as e:
+        raise HTTPException(status_code=500, detail=e.message)
+
+
+@posts_router.delete(
+    "/{id}/favorite",
+    status_code=204,
+    responses={
+        204: {"description": "Post unfavorited"},
+        401: {"model": Error, "description": "Unauthorized. Authentication is required."},
+        500: {"model": Error, "description": "Internal server error"},
+    },
+    summary="Remove Post from Favorites",
+)
+async def unfavorite_post(
+    id: str,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    favorite_service = Depends(get_favorite_application_service),
+):
+    try:
+        await favorite_service.remove_favorite(current_user.get_identity(), id)
+        return None
     except ApplicationError as e:
         raise HTTPException(status_code=500, detail=e.message)
 

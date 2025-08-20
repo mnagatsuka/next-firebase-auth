@@ -18,6 +18,7 @@ This page is composed of the following components. For component details, see th
 ### Primary Components
 - `Header` (Standard application header, at the top)
 - `BlogPostContent` (Main article content with title, author, date, and body)
+- `FavoriteToggle` (Star icon/button to add or remove from Favorites)
 - `CommentsSection` (Client-side rendered comments with add functionality)
 
 ### Responsive Behavior
@@ -68,6 +69,23 @@ This section defines the unique behavior and logic that integrates the component
 #### Component Reference
 - [Link to CommentsSection Storybook entry](https://storybook-link)
 
+### Favorite / Unfavorite Post
+
+#### Trigger
+- User clicks the star icon/button in the `BlogPostContent` header.
+
+#### Behavior
+1. If not authenticated, perform anonymous sign-in.
+2. Toggle favorite state:
+   - If not currently favorited, call `POST /posts/[id]/favorite` and reflect “Favorited”.
+   - If currently favorited, call `DELETE /posts/[id]/favorite` and reflect “Favorite”.
+3. Use optimistic UI; on error, revert and show a toast.
+
+#### Component Reference
+- `FavoriteToggle` (star button), `BlogPostContent`.
+
+## 4. Data Requirements
+
 ## 4. Data Requirements
 
 This section outlines the API endpoints this page interacts with. For complete request and response schemas, refer to the **OpenAPI spec**.
@@ -95,3 +113,13 @@ This section outlines the API endpoints this page interacts with. For complete r
 
 #### API Spec Reference
 - See the `createPostComment` endpoint in the [OpenAPI spec](https://link-to-your-openapi-spec)
+
+### `POST /posts/[id]/favorite`
+
+#### Description
+- Marks a post as a favorite for the current user (anonymous or authenticated).
+
+### `DELETE /posts/[id]/favorite`
+
+#### Description
+- Removes a post from the current user’s favorites.

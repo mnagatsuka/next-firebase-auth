@@ -55,10 +55,10 @@ post:
     - posts
   summary: Create Blog Post
   description: |
-    Creates a new blog post. Requires authentication.
+    Creates a new blog post. Requires Firebase Authentication with a non-anonymous user.
     
-    The author field will be automatically set based on the authenticated user.
-    Posts are created in 'draft' status by default.
+    Anonymous users are forbidden from creating posts. The author is inferred from the authenticated Firebase user's UID.
+    Posts may be created as `draft` or `published` depending on the request payload.
   operationId: createBlogPost
   security:
     - firebaseAuth: []

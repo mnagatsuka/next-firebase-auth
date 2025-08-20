@@ -38,4 +38,6 @@ export interface BlogPost {
   publishedAt: string;
   /** Current status of the blog post */
   status: BlogPostStatus;
+  /** Whether the current authenticated user has favorited this post (omitted when unauthenticated). */
+  isFavorited?: boolean;
 }

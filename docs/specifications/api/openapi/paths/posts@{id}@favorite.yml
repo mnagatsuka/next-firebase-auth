@@ -1,0 +1,54 @@
+post:
+  tags:
+    - posts
+  summary: Add Post to Favorites
+  description: |
+    Marks a post as a favorite for the current user. Requires Firebase Authentication.
+    
+    Works for both anonymous and authenticated users. Anonymous users must include a valid anonymous Firebase ID token.
+  operationId: favoritePost
+  security:
+    - firebaseAuth: []
+  parameters:
+    - $ref: "../components/parameters/post-id.yml"
+  responses:
+    "204":
+      description: Post favorited successfully
+    "401":
+      $ref: "../components/responses/unauthorized.yml"
+    "404":
+      $ref: "../components/responses/not-found.yml"
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "../openapi.yml#/components/schemas/Error"
+
+delete:
+  tags:
+    - posts
+  summary: Remove Post from Favorites
+  description: |
+    Removes a post from the current user's favorites. Requires Firebase Authentication.
+    
+    Works for both anonymous and authenticated users.
+  operationId: unfavoritePost
+  security:
+    - firebaseAuth: []
+  parameters:
+    - $ref: "../components/parameters/post-id.yml"
+  responses:
+    "204":
+      description: Post removed from favorites successfully
+    "401":
+      $ref: "../components/responses/unauthorized.yml"
+    "404":
+      $ref: "../components/responses/not-found.yml"
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "../openapi.yml#/components/schemas/Error"
+

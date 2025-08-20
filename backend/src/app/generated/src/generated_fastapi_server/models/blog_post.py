@@ -22,8 +22,8 @@ import json
 
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional
 try:
     from typing import Self
 except ImportError:
@@ -40,7 +40,8 @@ class BlogPost(BaseModel):
     author: StrictStr = Field(description="Author of the blog post")
     published_at: datetime = Field(description="Timestamp when the blog post was published", alias="publishedAt")
     status: StrictStr = Field(description="Current status of the blog post")
-    __properties: ClassVar[List[str]] = ["id", "title", "content", "excerpt", "author", "publishedAt", "status"]
+    is_favorited: Optional[StrictBool] = Field(default=None, description="Whether the current authenticated user has favorited this post (omitted when unauthenticated).", alias="isFavorited")
+    __properties: ClassVar[List[str]] = ["id", "title", "content", "excerpt", "author", "publishedAt", "status", "isFavorited"]
 
     @field_validator('status')
     def status_validate_enum(cls, value):
@@ -104,7 +105,8 @@ class BlogPost(BaseModel):
             "excerpt": obj.get("excerpt"),
             "author": obj.get("author"),
             "publishedAt": obj.get("publishedAt"),
-            "status": obj.get("status")
+            "status": obj.get("status"),
+            "isFavorited": obj.get("isFavorited")
         })
         return _obj
 

@@ -30,6 +30,10 @@ properties:
     enum: [draft, published]
     description: Current status of the blog post
     example: "published"
+  isFavorited:
+    type: boolean
+    description: Whether the current authenticated user has favorited this post (omitted when unauthenticated).
+    example: true
 required:
   - id
   - title

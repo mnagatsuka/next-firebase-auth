@@ -191,7 +191,7 @@ class CommentService:
         self._comment_repository = comment_repository
         self._post_repository = post_repository
     
-    async def create_comment(self, content: str, author: str, post_id: str) -> Comment:
+    async def create_comment(self, content: str, user_id: str, post_id: str) -> Comment:
         """Create a new comment with business validation."""
         # Verify the post exists
         post_exists = await self._post_repository.exists_by_id(post_id)
@@ -201,7 +201,7 @@ class CommentService:
         # Create the comment using the factory method
         comment = Comment.create_new(
             content=content,
-            author=author,
+            user_id=user_id,
             post_id=post_id
         )
         

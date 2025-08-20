@@ -58,7 +58,7 @@ async def create_blog_post(
         get_token_firebaseAuth
     ),
 ) -> BlogPostResponse:
-    """Creates a new blog post. Requires authentication.  The author field will be automatically set based on the authenticated user. Posts are created in &#39;draft&#39; status by default. """
+    """Creates a new blog post. Requires Firebase Authentication with a non-anonymous user.  Anonymous users are forbidden from creating posts. The author is inferred from the authenticated Firebase user&#39;s UID. Posts may be created as &#x60;draft&#x60; or &#x60;published&#x60; depending on the request payload. """
     if not BasePostsApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BasePostsApi.subclasses[0]().create_blog_post(create_post_request)
@@ -87,6 +87,30 @@ async def delete_blog_post(
     if not BasePostsApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BasePostsApi.subclasses[0]().delete_blog_post(id)
+
+
+@router.post(
+    "/posts/{id}/favorite",
+    responses={
+        204: {"description": "Post favorited successfully"},
+        401: {"model": Error, "description": "Unauthorized. Authentication is required."},
+        404: {"model": Error, "description": "Resource not found."},
+        500: {"model": Error, "description": "Internal server error"},
+    },
+    tags=["posts"],
+    summary="Add Post to Favorites",
+    response_model_by_alias=True,
+)
+async def favorite_post(
+    id: Annotated[StrictStr, Field(description="Unique identifier for the blog post")] = Path(..., description="Unique identifier for the blog post"),
+    token_firebaseAuth: TokenModel = Security(
+        get_token_firebaseAuth
+    ),
+) -> None:
+    """Marks a post as a favorite for the current user. Requires Firebase Authentication.  Works for both anonymous and authenticated users. Anonymous users must include a valid anonymous Firebase ID token. """
+    if not BasePostsApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
+    return await BasePostsApi.subclasses[0]().favorite_post(id)
 
 
 @router.get(
@@ -133,6 +157,34 @@ async def get_blog_posts(
 
 
 @router.get(
+    "/users/{uid}/favorites",
+    responses={
+        200: {"model": BlogPostListResponse, "description": "Successfully retrieved user favorite posts"},
+        400: {"model": Error, "description": "Bad Request. The request data is invalid."},
+        401: {"model": Error, "description": "Unauthorized. Authentication is required."},
+        403: {"model": Error, "description": "Forbidden - user does not have access to this resource"},
+        404: {"model": Error, "description": "Resource not found."},
+        500: {"model": Error, "description": "Internal server error"},
+    },
+    tags=["posts"],
+    summary="Get Favorite Posts For User",
+    response_model_by_alias=True,
+)
+async def get_user_favorites(
+    uid: Annotated[StrictStr, Field(description="Firebase Authentication user ID (UID)")] = Path(..., description="Firebase Authentication user ID (UID)"),
+    page: Annotated[Optional[Annotated[int, Field(strict=True, ge=1)]], Field(description="Page number for pagination")] = Query(1, description="Page number for pagination", alias="page", ge=1),
+    limit: Annotated[Optional[Annotated[int, Field(le=50, strict=True, ge=1)]], Field(description="Number of items per page")] = Query(10, description="Number of items per page", alias="limit", ge=1, le=50),
+    token_firebaseAuth: TokenModel = Security(
+        get_token_firebaseAuth
+    ),
+) -> BlogPostListResponse:
+    """Retrieves a paginated list of posts favorited by the specified user (Firebase &#x60;uid&#x60;).  Requires Firebase Authentication. The caller must be the same user as &#x60;{uid}&#x60; or have admin permissions. """
+    if not BasePostsApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
+    return await BasePostsApi.subclasses[0]().get_user_favorites(uid, page, limit)
+
+
+@router.get(
     "/users/{uid}/posts",
     responses={
         200: {"model": BlogPostListResponse, "description": "Successfully retrieved user-owned blog posts"},
@@ -159,6 +211,30 @@ async def get_user_posts(
     if not BasePostsApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BasePostsApi.subclasses[0]().get_user_posts(uid, page, limit, status)
+
+
+@router.delete(
+    "/posts/{id}/favorite",
+    responses={
+        204: {"description": "Post removed from favorites successfully"},
+        401: {"model": Error, "description": "Unauthorized. Authentication is required."},
+        404: {"model": Error, "description": "Resource not found."},
+        500: {"model": Error, "description": "Internal server error"},
+    },
+    tags=["posts"],
+    summary="Remove Post from Favorites",
+    response_model_by_alias=True,
+)
+async def unfavorite_post(
+    id: Annotated[StrictStr, Field(description="Unique identifier for the blog post")] = Path(..., description="Unique identifier for the blog post"),
+    token_firebaseAuth: TokenModel = Security(
+        get_token_firebaseAuth
+    ),
+) -> None:
+    """Removes a post from the current user&#39;s favorites. Requires Firebase Authentication.  Works for both anonymous and authenticated users. """
+    if not BasePostsApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
+    return await BasePostsApi.subclasses[0]().unfavorite_post(id)
 
 
 @router.put(

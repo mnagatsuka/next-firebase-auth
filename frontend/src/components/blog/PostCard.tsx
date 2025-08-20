@@ -22,7 +22,7 @@ export interface PostCardProps {
 	/** Whether to show status badge */
 	showStatus?: boolean;
 	/** Action buttons style */
-	actions?: "default" | "view-and-edit";
+	actions?: "default" | "view-and-edit" | "view-only";
 }
 
 export function PostCard({
@@ -40,7 +40,7 @@ export function PostCard({
 	const isDraft = status === "draft";
 	const detailHref = `/posts/${id}`;
 	const editHref = `/create-post?id=${id}`;
-	const primaryHref = actions === "view-and-edit" ? detailHref : isDraft ? editHref : detailHref;
+	const primaryHref = actions === "view-and-edit" ? detailHref : actions === "view-only" ? detailHref : isDraft ? editHref : detailHref;
 
 	return (
 		<Card className="h-full">
@@ -77,6 +77,10 @@ export function PostCard({
 							<Link href={editHref}>Edit</Link>
 						</Button>
 					</div>
+				) : actions === "view-only" ? (
+					<Button variant="outline" size="sm" asChild>
+						<Link href={detailHref}>View</Link>
+					</Button>
 				) : (
 					<Button variant="outline" size="sm" asChild>
 						<Link href={primaryHref}>{isDraft ? "Edit Draft" : "Read more"}</Link>

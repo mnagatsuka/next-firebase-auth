@@ -46,7 +46,7 @@ post:
   description: |
     Creates a new comment on a specific blog post. Requires authentication.
     
-    The author field will be automatically set based on the authenticated user.
+    The userId will be automatically set based on the authenticated user's Firebase UID.
     Comments are moderated and may not appear immediately.
   operationId: createComment
   security:

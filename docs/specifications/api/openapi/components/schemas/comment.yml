@@ -8,10 +8,10 @@ properties:
     type: string
     description: Content of the comment
     example: "Great article! Very helpful."
-  author:
+  userId:
     type: string
-    description: Name of the comment author
-    example: "Jane Smith"
+    description: Firebase User UID of the comment author
+    example: "uid_abc123xyz"
   createdAt:
     type: string
     format: date-time
@@ -24,6 +24,6 @@ properties:
 required:
   - id
   - content
-  - author
+  - userId
   - createdAt
   - postId

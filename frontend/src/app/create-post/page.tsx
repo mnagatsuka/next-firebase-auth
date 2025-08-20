@@ -5,12 +5,14 @@ import { toast } from "sonner";
 import { BlogPostForm, type BlogPostFormData } from "@/components/blog/BlogPostForm";
 import { QueryErrorBoundary } from "@/components/common/QueryErrorBoundary";
 import { useCreateBlogPost, useGetBlogPostById, useUpdateBlogPost } from "@/lib/api/generated/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function CreatePostPage() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const postId = searchParams.get("id");
 	const isEditing = !!postId;
+  const { user, isLoading: authLoading } = useAuth();
 
 	// Load existing post data if editing
 	const { data: existingPost, isLoading: isLoadingPost } = useGetBlogPostById(postId || "", {
@@ -115,13 +117,20 @@ export default function CreatePostPage() {
 		router.back();
 	};
 
-	if (isLoadingPost) {
+	if (authLoading || isLoadingPost) {
 		return (
 			<div className="flex justify-center items-center min-h-[50vh]">
-				<div className="text-lg">Loading post...</div>
+				<div className="text-lg">Loading...</div>
 			</div>
 		);
 	}
+
+  // Block anonymous users from creating or editing posts
+  if (user?.isAnonymous) {
+    toast.error("Please sign in to create or edit posts");
+    router.replace("/signup");
+    return null;
+  }
 
 	const isLoading = createMutation.isPending || updateMutation.isPending;
 

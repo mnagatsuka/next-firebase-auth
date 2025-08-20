@@ -21,6 +21,7 @@ This section lists the key pages within the application, each with its dedicated
 - [Individual Post Page](/docs/specifications/ui/pages/individual-post.md)
 - [Create/Edit Blog Post Page](/docs/specifications/ui/pages/create-blog-post.md)
 - [My Posts](/docs/specifications/ui/pages/my-posts.md)
+- [Favorite Posts](/docs/specifications/ui/pages/favorite-posts.md)
 
 
 ## 🎨 Components and Storybook

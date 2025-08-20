@@ -51,6 +51,7 @@ import type {
   Error,
   GetBlogPostsParams,
   GetPostCommentsParams,
+  GetUserFavoritesParams,
   GetUserPostsParams,
   NotFoundResponse,
   UnauthorizedResponse
@@ -170,10 +171,10 @@ export function useGetBlogPosts<TData = Awaited<ReturnType<typeof getBlogPosts>>
 
 
 /**
- * Creates a new blog post. Requires authentication.
+ * Creates a new blog post. Requires Firebase Authentication with a non-anonymous user.
 
-The author field will be automatically set based on the authenticated user.
-Posts are created in 'draft' status by default.
+Anonymous users are forbidden from creating posts. The author is inferred from the authenticated Firebase user's UID.
+Posts may be created as `draft` or `published` depending on the request payload.
 
  * @summary Create Blog Post
  */
@@ -619,7 +620,7 @@ export function useGetPostComments<TData = Awaited<ReturnType<typeof getPostComm
 /**
  * Creates a new comment on a specific blog post. Requires authentication.
 
-The author field will be automatically set based on the authenticated user.
+The userId will be automatically set based on the authenticated user's Firebase UID.
 Comments are moderated and may not appear immediately.
 
  * @summary Create Comment
@@ -690,6 +691,156 @@ export const useCreateComment = <TError = BadRequestResponse | UnauthorizedRespo
       > => {
 
       const mutationOptions = getCreateCommentMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Marks a post as a favorite for the current user. Requires Firebase Authentication.
+
+Works for both anonymous and authenticated users. Anonymous users must include a valid anonymous Firebase ID token.
+
+ * @summary Add Post to Favorites
+ */
+export const getFavoritePostUrl = (id: string,) => {
+
+
+  
+
+  return `/posts/${id}/favorite`
+}
+
+export const favoritePost = async (id: string, options?: RequestInit): Promise<null> => {
+  
+  return customFetch<null>(getFavoritePostUrl(id),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
+
+
+
+
+export const getFavoritePostMutationOptions = <TError = UnauthorizedResponse | NotFoundResponse | Error,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof favoritePost>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof favoritePost>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['favoritePost'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof favoritePost>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  favoritePost(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FavoritePostMutationResult = NonNullable<Awaited<ReturnType<typeof favoritePost>>>
+    
+    export type FavoritePostMutationError = UnauthorizedResponse | NotFoundResponse | Error
+
+    /**
+ * @summary Add Post to Favorites
+ */
+export const useFavoritePost = <TError = UnauthorizedResponse | NotFoundResponse | Error,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof favoritePost>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof favoritePost>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getFavoritePostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Removes a post from the current user's favorites. Requires Firebase Authentication.
+
+Works for both anonymous and authenticated users.
+
+ * @summary Remove Post from Favorites
+ */
+export const getUnfavoritePostUrl = (id: string,) => {
+
+
+  
+
+  return `/posts/${id}/favorite`
+}
+
+export const unfavoritePost = async (id: string, options?: RequestInit): Promise<null> => {
+  
+  return customFetch<null>(getUnfavoritePostUrl(id),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+
+
+
+
+export const getUnfavoritePostMutationOptions = <TError = UnauthorizedResponse | NotFoundResponse | Error,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unfavoritePost>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof unfavoritePost>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['unfavoritePost'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unfavoritePost>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  unfavoritePost(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnfavoritePostMutationResult = NonNullable<Awaited<ReturnType<typeof unfavoritePost>>>
+    
+    export type UnfavoritePostMutationError = UnauthorizedResponse | NotFoundResponse | Error
+
+    /**
+ * @summary Remove Post from Favorites
+ */
+export const useUnfavoritePost = <TError = UnauthorizedResponse | NotFoundResponse | Error,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unfavoritePost>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof unfavoritePost>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getUnfavoritePostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -801,6 +952,121 @@ export function useGetUserPosts<TData = Awaited<ReturnType<typeof getUserPosts>>
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetUserPostsQueryOptions(uid,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Retrieves a paginated list of posts favorited by the specified user (Firebase `uid`).
+
+Requires Firebase Authentication. The caller must be the same user as `{uid}` or have admin permissions.
+
+ * @summary Get Favorite Posts For User
+ */
+export const getGetUserFavoritesUrl = (uid: string,
+    params?: GetUserFavoritesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/users/${uid}/favorites?${stringifiedParams}` : `/users/${uid}/favorites`
+}
+
+export const getUserFavorites = async (uid: string,
+    params?: GetUserFavoritesParams, options?: RequestInit): Promise<BlogPostListResponse> => {
+  
+  return customFetch<BlogPostListResponse>(getGetUserFavoritesUrl(uid,params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getGetUserFavoritesQueryKey = (uid?: string,
+    params?: GetUserFavoritesParams,) => {
+    return [`/users/${uid}/favorites`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getGetUserFavoritesQueryOptions = <TData = Awaited<ReturnType<typeof getUserFavorites>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(uid: string,
+    params?: GetUserFavoritesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserFavorites>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUserFavoritesQueryKey(uid,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserFavorites>>> = ({ signal }) => getUserFavorites(uid,params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(uid), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUserFavorites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetUserFavoritesQueryResult = NonNullable<Awaited<ReturnType<typeof getUserFavorites>>>
+export type GetUserFavoritesQueryError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error
+
+
+export function useGetUserFavorites<TData = Awaited<ReturnType<typeof getUserFavorites>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(
+ uid: string,
+    params: undefined |  GetUserFavoritesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserFavorites>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserFavorites>>,
+          TError,
+          Awaited<ReturnType<typeof getUserFavorites>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserFavorites<TData = Awaited<ReturnType<typeof getUserFavorites>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(
+ uid: string,
+    params?: GetUserFavoritesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserFavorites>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserFavorites>>,
+          TError,
+          Awaited<ReturnType<typeof getUserFavorites>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserFavorites<TData = Awaited<ReturnType<typeof getUserFavorites>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(
+ uid: string,
+    params?: GetUserFavoritesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserFavorites>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Favorite Posts For User
+ */
+
+export function useGetUserFavorites<TData = Awaited<ReturnType<typeof getUserFavorites>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(
+ uid: string,
+    params?: GetUserFavoritesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserFavorites>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetUserFavoritesQueryOptions(uid,params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

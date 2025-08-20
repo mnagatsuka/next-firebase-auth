@@ -21,7 +21,7 @@ class BasePostsApi:
         self,
         create_post_request: Annotated[CreatePostRequest, Field(description="Blog post data")],
     ) -> BlogPostResponse:
-        """Creates a new blog post. Requires authentication.  The author field will be automatically set based on the authenticated user. Posts are created in &#39;draft&#39; status by default. """
+        """Creates a new blog post. Requires Firebase Authentication with a non-anonymous user.  Anonymous users are forbidden from creating posts. The author is inferred from the authenticated Firebase user&#39;s UID. Posts may be created as &#x60;draft&#x60; or &#x60;published&#x60; depending on the request payload. """
         ...
 
 
@@ -30,6 +30,14 @@ class BasePostsApi:
         id: Annotated[StrictStr, Field(description="Unique identifier for the blog post")],
     ) -> None:
         """Deletes a blog post by its ID. Requires authentication.  Only the author of the post or users with admin privileges can delete a post. This action is irreversible. """
+        ...
+
+
+    async def favorite_post(
+        self,
+        id: Annotated[StrictStr, Field(description="Unique identifier for the blog post")],
+    ) -> None:
+        """Marks a post as a favorite for the current user. Requires Firebase Authentication.  Works for both anonymous and authenticated users. Anonymous users must include a valid anonymous Firebase ID token. """
         ...
 
 
@@ -52,6 +60,16 @@ class BasePostsApi:
         ...
 
 
+    async def get_user_favorites(
+        self,
+        uid: Annotated[StrictStr, Field(description="Firebase Authentication user ID (UID)")],
+        page: Annotated[Optional[Annotated[int, Field(strict=True, ge=1)]], Field(description="Page number for pagination")],
+        limit: Annotated[Optional[Annotated[int, Field(le=50, strict=True, ge=1)]], Field(description="Number of items per page")],
+    ) -> BlogPostListResponse:
+        """Retrieves a paginated list of posts favorited by the specified user (Firebase &#x60;uid&#x60;).  Requires Firebase Authentication. The caller must be the same user as &#x60;{uid}&#x60; or have admin permissions. """
+        ...
+
+
     async def get_user_posts(
         self,
         uid: Annotated[StrictStr, Field(description="Firebase Authentication user ID (UID)")],
@@ -60,6 +78,14 @@ class BasePostsApi:
         status: Annotated[Optional[StrictStr], Field(description="Optional status filter for user-owned posts")],
     ) -> BlogPostListResponse:
         """Retrieves a paginated list of blog posts owned by the specified user (identified by Firebase &#x60;uid&#x60;).  Requires Firebase Authentication. The caller must be the same user as &#x60;{uid}&#x60; or have admin permissions.  Supports filtering by &#x60;status&#x60;. When &#x60;status&#x60; is omitted, returns all posts for the user (both &#x60;published&#x60; and &#x60;draft&#x60;). """
+        ...
+
+
+    async def unfavorite_post(
+        self,
+        id: Annotated[StrictStr, Field(description="Unique identifier for the blog post")],
+    ) -> None:
+        """Removes a post from the current user&#39;s favorites. Requires Firebase Authentication.  Works for both anonymous and authenticated users. """
         ...
 
 

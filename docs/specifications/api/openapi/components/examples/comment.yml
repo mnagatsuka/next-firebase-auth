@@ -2,6 +2,6 @@ summary: Blog post comment
 value:
   id: "comment-456"
   content: "Great article! Very helpful explanation of Next.js features. I especially liked the section on SSR vs SSG."
-  author: "Jane Smith"
+  userId: "uid_abc123xyz"
   createdAt: "2024-01-15T14:20:00Z"
   postId: "post-123"

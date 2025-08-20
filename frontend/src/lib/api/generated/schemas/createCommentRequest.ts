@@ -25,6 +25,4 @@ Authorization: Bearer <firebase-id-token>
 export interface CreateCommentRequest {
   /** Content of the comment */
   content: string;
-  /** Name of the comment author */
-  author: string;
 }

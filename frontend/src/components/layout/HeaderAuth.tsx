@@ -32,9 +32,11 @@ export function HeaderAuth() {
 	if (isAuthenticated && user) {
 		return (
 			<>
-				<Link href="/create-post" className="text-sm font-medium hover:underline">
-					Create Post
-				</Link>
+				{!user.isAnonymous && (
+					<Link href="/create-post" className="text-sm font-medium hover:underline">
+						Create Post
+					</Link>
+				)}
 				<div className="flex items-center space-x-3">
 					<div className="flex items-center space-x-2">
 						<span className="text-sm">Welcome, {getDisplayName()}</span>

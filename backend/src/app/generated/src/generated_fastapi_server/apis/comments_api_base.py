@@ -22,7 +22,7 @@ class BaseCommentsApi:
         id: Annotated[StrictStr, Field(description="Unique identifier for the blog post")],
         create_comment_request: Annotated[CreateCommentRequest, Field(description="Comment data")],
     ) -> Comment:
-        """Creates a new comment on a specific blog post. Requires authentication.  The author field will be automatically set based on the authenticated user. Comments are moderated and may not appear immediately. """
+        """Creates a new comment on a specific blog post. Requires authentication.  The userId will be automatically set based on the authenticated user&#39;s Firebase UID. Comments are moderated and may not appear immediately. """
         ...
 
 

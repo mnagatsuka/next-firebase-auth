@@ -127,10 +127,10 @@ paths:
       - posts
     post:
       description: |
-        Creates a new blog post. Requires authentication.
+        Creates a new blog post. Requires Firebase Authentication with a non-anonymous user.
 
-        The author field will be automatically set based on the authenticated user.
-        Posts are created in 'draft' status by default.
+        Anonymous users are forbidden from creating posts. The author is inferred from the authenticated Firebase user's UID.
+        Posts may be created as `draft` or `published` depending on the request payload.
       operationId: createBlogPost
       requestBody:
         content:
@@ -383,7 +383,7 @@ paths:
       description: |
         Creates a new comment on a specific blog post. Requires authentication.
 
-        The author field will be automatically set based on the authenticated user.
+        The userId will be automatically set based on the authenticated user's Firebase UID.
         Comments are moderated and may not appear immediately.
       operationId: createComment
       parameters:
@@ -448,6 +448,75 @@ paths:
       summary: Create Comment
       tags:
       - comments
+  /posts/{id}/favorite:
+    delete:
+      description: |
+        Removes a post from the current user's favorites. Requires Firebase Authentication.
+
+        Works for both anonymous and authenticated users.
+      operationId: unfavoritePost
+      parameters:
+      - description: Unique identifier for the blog post
+        example: post-123
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Post removed from favorites successfully
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "404":
+          $ref: "#/components/responses/not-found"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Internal server error
+      security:
+      - firebaseAuth: []
+      summary: Remove Post from Favorites
+      tags:
+      - posts
+    post:
+      description: |
+        Marks a post as a favorite for the current user. Requires Firebase Authentication.
+
+        Works for both anonymous and authenticated users. Anonymous users must include a valid anonymous Firebase ID token.
+      operationId: favoritePost
+      parameters:
+      - description: Unique identifier for the blog post
+        example: post-123
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Post favorited successfully
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "404":
+          $ref: "#/components/responses/not-found"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Internal server error
+      security:
+      - firebaseAuth: []
+      summary: Add Post to Favorites
+      tags:
+      - posts
   /users/{uid}/posts:
     get:
       description: |
@@ -533,6 +602,79 @@ paths:
       security:
       - firebaseAuth: []
       summary: Get Posts For User
+      tags:
+      - posts
+  /users/{uid}/favorites:
+    get:
+      description: |
+        Retrieves a paginated list of posts favorited by the specified user (Firebase `uid`).
+
+        Requires Firebase Authentication. The caller must be the same user as `{uid}` or have admin permissions.
+      operationId: getUserFavorites
+      parameters:
+      - description: Firebase Authentication user ID (UID)
+        example: u_abc123
+        explode: false
+        in: path
+        name: uid
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Page number for pagination
+        example: 1
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+        style: form
+      - description: Number of items per page
+        example: 10
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 10
+          maximum: 50
+          minimum: 1
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/blog-post-list-response"
+              schema:
+                $ref: "#/components/schemas/blog-post-list-response"
+          description: Successfully retrieved user favorite posts
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Forbidden - user does not have access to this resource
+        "404":
+          $ref: "#/components/responses/not-found"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Internal server error
+      security:
+      - firebaseAuth: []
+      summary: Get Favorite Posts For User
       tags:
       - posts
 components:
@@ -699,18 +841,18 @@ components:
         - id: comment-456
           content: Great article! Very helpful explanation of Next.js features. I
             especially liked the section on SSR vs SSG.
-          author: Jane Smith
+          userId: uid_abc123xyz
           createdAt: 2024-01-15T14:20:00Z
           postId: post-123
         - id: comment-457
           content: Thanks for sharing this! The code examples are really clear and
             easy to follow.
-          author: Mike Wilson
+          userId: uid_def456uvw
           createdAt: 2024-01-15T16:45:00Z
           postId: post-123
         - id: comment-458
           content: Could you write a follow-up article about Next.js deployment strategies?
-          author: Sarah Davis
+          userId: uid_xyz789rst
           createdAt: 2024-01-16T08:30:00Z
           postId: post-123
     create-comment-request:
@@ -718,14 +860,13 @@ components:
       value:
         content: Great article! Very helpful explanation of Next.js features. I especially
           liked the section on SSR vs SSG.
-        author: Jane Smith
     comment:
       summary: Blog post comment
       value:
         id: comment-456
         content: Great article! Very helpful explanation of Next.js features. I especially
           liked the section on SSR vs SSG.
-        author: Jane Smith
+        userId: uid_abc123xyz
         createdAt: 2024-01-15T14:20:00Z
         postId: post-123
     blog-post:
@@ -1091,6 +1232,7 @@ components:
       example:
         publishedAt: 2024-01-15T10:30:00Z
         author: John Doe
+        isFavorited: true
         id: post-123
         title: Getting Started with Next.js
         excerpt: Learn the basics of Next.js in this comprehensive guide.
@@ -1142,6 +1284,12 @@ components:
           example: published
           title: status
           type: string
+        isFavorited:
+          description: Whether the current authenticated user has favorited this post
+            (omitted when unauthenticated).
+          example: true
+          title: isFavorited
+          type: boolean
       required:
       - author
       - content
@@ -1157,6 +1305,7 @@ components:
         data:
           publishedAt: 2024-01-15T10:30:00Z
           author: John Doe
+          isFavorited: true
           id: post-123
           title: Getting Started with Next.js
           excerpt: Learn the basics of Next.js in this comprehensive guide.
@@ -1179,9 +1328,9 @@ components:
     comment:
       example:
         createdAt: 2024-01-15T14:20:00Z
-        author: Jane Smith
         id: comment-456
         postId: post-123
+        userId: uid_abc123xyz
         content: Great article! Very helpful.
       properties:
         id:
@@ -1194,10 +1343,10 @@ components:
           example: Great article! Very helpful.
           title: content
           type: string
-        author:
-          description: Name of the comment author
-          example: Jane Smith
-          title: author
+        userId:
+          description: Firebase User UID of the comment author
+          example: uid_abc123xyz
+          title: userId
           type: string
         createdAt:
           description: Timestamp when the comment was created
@@ -1211,25 +1360,25 @@ components:
           title: postId
           type: string
       required:
-      - author
       - content
       - createdAt
       - id
       - postId
+      - userId
       title: comment
       type: object
     comments-response:
       example:
         data:
         - createdAt: 2024-01-15T14:20:00Z
-          author: Jane Smith
           id: comment-456
           postId: post-123
+          userId: uid_abc123xyz
           content: Great article! Very helpful.
         - createdAt: 2024-01-15T14:20:00Z
-          author: Jane Smith
           id: comment-456
           postId: post-123
+          userId: uid_abc123xyz
           content: Great article! Very helpful.
         status: success
       properties:
@@ -1253,13 +1402,7 @@ components:
           example: Great article! Very helpful.
           title: content
           type: string
-        author:
-          description: Name of the comment author
-          example: Jane Smith
-          title: author
-          type: string
       required:
-      - author
       - content
       title: create-comment-request
       type: object

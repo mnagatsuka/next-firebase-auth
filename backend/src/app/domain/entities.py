@@ -132,7 +132,7 @@ class Comment:
     
     id: str
     content: str
-    author: str
+    user_id: str
     post_id: str
     created_at: Optional[datetime] = None
     
@@ -140,14 +140,14 @@ class Comment:
         """Basic validation and data cleaning."""
         if not self.content.strip():
             raise ValueError("Comment content cannot be empty")
-        if not self.author.strip():
-            raise ValueError("Author cannot be empty")
+        if not self.user_id.strip():
+            raise ValueError("User ID cannot be empty")
         if not self.post_id.strip():
             raise ValueError("Post ID cannot be empty")
         
         # Clean up data
         self.content = self.content.strip()
-        self.author = self.author.strip()
+        self.user_id = self.user_id.strip()
         self.post_id = self.post_id.strip()
         
         # Set timestamp if not provided
@@ -164,20 +164,20 @@ class Comment:
     def can_be_updated_by(self, user_id: str) -> bool:
         """Check if the comment can be updated by the given user."""
         # For now, only the author can update
-        return self.author == user_id
+        return self.user_id == user_id
     
     def can_be_deleted_by(self, user_id: str) -> bool:
         """Check if the comment can be deleted by the given user."""
         # For now, only the author can delete
-        return self.author == user_id
+        return self.user_id == user_id
     
     @classmethod
-    def create_new(cls, content: str, author: str, post_id: str) -> 'Comment':
+    def create_new(cls, content: str, user_id: str, post_id: str) -> 'Comment':
         """Factory method to create a new comment."""
         comment_id = str(uuid.uuid4())
         return cls(
             id=comment_id,
             content=content,
-            author=author,
+            user_id=user_id,
             post_id=post_id
         )

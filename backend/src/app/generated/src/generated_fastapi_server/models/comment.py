@@ -35,10 +35,10 @@ class Comment(BaseModel):
     """ # noqa: E501
     id: StrictStr = Field(description="Unique identifier for the comment")
     content: StrictStr = Field(description="Content of the comment")
-    author: StrictStr = Field(description="Name of the comment author")
+    user_id: StrictStr = Field(description="Firebase User UID of the comment author", alias="userId")
     created_at: datetime = Field(description="Timestamp when the comment was created", alias="createdAt")
     post_id: StrictStr = Field(description="ID of the blog post this comment belongs to", alias="postId")
-    __properties: ClassVar[List[str]] = ["id", "content", "author", "createdAt", "postId"]
+    __properties: ClassVar[List[str]] = ["id", "content", "userId", "createdAt", "postId"]
 
     model_config = {
         "populate_by_name": True,
@@ -91,7 +91,7 @@ class Comment(BaseModel):
         _obj = cls.model_validate({
             "id": obj.get("id"),
             "content": obj.get("content"),
-            "author": obj.get("author"),
+            "userId": obj.get("userId"),
             "createdAt": obj.get("createdAt"),
             "postId": obj.get("postId")
         })

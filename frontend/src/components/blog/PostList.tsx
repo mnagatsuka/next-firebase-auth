@@ -3,16 +3,16 @@ import { PostCard } from "./PostCard";
 import { PostListSkeleton } from "./PostCardSkeleton";
 
 export interface PostListProps {
-	/** Array of blog posts to display */
-	posts: BlogPostSummary[];
-	/** Loading state */
-	isLoading?: boolean;
-	/** Empty state message */
-	emptyMessage?: string;
-	/** Whether to show post status badges */
-	showStatus?: boolean;
-	/** Action buttons style for each item */
-	actions?: "default" | "view-and-edit";
+    /** Array of blog posts to display */
+    posts: BlogPostSummary[];
+    /** Loading state */
+    isLoading?: boolean;
+    /** Empty state message */
+    emptyMessage?: string;
+    /** Whether to show post status badges */
+    showStatus?: boolean;
+    /** Action buttons style for each item */
+    actions?: "default" | "view-and-edit" | "view-only";
 }
 
 export function PostList({

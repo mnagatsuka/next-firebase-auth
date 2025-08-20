@@ -1,4 +1,3 @@
 summary: Create comment request
 value:
   content: "Great article! Very helpful explanation of Next.js features. I especially liked the section on SSR vs SSG."
-  author: "Jane Smith"

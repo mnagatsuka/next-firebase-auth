@@ -27,8 +27,9 @@ class Settings(BaseSettings):
     AWS_SECRET_ACCESS_KEY: str = "test"
 
     # DynamoDB tables
-    DYNAMODB_TABLE_POSTS: str = "dev_posts"
-    DYNAMODB_TABLE_COMMENTS: str = "dev_comments"
+    DYNAMODB_TABLE_POSTS: str = "posts"
+    DYNAMODB_TABLE_COMMENTS: str = "comments"
+    DYNAMODB_TABLE_FAVORITES: str = "favorites"
 
     # Firebase Auth configuration
     FIREBASE_PROJECT_ID: str = ""

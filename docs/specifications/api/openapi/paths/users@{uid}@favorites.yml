@@ -1,0 +1,44 @@
+get:
+  tags:
+    - posts
+  summary: Get Favorite Posts For User
+  description: |
+    Retrieves a paginated list of posts favorited by the specified user (Firebase `uid`).
+
+    Requires Firebase Authentication. The caller must be the same user as `{uid}` or have admin permissions.
+  operationId: getUserFavorites
+  security:
+    - firebaseAuth: []
+  parameters:
+    - $ref: "../components/parameters/user-id.yml"
+    - $ref: "../components/parameters/pagination.yml#/page"
+    - $ref: "../components/parameters/pagination.yml#/limit"
+  responses:
+    "200":
+      description: Successfully retrieved user favorite posts
+      content:
+        application/json:
+          schema:
+            $ref: "../openapi.yml#/components/schemas/BlogPostListResponse"
+          examples:
+            default:
+              $ref: "../components/examples/blog-post-list-response.yml"
+    "400":
+      $ref: "../components/responses/bad-request.yml"
+    "401":
+      $ref: "../components/responses/unauthorized.yml"
+    "403":
+      description: Forbidden - user does not have access to this resource
+      content:
+        application/json:
+          schema:
+            $ref: "../openapi.yml#/components/schemas/Error"
+    "404":
+      $ref: "../components/responses/not-found.yml"
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "../openapi.yml#/components/schemas/Error"
+

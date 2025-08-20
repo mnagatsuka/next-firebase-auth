@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatBlogPostDate } from "@/lib/utils/date";
+import { FavoriteToggle } from "./FavoriteToggle";
 
 export interface BlogPostContentProps {
 	/** Post title */
@@ -21,6 +22,8 @@ export interface BlogPostContentProps {
 	postId?: string;
 	/** Whether current user can edit this post */
 	canEdit?: boolean;
+	/** Whether the current user has favorited this post (if known) */
+	isFavorited?: boolean;
 }
 
 export function BlogPostContent({
@@ -32,6 +35,7 @@ export function BlogPostContent({
 	readingTime,
 	postId,
 	canEdit = false,
+	isFavorited = false,
 }: BlogPostContentProps) {
 	const formattedDate = formatBlogPostDate(publishedAt);
 
@@ -61,14 +65,17 @@ export function BlogPostContent({
 						)}
 					</div>
 
-					{canEdit && postId && (
-						<Button variant="outline" size="sm" asChild>
-							<Link href={`/create-post?id=${postId}`}>
-								<Edit className="h-4 w-4 mr-2" />
-								Edit Post
-							</Link>
-						</Button>
-					)}
+					<div className="flex items-center gap-2">
+						{postId && <FavoriteToggle postId={postId} initialFavorited={isFavorited} />}
+						{canEdit && postId && (
+							<Button variant="outline" size="sm" asChild>
+								<Link href={`/create-post?id=${postId}`}>
+									<Edit className="h-4 w-4 mr-2" />
+									Edit Post
+								</Link>
+							</Button>
+						)}
+					</div>
 				</div>
 			</header>
 

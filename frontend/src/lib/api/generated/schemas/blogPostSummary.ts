@@ -21,6 +21,7 @@ Authorization: Bearer <firebase-id-token>
 
  * OpenAPI spec version: 1.0.0
  */
+import type { BlogPostSummaryStatus } from './blogPostSummaryStatus';
 
 export interface BlogPostSummary {
   /** Unique identifier for the blog post */
@@ -33,4 +34,6 @@ export interface BlogPostSummary {
   author: string;
   /** Timestamp when the blog post was published */
   publishedAt: string;
+  /** Current status of the blog post */
+  status: BlogPostSummaryStatus;
 }

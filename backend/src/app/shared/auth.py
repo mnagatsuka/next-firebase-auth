@@ -109,6 +109,7 @@ def get_auth_service(
 
 
 async def get_current_user(
+    request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     auth_service: AuthService = Depends(get_auth_service)
 ) -> AuthenticatedUser:
@@ -119,6 +120,17 @@ async def get_current_user(
         HTTPException: 401 if authentication fails
     """
     if not credentials:
+        # Fallback: try session cookie for server-to-server requests
+        session_cookie = request.cookies.get("session")
+        if session_cookie:
+            try:
+                firebase_service = get_firebase_service()
+                decoded_cookie = auth.verify_session_cookie(session_cookie, check_revoked=True)
+                user = AuthenticatedUser.from_firebase_token(decoded_cookie)
+                return user
+            except Exception:
+                # proceed to raise 401 below
+                pass
         raise HTTPException(
             status_code=401,
             detail="Authorization header required",
@@ -138,6 +150,7 @@ async def get_current_user(
 
 
 async def get_current_user_optional(
+    request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     auth_service: AuthService = Depends(get_auth_service)
 ) -> Optional[AuthenticatedUser]:
@@ -147,6 +160,14 @@ async def get_current_user_optional(
     This dependency doesn't raise exceptions for missing or invalid tokens.
     """
     if not credentials:
+        # Fallback to session cookie for SSR requests
+        session_cookie = request.cookies.get("session")
+        if session_cookie:
+            try:
+                decoded_cookie = auth.verify_session_cookie(session_cookie, check_revoked=False)
+                return AuthenticatedUser.from_firebase_token(decoded_cookie)
+            except Exception:
+                return None
         return None
     
     try:

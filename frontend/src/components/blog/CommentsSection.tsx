@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+// Name input removed; user identity comes from auth on server
 import { Textarea } from "@/components/ui/textarea";
 import {
 	getGetPostCommentsQueryKey,
@@ -20,7 +20,6 @@ export interface CommentsSectionProps {
 
 export function CommentsSection({ postId }: CommentsSectionProps) {
 	const [newComment, setNewComment] = useState("");
-	const [authorName, setAuthorName] = useState("");
 	const queryClient = useQueryClient();
 
 	const { data: commentsResponse, isLoading } = useGetPostComments(postId);
@@ -38,17 +37,16 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
 	const comments = commentsResponse?.data || [];
 
 	const handleSubmit = async () => {
-		if (newComment.trim() && authorName.trim()) {
+		if (newComment.trim()) {
 			try {
 				await createCommentMutation.mutateAsync({
 					id: postId,
 					data: {
-						author: authorName.trim(),
 						content: newComment.trim(),
-					},
+						postId,
+					} as any,
 				});
 				setNewComment("");
-				setAuthorName("");
 			} catch (error) {
 				console.error("Failed to add comment:", error);
 			}
@@ -66,12 +64,7 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
 					<div className="space-y-4 p-4 bg-muted/50 rounded-lg">
 						<h3 className="font-medium">Add a Comment</h3>
 						<div className="space-y-3">
-							<Input
-								placeholder="Your name"
-								value={authorName}
-								onChange={(e) => setAuthorName(e.target.value)}
-								disabled={createCommentMutation.isPending}
-							/>
+								{/* Name input removed */}
 							<Textarea
 								placeholder="Write your comment..."
 								value={newComment}
@@ -81,9 +74,7 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
 							/>
 							<Button
 								onClick={handleSubmit}
-								disabled={
-									createCommentMutation.isPending || !newComment.trim() || !authorName.trim()
-								}
+								disabled={createCommentMutation.isPending || !newComment.trim()}
 							>
 								{createCommentMutation.isPending ? "Posting..." : "Post Comment"}
 							</Button>
@@ -109,7 +100,7 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
 							comments.map((comment) => (
 								<div key={comment.id} className="border-l-2 border-muted pl-4 space-y-2">
 									<div className="flex items-center space-x-2 text-sm text-muted-foreground">
-										<span className="font-medium text-foreground">{comment.author}</span>
+											<span className="font-medium text-foreground">{(comment as any).userId ?? (comment as any).author}</span>
 										<span>•</span>
 										<span>{formatBlogPostDate(comment.createdAt)}</span>
 									</div>

@@ -33,8 +33,7 @@ class CreateCommentRequest(BaseModel):
     CreateCommentRequest
     """ # noqa: E501
     content: StrictStr = Field(description="Content of the comment")
-    author: StrictStr = Field(description="Name of the comment author")
-    __properties: ClassVar[List[str]] = ["content", "author"]
+    __properties: ClassVar[List[str]] = ["content"]
 
     model_config = {
         "populate_by_name": True,
@@ -85,8 +84,7 @@ class CreateCommentRequest(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "content": obj.get("content"),
-            "author": obj.get("author")
+            "content": obj.get("content")
         })
         return _obj
 

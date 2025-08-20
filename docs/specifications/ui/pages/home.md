@@ -68,10 +68,21 @@ This page composes existing, reusable components. For component prop-level detai
 ### Navigate to My Posts
 
 #### Trigger
-- User clicks "My Posts" in `Header`.
+- User clicks "My Posts" in `Header` (visible only for non-anonymous users).
 
 #### Behavior
 - Navigate to `/my/posts`. Use standard link navigation; client prefetch may be enabled when available.
+
+#### Component Reference
+- `Header`.
+
+### Navigate to Favorite Posts
+
+#### Trigger
+- User clicks "Favorites" in `Header`.
+
+#### Behavior
+- Navigate to `/my/favorites`. Use standard link navigation; client prefetch may be enabled when available.
 
 #### Component Reference
 - `Header`.

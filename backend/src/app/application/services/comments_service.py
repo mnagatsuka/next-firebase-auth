@@ -30,14 +30,14 @@ class CommentApplicationService:
         self.comment_service = CommentService(comment_repository, self.post_repository)
     
     async def create_comment(
-        self, post_id: str, content: str, author: str
+        self, post_id: str, content: str, user_id: str
     ) -> Dict[str, Any]:
         """Create a new comment use case."""
         try:
             # Create comment through domain service
             comment = await self.comment_service.create_comment(
                 content=content,
-                author=author,
+                user_id=user_id,
                 post_id=post_id
             )
             
@@ -80,7 +80,7 @@ class CommentApplicationService:
         return {
             "id": comment.id,
             "content": comment.content,
-            "author": comment.author,
+            "userId": comment.user_id,
             "postId": comment.post_id,
             "createdAt": comment.created_at
         }

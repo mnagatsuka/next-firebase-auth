@@ -56,8 +56,12 @@ paths:
     $ref: './paths/posts@{id}.yml'
   /posts/{id}/comments:
     $ref: './paths/posts@{id}@comments.yml'
+  /posts/{id}/favorite:
+    $ref: './paths/posts@{id}@favorite.yml'
   /users/{uid}/posts:
     $ref: './paths/users@{uid}@posts.yml'
+  /users/{uid}/favorites:
+    $ref: './paths/users@{uid}@favorites.yml'
 
 components:
   securitySchemes:
