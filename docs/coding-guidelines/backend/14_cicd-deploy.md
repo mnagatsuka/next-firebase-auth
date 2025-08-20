@@ -229,7 +229,7 @@ async def health_check():
     }
 
 # Include API routes
-app.include_router(api_router, prefix="/api/v1")
+app.include_router(api_router)
 ```
 
 ### Run Script for Lambda Web Adapter
@@ -516,11 +516,11 @@ Create GitHub environments with secrets:
 
 ```bash
 # Test locally with SAM
-sam local start-api --port 3001
+sam local start-api --port 3000
 
 # Test endpoints
-curl http://localhost:3001/health
-curl http://localhost:3001/api/v1/users
+curl http://localhost:3000/health
+curl http://localhost:3000/users
 ```
 
 ### Post-Deployment Testing
@@ -543,7 +543,7 @@ def test_health_endpoint():
 @pytest.mark.skipif(not API_URL, reason="API_URL not set")  
 def test_protected_endpoint():
     """Test protected endpoint requires auth."""
-    response = requests.get(f"{API_URL}/api/v1/users")
+    response = requests.get(f"{API_URL}/users")
     assert response.status_code == 401  # Unauthorized without token
 ```
 

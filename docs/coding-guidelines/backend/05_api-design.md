@@ -137,12 +137,12 @@ For small applications, avoid versioning until actually needed. When you do need
 
 ```python
 # Simple URL-based versioning
-@app.get("/v1/users/{user_id}")
+@app.get("/users/{user_id}")
 async def get_user_v1(user_id: str):
     return await user_service.get_user(user_id)
 
 # Or use API prefix if preferred
-@app.get("/api/v1/users/{user_id}")
+@app.get("/users/{user_id}")
 async def get_user_v1_prefixed(user_id: str):
     return await user_service.get_user(user_id)
 ```

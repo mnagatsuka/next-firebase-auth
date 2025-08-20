@@ -12,9 +12,10 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-cache || true
 
 # Copy application code
-COPY . .
+COPY backend/ ./backend/
 
 EXPOSE 8000
 
+WORKDIR /app/backend
 CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 

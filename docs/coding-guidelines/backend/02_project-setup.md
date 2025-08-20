@@ -371,7 +371,6 @@ Create the recommended directory structure from project root:
 ```bash
 # Backend source code
 mkdir -p backend/src/app/{api,application,domain,infra,shared}
-mkdir -p backend/src/app/api/v1
 
 # Tests at root level, mirroring backend structure
 mkdir -p tests/backend/{unit,integration,e2e}

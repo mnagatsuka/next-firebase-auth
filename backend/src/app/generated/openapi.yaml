@@ -29,7 +29,7 @@ info:
   version: 1.0.0
 servers:
 - description: API server
-  url: "https://api.{environment}.myapp.test/v1"
+  url: "https://api.{environment}.myapp.test"
   variables:
     environment:
       default: prod
@@ -106,6 +106,10 @@ paths:
               examples:
                 default:
                   $ref: "#/components/examples/blog-post-list-response"
+                page2:
+                  $ref: "#/components/examples/blog-post-list-response-page2"
+                limit1:
+                  $ref: "#/components/examples/blog-post-list-response-limit1"
               schema:
                 $ref: "#/components/schemas/blog-post-list-response"
           description: Successfully retrieved paginated blog posts
@@ -153,7 +157,7 @@ paths:
               description: URL of the created blog post
               explode: false
               schema:
-                example: /api/v1/posts/post-123
+                example: /posts/post-123
                 format: uri
                 type: string
               style: simple
@@ -417,7 +421,7 @@ paths:
               description: URL of the created comment
               explode: false
               schema:
-                example: /api/v1/posts/post-123/comments/comment-456
+                example: /posts/post-123/comments/comment-456
                 format: uri
                 type: string
               style: simple
@@ -444,6 +448,93 @@ paths:
       summary: Create Comment
       tags:
       - comments
+  /users/{uid}/posts:
+    get:
+      description: |
+        Retrieves a paginated list of blog posts owned by the specified user (identified by Firebase `uid`).
+
+        Requires Firebase Authentication. The caller must be the same user as `{uid}` or have admin permissions.
+
+        Supports filtering by `status`. When `status` is omitted, returns all posts for the user
+        (both `published` and `draft`).
+      operationId: getUserPosts
+      parameters:
+      - description: Firebase Authentication user ID (UID)
+        example: u_abc123
+        explode: false
+        in: path
+        name: uid
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Page number for pagination
+        example: 1
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+        style: form
+      - description: Number of items per page
+        example: 10
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 10
+          maximum: 50
+          minimum: 1
+          type: integer
+        style: form
+      - description: Optional status filter for user-owned posts
+        explode: true
+        in: query
+        name: status
+        required: false
+        schema:
+          enum:
+          - published
+          - draft
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/blog-post-list-response"
+              schema:
+                $ref: "#/components/schemas/blog-post-list-response"
+          description: Successfully retrieved user-owned blog posts
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Forbidden - user does not have access to this resource
+        "404":
+          $ref: "#/components/responses/not-found"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Internal server error
+      security:
+      - firebaseAuth: []
+      summary: Get Posts For User
+      tags:
+      - posts
 components:
   examples:
     blog-post-list-response:
@@ -473,7 +564,35 @@ components:
           pagination:
             page: 1
             limit: 10
-            total: 45
+            total: 3
+            hasNext: false
+    blog-post-list-response-page2:
+      summary: Paginated blog posts response page 2
+      value:
+        status: success
+        data:
+          posts: []
+          pagination:
+            page: 2
+            limit: 5
+            total: 3
+            hasNext: false
+    blog-post-list-response-limit1:
+      summary: Paginated blog posts response with limit 1
+      value:
+        status: success
+        data:
+          posts:
+          - id: post-123
+            title: Getting Started with Next.js
+            excerpt: "Learn the basics of Next.js in this comprehensive guide covering\
+              \ SSR, SSG, and CSR."
+            author: John Doe
+            publishedAt: 2024-01-15T10:30:00Z
+          pagination:
+            page: 1
+            limit: 1
+            total: 3
             hasNext: true
     error-400:
       summary: Bad Request error
@@ -691,6 +810,16 @@ components:
       schema:
         type: string
       style: simple
+    user-id:
+      description: Firebase Authentication user ID (UID)
+      example: u_abc123
+      explode: false
+      in: path
+      name: uid
+      required: true
+      schema:
+        type: string
+      style: simple
   responses:
     bad-request:
       content:
@@ -735,6 +864,7 @@ components:
         id: post-123
         title: Getting Started with Next.js
         excerpt: Learn the basics of Next.js in this comprehensive guide.
+        status: published
       properties:
         id:
           description: Unique identifier for the blog post
@@ -762,11 +892,20 @@ components:
           format: date-time
           title: publishedAt
           type: string
+        status:
+          description: Current status of the blog post
+          enum:
+          - draft
+          - published
+          example: published
+          title: status
+          type: string
       required:
       - author
       - excerpt
       - id
       - publishedAt
+      - status
       - title
       title: blog-post-summary
       type: object
@@ -817,11 +956,13 @@ components:
           id: post-123
           title: Getting Started with Next.js
           excerpt: Learn the basics of Next.js in this comprehensive guide.
+          status: published
         - publishedAt: 2024-01-15T10:30:00Z
           author: John Doe
           id: post-123
           title: Getting Started with Next.js
           excerpt: Learn the basics of Next.js in this comprehensive guide.
+          status: published
       properties:
         posts:
           description: Array of blog post summaries
@@ -847,11 +988,13 @@ components:
             id: post-123
             title: Getting Started with Next.js
             excerpt: Learn the basics of Next.js in this comprehensive guide.
+            status: published
           - publishedAt: 2024-01-15T10:30:00Z
             author: John Doe
             id: post-123
             title: Getting Started with Next.js
             excerpt: Learn the basics of Next.js in this comprehensive guide.
+            status: published
         status: success
       properties:
         status:

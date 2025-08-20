@@ -22,7 +22,7 @@ import json
 
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List
 try:
     from typing import Self
@@ -38,7 +38,15 @@ class BlogPostSummary(BaseModel):
     excerpt: StrictStr = Field(description="Short summary or excerpt of the blog post")
     author: StrictStr = Field(description="Author of the blog post")
     published_at: datetime = Field(description="Timestamp when the blog post was published", alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["id", "title", "excerpt", "author", "publishedAt"]
+    status: StrictStr = Field(description="Current status of the blog post")
+    __properties: ClassVar[List[str]] = ["id", "title", "excerpt", "author", "publishedAt", "status"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in ('draft', 'published',):
+            raise ValueError("must be one of enum values ('draft', 'published')")
+        return value
 
     model_config = {
         "populate_by_name": True,
@@ -93,7 +101,8 @@ class BlogPostSummary(BaseModel):
             "title": obj.get("title"),
             "excerpt": obj.get("excerpt"),
             "author": obj.get("author"),
-            "publishedAt": obj.get("publishedAt")
+            "publishedAt": obj.get("publishedAt"),
+            "status": obj.get("status")
         })
         return _obj
 

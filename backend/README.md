@@ -95,8 +95,73 @@ uv run --active pytest -c backend/pyproject.toml \
 uv run --active uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # Quick checks
-curl http://localhost:8000/api/v1/healthz
-curl "http://localhost:8000/api/v1/posts?page=1&limit=10"
+curl http://localhost:8000/health
+curl "http://localhost:8000/posts?page=1&limit=10"
+```
+
+## Local AWS (LocalStack) Setup
+
+Local development can use LocalStack to emulate DynamoDB. Repositories can switch between in-memory and DynamoDB via env.
+
+1) Copy the example env and adjust as needed
+```bash
+cp backend/.env.local.example backend/.env.local
+# optional: set APP_REPOSITORY_PROVIDER=memory to keep in-memory repos
+```
+
+2) Start services with Docker Compose (from repo root)
+```bash
+# Recommended: pass env file so table names & provider are injected
+docker compose --env-file backend/.env.local up -d
+```
+
+This mounts `scripts/localstack-init.sh` which creates DynamoDB tables (`dev_posts`, `dev_comments`).
+
+3) Use DynamoDB repositories
+```bash
+# In backend/.env.local, set (example):
+APP_REPOSITORY_PROVIDER=dynamodb
+APP_DYNAMODB_TABLE_POSTS=dev_posts
+APP_DYNAMODB_TABLE_COMMENTS=dev_comments
+```
+
+4) Seed sample data
+```bash
+docker compose exec backend uv run python scripts/seed_data.py
+```
+
+5) Hit endpoints and verify persistence across restarts
+```bash
+curl "http://localhost:8000/posts?page=1&limit=10"
+```
+
+Notes
+- Default remains in-memory to keep unit tests and CI fast.
+- DynamoDB queries use Scan + FilterExpression for simplicity in local dev.
+
+## Docker Scripts (pnpm)
+
+Use package.json scripts to manage the stack with `.env.local` automatically:
+
+```bash
+# Start services with backend/.env.local
+pnpm dc:up
+
+# Rebuild images and start
+pnpm dc:up:rebuild
+
+# Stop services
+pnpm dc:down
+
+# Show status
+pnpm dc:ps
+
+# Tail logs
+pnpm dc:logs:backend
+pnpm dc:logs:localstack
+
+# Seed DynamoDB through backend container
+pnpm dc:seed
 ```
 
 ## Troubleshooting

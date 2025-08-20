@@ -611,7 +611,7 @@ class TestOpenAPIContracts:
         )
         
         # Make API call
-        response = self.client.post("/api/v1/users", json={
+        response = self.client.post("/users", json={
             "email": "test@example.com",
             "name": "Test User"
         })

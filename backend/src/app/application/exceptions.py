@@ -44,3 +44,17 @@ class ConflictError(ApplicationError):
     
     def __init__(self, message: str):
         super().__init__(message, "CONFLICT")
+
+
+class AuthenticationError(ApplicationError):
+    """Firebase authentication error."""
+    
+    def __init__(self, message: str):
+        super().__init__(message, "AUTHENTICATION_ERROR")
+
+
+class InvalidTokenError(AuthenticationError):
+    """Invalid Firebase token error."""
+    
+    def __init__(self, message: str = "Invalid or expired token"):
+        super().__init__(message)

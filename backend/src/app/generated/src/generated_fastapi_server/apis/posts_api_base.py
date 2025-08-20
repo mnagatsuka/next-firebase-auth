@@ -52,6 +52,17 @@ class BasePostsApi:
         ...
 
 
+    async def get_user_posts(
+        self,
+        uid: Annotated[StrictStr, Field(description="Firebase Authentication user ID (UID)")],
+        page: Annotated[Optional[Annotated[int, Field(strict=True, ge=1)]], Field(description="Page number for pagination")],
+        limit: Annotated[Optional[Annotated[int, Field(le=50, strict=True, ge=1)]], Field(description="Number of items per page")],
+        status: Annotated[Optional[StrictStr], Field(description="Optional status filter for user-owned posts")],
+    ) -> BlogPostListResponse:
+        """Retrieves a paginated list of blog posts owned by the specified user (identified by Firebase &#x60;uid&#x60;).  Requires Firebase Authentication. The caller must be the same user as &#x60;{uid}&#x60; or have admin permissions.  Supports filtering by &#x60;status&#x60;. When &#x60;status&#x60; is omitted, returns all posts for the user (both &#x60;published&#x60; and &#x60;draft&#x60;). """
+        ...
+
+
     async def update_blog_post(
         self,
         id: Annotated[StrictStr, Field(description="Unique identifier for the blog post")],

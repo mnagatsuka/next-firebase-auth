@@ -5,6 +5,18 @@ from datetime import datetime
 
 from app.domain.entities import Comment
 from app.domain.services import CommentService
+from app.domain.exceptions import (
+    PostNotFoundError, 
+    CommentNotFoundError,
+    UnauthorizedCommentAccessError,
+    CommentValidationError
+)
+from app.application.exceptions import (
+    ApplicationError, 
+    ValidationError, 
+    NotFoundError, 
+    ForbiddenError
+)
 from app.infra.repositories.comments_repository import InMemoryCommentRepository
 from app.infra.repositories.posts_repository import InMemoryPostRepository
 
@@ -12,9 +24,8 @@ from app.infra.repositories.posts_repository import InMemoryPostRepository
 class CommentApplicationService:
     """Application service for comment-related use cases."""
     
-    def __init__(self, comment_repository: InMemoryCommentRepository):
-        # Get post repository instance - in a real app this would be injected
-        self.post_repository = InMemoryPostRepository()
+    def __init__(self, comment_repository, post_repository):
+        self.post_repository = post_repository
         self.comment_repository = comment_repository
         self.comment_service = CommentService(comment_repository, self.post_repository)
     
@@ -22,15 +33,22 @@ class CommentApplicationService:
         self, post_id: str, content: str, author: str
     ) -> Dict[str, Any]:
         """Create a new comment use case."""
-        # Create comment through domain service
-        comment = await self.comment_service.create_comment(
-            content=content,
-            author=author,
-            post_id=post_id
-        )
-        
-        # Return domain data compatible with generated models
-        return self._convert_to_dict(comment)
+        try:
+            # Create comment through domain service
+            comment = await self.comment_service.create_comment(
+                content=content,
+                author=author,
+                post_id=post_id
+            )
+            
+            # Return domain data compatible with generated models
+            return self._convert_to_dict(comment)
+        except PostNotFoundError:
+            raise NotFoundError(f"Post with ID {post_id} not found")
+        except (ValueError, CommentValidationError) as e:
+            raise ValidationError(str(e))
+        except Exception as e:
+            raise ApplicationError(f"Failed to create comment: {str(e)}")
     
     async def get_comments_by_post(
         self, post_id: str, limit: int = 10

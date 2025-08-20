@@ -67,6 +67,7 @@ class BlogPost:
         
         self.status = PostStatus.DRAFT
         self.published_at = None
+        
         self.updated_at = datetime.now(timezone.utc)
     
     def update_content(self, title: str = None, content: str = None, excerpt: str = None) -> None:
@@ -105,16 +106,23 @@ class BlogPost:
         return self.author == user_id
     
     @classmethod
-    def create_new(cls, title: str, content: str, excerpt: str, author: str) -> 'BlogPost':
+    def create_new(cls, title: str, content: str, excerpt: str, author: str, status: str = "draft") -> 'BlogPost':
         """Factory method to create a new blog post."""
         post_id = str(uuid.uuid4())
+        # Convert string status to PostStatus enum
+        post_status = PostStatus.PUBLISHED if status.lower() == "published" else PostStatus.DRAFT
+        
+        # Set published_at if the post is being created as published
+        published_at = datetime.now(timezone.utc) if post_status == PostStatus.PUBLISHED else None
+        
         return cls(
             id=post_id,
             title=title,
             content=content,
             excerpt=excerpt,
             author=author,
-            status=PostStatus.DRAFT
+            status=post_status,
+            published_at=published_at
         )
 
 

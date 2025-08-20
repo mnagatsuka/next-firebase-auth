@@ -132,6 +132,35 @@ async def get_blog_posts(
     return await BasePostsApi.subclasses[0]().get_blog_posts(page, limit, status, author)
 
 
+@router.get(
+    "/users/{uid}/posts",
+    responses={
+        200: {"model": BlogPostListResponse, "description": "Successfully retrieved user-owned blog posts"},
+        400: {"model": Error, "description": "Bad Request. The request data is invalid."},
+        401: {"model": Error, "description": "Unauthorized. Authentication is required."},
+        403: {"model": Error, "description": "Forbidden - user does not have access to this resource"},
+        404: {"model": Error, "description": "Resource not found."},
+        500: {"model": Error, "description": "Internal server error"},
+    },
+    tags=["posts"],
+    summary="Get Posts For User",
+    response_model_by_alias=True,
+)
+async def get_user_posts(
+    uid: Annotated[StrictStr, Field(description="Firebase Authentication user ID (UID)")] = Path(..., description="Firebase Authentication user ID (UID)"),
+    page: Annotated[Optional[Annotated[int, Field(strict=True, ge=1)]], Field(description="Page number for pagination")] = Query(1, description="Page number for pagination", alias="page", ge=1),
+    limit: Annotated[Optional[Annotated[int, Field(le=50, strict=True, ge=1)]], Field(description="Number of items per page")] = Query(10, description="Number of items per page", alias="limit", ge=1, le=50),
+    status: Annotated[Optional[StrictStr], Field(description="Optional status filter for user-owned posts")] = Query(None, description="Optional status filter for user-owned posts", alias="status"),
+    token_firebaseAuth: TokenModel = Security(
+        get_token_firebaseAuth
+    ),
+) -> BlogPostListResponse:
+    """Retrieves a paginated list of blog posts owned by the specified user (identified by Firebase &#x60;uid&#x60;).  Requires Firebase Authentication. The caller must be the same user as &#x60;{uid}&#x60; or have admin permissions.  Supports filtering by &#x60;status&#x60;. When &#x60;status&#x60; is omitted, returns all posts for the user (both &#x60;published&#x60; and &#x60;draft&#x60;). """
+    if not BasePostsApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
+    return await BasePostsApi.subclasses[0]().get_user_posts(uid, page, limit, status)
+
+
 @router.put(
     "/posts/{id}",
     responses={

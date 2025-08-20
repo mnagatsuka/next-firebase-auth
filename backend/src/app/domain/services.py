@@ -29,6 +29,10 @@ class PostRepository(Protocol):
         """Find published blog posts with pagination."""
         ...
     
+    async def find_by_author_with_pagination(self, author: str, page: int = 1, limit: int = 10, status: Optional[PostStatus] = None) -> List[BlogPost]:
+        """Find blog posts by author with pagination and status filtering."""
+        ...
+    
     async def delete(self, post_id: str) -> None:
         """Delete a blog post."""
         ...
@@ -44,14 +48,15 @@ class PostService:
     def __init__(self, post_repository: PostRepository):
         self._post_repository = post_repository
     
-    async def create_post(self, title: str, content: str, excerpt: str, author: str) -> BlogPost:
+    async def create_post(self, title: str, content: str, excerpt: str, author: str, status: str = "draft") -> BlogPost:
         """Create a new blog post with business validation."""
         # Create the post using the factory method
         post = BlogPost.create_new(
             title=title,
             content=content,
             excerpt=excerpt,
-            author=author
+            author=author,
+            status=status
         )
         
         # Save and return
@@ -135,6 +140,20 @@ class PostService:
     async def get_posts_by_author(self, author: str, status: Optional[PostStatus] = None) -> List[BlogPost]:
         """Get blog posts by author."""
         return await self._post_repository.find_by_author(author, status)
+    
+    async def get_posts_by_author_with_pagination(self, author: str, page: int = 1, limit: int = 10, status: Optional[PostStatus] = None) -> List[BlogPost]:
+        """Get blog posts by author with pagination and status filtering."""
+        if page < 1:
+            page = 1
+        if limit < 1 or limit > 50:
+            limit = 10
+        
+        return await self._post_repository.find_by_author_with_pagination(
+            author=author,
+            page=page,
+            limit=limit,
+            status=status
+        )
 
 
 class CommentRepository(Protocol):
