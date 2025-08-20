@@ -41,6 +41,8 @@ export * from './errorStatus';
 export * from './getBlogPostsParams';
 export * from './getBlogPostsStatus';
 export * from './getPostCommentsParams';
+export * from './getUserPostsParams';
+export * from './getUserPostsStatus';
 export * from './limitParameter';
 export * from './notFoundResponse';
 export * from './pageParameter';

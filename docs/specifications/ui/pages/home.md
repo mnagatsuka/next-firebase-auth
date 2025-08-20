@@ -34,7 +34,7 @@ This page composes existing, reusable components. For component prop-level detai
 - HTTP GET to `/`.
 
 #### Behavior
-1. Server fetches the first page of posts (e.g., `GET /api/posts?limit=10&page=1`).
+1. Server fetches the first page of posts (e.g., `GET /posts?limit=10&page=1`).
 2. Returns fully rendered HTML for better SEO and fast first paint.
 3. Client hydrates to enable pagination and navigation interactions.
 
@@ -65,9 +65,20 @@ This page composes existing, reusable components. For component prop-level detai
 #### Component Reference
 - `PostCard`.
 
+### Navigate to My Posts
+
+#### Trigger
+- User clicks "My Posts" in `Header`.
+
+#### Behavior
+- Navigate to `/my/posts`. Use standard link navigation; client prefetch may be enabled when available.
+
+#### Component Reference
+- `Header`.
+
 ## 4. Data Requirements
 
-### `GET /api/posts`
+### `GET /posts`
 
 #### Description
 - Returns a paginated list of posts for listing on the home page.
@@ -78,7 +89,7 @@ This page composes existing, reusable components. For component prop-level detai
 #### API Spec Reference
 - See `listPosts` in the OpenAPI specification (placeholder link).
 
-### `GET /api/posts/[id]` (linked page)
+### `GET /posts/[id]` (linked page)
 
 #### Description
 - Used by the details page; referenced here for navigation completeness.

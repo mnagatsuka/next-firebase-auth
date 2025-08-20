@@ -34,7 +34,7 @@ This section defines the unique behavior and logic that integrates the component
 - HTTP GET request to `/posts/[id]`.
 
 #### Behavior
-1. Server fetches the blog post data using the ID from the URL via `GET /api/posts/[id]`.
+1. Server fetches the blog post data using the ID from the URL via `GET /posts/[id]`.
 2. Returns fully rendered HTML including post content for optimal SEO.
 3. Client hydrates to enable interactive features like comments.
 4. If post is not found, displays 404 error page.
@@ -49,7 +49,7 @@ This section defines the unique behavior and logic that integrates the component
 
 #### Behavior
 1. After the main post content is rendered, the comments section loads dynamically.
-2. API call to `GET /api/posts/[id]/comments` fetches existing comments.
+2. API call to `GET /posts/[id]/comments` fetches existing comments.
 3. Comments are rendered without full page refreshes.
 
 #### Component Reference
@@ -61,7 +61,7 @@ This section defines the unique behavior and logic that integrates the component
 - User submits a comment through the comment form in `CommentsSection`.
 
 #### Behavior
-1. API call to `POST /api/posts/[id]/comments` is made.
+1. API call to `POST /posts/[id]/comments` is made.
 2. Upon success, the new comment is added to the comments list without page refresh.
 3. Comment form is cleared.
 
@@ -72,7 +72,7 @@ This section defines the unique behavior and logic that integrates the component
 
 This section outlines the API endpoints this page interacts with. For complete request and response schemas, refer to the **OpenAPI spec**.
 
-### `GET /api/posts/[id]`
+### `GET /posts/[id]`
 
 #### Description
 - Fetches the complete details of a single blog post by its ID.
@@ -80,7 +80,7 @@ This section outlines the API endpoints this page interacts with. For complete r
 #### API Spec Reference
 - See the `getPostById` endpoint in the [OpenAPI spec](https://link-to-your-openapi-spec)
 
-### `GET /api/posts/[id]/comments`
+### `GET /posts/[id]/comments`
 
 #### Description
 - Fetches all comments associated with a specific blog post for client-side rendering.
@@ -88,7 +88,7 @@ This section outlines the API endpoints this page interacts with. For complete r
 #### API Spec Reference
 - See the `getPostComments` endpoint in the [OpenAPI spec](https://link-to-your-openapi-spec)
 
-### `POST /api/posts/[id]/comments`
+### `POST /posts/[id]/comments`
 
 #### Description
 - Creates a new comment on a specific blog post.

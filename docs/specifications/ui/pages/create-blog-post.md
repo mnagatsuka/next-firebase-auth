@@ -34,7 +34,7 @@ This section defines the unique behavior and logic that integrates the component
 - Page loads with a specific blog post ID (e.g., via a query parameter like `/create-post?id=123`).
 
 #### Behavior
-1. An API call is made to `GET /api/posts/[id]` to fetch the existing blog post data.
+1. An API call is made to `GET /posts/[id]` to fetch the existing blog post data.
 2. A loading state is displayed while fetching the data.
 3. Upon successful fetch, the `BlogPostForm` is pre-filled with the retrieved data.
 4. If the post is not found or an error occurs, an appropriate error message is displayed, or the user is redirected.
@@ -53,8 +53,8 @@ This section defines the unique behavior and logic that integrates the component
 3. If validation passes:
     a. A loading indicator is shown on the button.
     b. An API call is made:
-        - `POST /api/posts` for new posts.
-        - `PUT /api/posts/[id]` for existing posts (if an ID was provided during initialization).
+        - `POST /posts` for new posts.
+        - `PUT /posts/[id]` for existing posts (if an ID was provided during initialization).
     c. Upon successful API response:
         - A success notification is displayed.
         - The user is redirected to the newly created/updated post's view page (`/posts/[id]`) or the blog post list page (`/`).
@@ -82,7 +82,7 @@ This section defines the unique behavior and logic that integrates the component
 
 This section outlines the API endpoints this page interacts with. For complete request and response schemas, refer to the **OpenAPI spec**.
 
-### `GET /api/posts/[id]`
+### `GET /posts/[id]`
 
 #### Description
 - Fetches the details of a single blog post by its ID. Used to pre-fill the form when editing an existing post.
@@ -90,7 +90,7 @@ This section outlines the API endpoints this page interacts with. For complete r
 #### API Spec Reference
 - See the `getPostById` endpoint in the [OpenAPI spec](https://link-to-your-openapi-spec) (Placeholder)
 
-### `POST /api/posts`
+### `POST /posts`
 
 #### Description
 - Creates a new blog post.
@@ -98,7 +98,7 @@ This section outlines the API endpoints this page interacts with. For complete r
 #### API Spec Reference
 - See the `createPost` endpoint in the [OpenAPI spec](https://link-to-your-openapi-spec) (Placeholder)
 
-### `PUT /api/posts/[id]`
+### `PUT /posts/[id]`
 
 #### Description
 - Updates an existing blog post identified by its ID.

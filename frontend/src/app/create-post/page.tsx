@@ -1,128 +1,141 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { BlogPostForm, BlogPostFormData } from "@/components/blog/BlogPostForm"
-import { getBlogPostById, createBlogPost } from "@/lib/api/generated/client"
-import { toast } from "sonner"
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
+import { BlogPostForm, type BlogPostFormData } from "@/components/blog/BlogPostForm";
+import { QueryErrorBoundary } from "@/components/common/QueryErrorBoundary";
+import { useCreateBlogPost, useGetBlogPostById, useUpdateBlogPost } from "@/lib/api/generated/client";
 
 export default function CreatePostPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const postId = searchParams.get("id")
-  
-  const [initialData, setInitialData] = useState<Partial<BlogPostFormData>>({})
-  const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingPost, setIsLoadingPost] = useState(!!postId)
+	const router = useRouter();
+	const searchParams = useSearchParams();
+	const postId = searchParams.get("id");
+	const isEditing = !!postId;
 
-  // Load existing post data if editing
-  useEffect(() => {
-    if (!postId) return
+	// Load existing post data if editing
+	const { data: existingPost, isLoading: isLoadingPost } = useGetBlogPostById(postId || "", {
+		query: { enabled: isEditing },
+	});
 
-    const loadPost = async () => {
-      try {
-        setIsLoadingPost(true)
-        const response = await getBlogPostById(postId)
-        const post = response.data
-        
-        setInitialData({
-          title: post.title,
-          content: post.content,
-          excerpt: post.excerpt,
-          status: post.status,
-          tags: [] // TODO: Add tags to API schema if needed
-        })
-      } catch (error: any) {
-        console.error("Failed to load post:", error)
-        toast.error("Failed to load post for editing")
-        router.push("/")
-      } finally {
-        setIsLoadingPost(false)
-      }
-    }
+    // Mutations (no global handlers to avoid duplicate toasts)
+    const createMutation = useCreateBlogPost();
+    const updateMutation = useUpdateBlogPost();
 
-    loadPost()
-  }, [postId, router])
+	const initialData =
+		existingPost?.status === "success"
+			? {
+					title: existingPost.data.title,
+					content: existingPost.data.content,
+					excerpt: existingPost.data.excerpt,
+					status: existingPost.data.status,
+					tags: [], // TODO: Add tags to API schema if needed
+				}
+			: {};
 
-  const handleSubmit = async (formData: BlogPostFormData) => {
-    try {
-      setIsLoading(true)
-      
-      if (postId) {
-        // TODO: Implement update functionality when PUT endpoint is ready
-        console.log("Would update post:", postId, formData)
-        toast.success("Post updated successfully!")
-      } else {
-        // Create new post
-        const response = await createBlogPost({
-          title: formData.title,
-          content: formData.content,
-          excerpt: formData.excerpt || "",
-          status: formData.status as "draft" | "published"
-        })
-        console.log("Created post:", response)
-        toast.success("Post published successfully!")
-      }
-      
-      // Navigate to home page or post detail
-      router.push("/")
-    } catch (error: any) {
-      console.error("Failed to save post:", error)
-      toast.error("Failed to save post")
-    } finally {
-      setIsLoading(false)
-    }
-  }
+	const handleSubmit = (formData: BlogPostFormData) => {
+		const payload = {
+			title: formData.title,
+			content: formData.content,
+			excerpt: formData.excerpt || "",
+			status: formData.status as "draft" | "published",
+		};
 
-  const handleSaveDraft = async (formData: BlogPostFormData) => {
-    try {
-      setIsLoading(true)
-      
-      if (postId) {
-        // TODO: Implement update functionality when PUT endpoint is ready
-        console.log("Would update draft:", postId, formData)
-        toast.success("Draft updated successfully!")
-      } else {
-        // Save as draft
-        const response = await createBlogPost({
-          title: formData.title,
-          content: formData.content,
-          excerpt: formData.excerpt || "",
-          status: "draft"
-        })
-        console.log("Saved draft:", response)
-        toast.success("Draft saved successfully!")
-      }
-    } catch (error: any) {
-      console.error("Failed to save draft:", error)
-      toast.error("Failed to save draft")
-    } finally {
-      setIsLoading(false)
-    }
-  }
+        if (isEditing && postId) {
+            updateMutation.mutate(
+                { id: postId, data: payload },
+                {
+                    onSuccess: () => {
+                        toast.success("Post updated successfully!");
+                        router.push("/");
+                    },
+                    onError: (error) => {
+                        console.error("Failed to update post:", error);
+                        toast.error("Failed to update post");
+                    },
+                },
+            );
+        } else {
+            createMutation.mutate(
+                { data: payload },
+                {
+                    onSuccess: () => {
+                        toast.success("Post created successfully!");
+                        router.push("/");
+                    },
+                    onError: (error) => {
+                        console.error("Failed to create post:", error);
+                        toast.error("Failed to create post");
+                    },
+                },
+            );
+        }
+	};
 
-  const handleCancel = () => {
-    // TODO: Add confirmation dialog if there are unsaved changes
-    router.back()
-  }
+	const handleSaveDraft = (formData: BlogPostFormData) => {
+		const payload = {
+			title: formData.title,
+			content: formData.content,
+			excerpt: formData.excerpt || "",
+			status: "draft" as const,
+		};
 
-  if (isLoadingPost) {
-    return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="text-lg">Loading post...</div>
-      </div>
-    )
-  }
+        if (isEditing && postId) {
+            updateMutation.mutate(
+                { id: postId, data: payload },
+                {
+                    onSuccess: () => {
+                        toast.success("Draft saved successfully!");
+                        router.push("/");
+                    },
+                    onError: (error) => {
+                        console.error("Update error:", error);
+                        toast.error("Failed to save draft");
+                    },
+                },
+            );
+        } else {
+            createMutation.mutate(
+                { data: payload },
+                {
+                    onSuccess: () => {
+                        toast.success("Draft saved successfully!");
+                        router.push("/");
+                    },
+                    onError: (error) => {
+                        console.error("Create error:", error);
+                        toast.error("Failed to save draft");
+                    },
+                },
+            );
+        }
+	};
 
-  return (
-    <div className="container mx-auto py-8">
-      <BlogPostForm
-        initialData={initialData}
-        isLoading={isLoading}
-        onSubmit={handleSubmit}
-        onSaveDraft={handleSaveDraft}
-        onCancel={handleCancel}
-      />
-    </div>
-  )
+	const handleCancel = () => {
+		// TODO: Add confirmation dialog if there are unsaved changes
+		router.back();
+	};
+
+	if (isLoadingPost) {
+		return (
+			<div className="flex justify-center items-center min-h-[50vh]">
+				<div className="text-lg">Loading post...</div>
+			</div>
+		);
+	}
+
+	const isLoading = createMutation.isPending || updateMutation.isPending;
+
+	return (
+		<QueryErrorBoundary>
+			<div className="container mx-auto py-8">
+				<BlogPostForm
+					initialData={initialData}
+					isLoading={isLoading}
+					onSubmit={handleSubmit}
+					onSaveDraft={handleSaveDraft}
+					onCancel={handleCancel}
+				/>
+			</div>
+		</QueryErrorBoundary>
+	);
 }

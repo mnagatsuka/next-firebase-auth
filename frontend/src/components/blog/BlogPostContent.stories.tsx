@@ -1,22 +1,22 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { BlogPostContent } from './BlogPostContent'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { BlogPostContent } from "./BlogPostContent";
 
 const meta: Meta<typeof BlogPostContent> = {
-  title: 'Blog/BlogPostContent',
-  component: BlogPostContent,
-  parameters: {
-    layout: 'padded',
-  },
-  tags: ['autodocs'],
-}
+	title: "Blog/BlogPostContent",
+	component: BlogPostContent,
+	parameters: {
+		layout: "padded",
+	},
+	tags: ["autodocs"],
+};
 
-export default meta
-type Story = StoryObj<typeof BlogPostContent>
+export default meta;
+type Story = StoryObj<typeof BlogPostContent>;
 
 export const Default: Story = {
-  args: {
-    title: 'Getting Started with Next.js',
-    content: `Next.js is a powerful React framework that enables you to build full-stack web applications by extending the latest React features.
+	args: {
+		title: "Getting Started with Next.js",
+		content: `Next.js is a powerful React framework that enables you to build full-stack web applications by extending the latest React features.
 
 Key Features:
 - Server-Side Rendering (SSR): Pre-render pages on the server
@@ -34,17 +34,17 @@ Your application will be available at http://localhost:3000.
 
 Conclusion:
 Next.js provides a great developer experience with many features out of the box. It's perfect for building modern web applications.`,
-    author: 'John Doe',
-    publishedAt: '2024-01-15T10:30:00Z',
-    tags: ['Next.js', 'React', 'TypeScript'],
-    readingTime: '5 min read',
-  },
-}
+		author: "John Doe",
+		publishedAt: "2024-01-15T10:30:00Z",
+		tags: ["Next.js", "React", "TypeScript"],
+		readingTime: "5 min read",
+	},
+};
 
 export const LongContent: Story = {
-  args: {
-    title: 'Advanced React Patterns and State Management Techniques',
-    content: `React has evolved significantly over the years, and with it, the patterns we use to build applications. In this comprehensive post, we'll explore some advanced patterns that can help you write more maintainable and scalable React code.
+	args: {
+		title: "Advanced React Patterns and State Management Techniques",
+		content: `React has evolved significantly over the years, and with it, the patterns we use to build applications. In this comprehensive post, we'll explore some advanced patterns that can help you write more maintainable and scalable React code.
 
 Custom Hooks:
 Custom hooks are a powerful way to extract component logic into reusable functions. They allow you to share stateful logic between components without changing your component hierarchy.
@@ -73,31 +73,31 @@ React provides several tools for optimizing performance:
 
 Conclusion:
 Mastering these patterns will help you build more efficient and maintainable React applications. Remember to always measure performance before optimizing, and choose the right tool for the job.`,
-    author: 'Jane Smith',
-    publishedAt: '2024-01-14T09:15:00Z',
-    tags: ['React', 'Patterns', 'State Management', 'Performance', 'Hooks'],
-    readingTime: '12 min read',
-  },
-}
+		author: "Jane Smith",
+		publishedAt: "2024-01-14T09:15:00Z",
+		tags: ["React", "Patterns", "State Management", "Performance", "Hooks"],
+		readingTime: "12 min read",
+	},
+};
 
 export const MinimalContent: Story = {
-  args: {
-    title: 'Quick Tip',
-    content: 'This is a short blog post with minimal content.',
-    author: 'Bob Johnson',
-    publishedAt: '2024-01-13T14:45:00Z',
-    tags: ['Tips'],
-  },
-}
+	args: {
+		title: "Quick Tip",
+		content: "This is a short blog post with minimal content.",
+		author: "Bob Johnson",
+		publishedAt: "2024-01-13T14:45:00Z",
+		tags: ["Tips"],
+	},
+};
 
 export const NoTags: Story = {
-  args: {
-    title: 'Post Without Tags',
-    content: `Sometimes blog posts don't need tags. This post demonstrates how the content looks without any tags or reading time estimate.
+	args: {
+		title: "Post Without Tags",
+		content: `Sometimes blog posts don't need tags. This post demonstrates how the content looks without any tags or reading time estimate.
 
 Content can still be rich and informative without needing categorization. The focus should always be on providing value to the reader.`,
-    author: 'Alice Wilson',
-    publishedAt: '2024-01-12T16:20:00Z',
-    tags: [],
-  },
-}
+		author: "Alice Wilson",
+		publishedAt: "2024-01-12T16:20:00Z",
+		tags: [],
+	},
+};

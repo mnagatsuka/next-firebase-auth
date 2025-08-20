@@ -118,7 +118,7 @@ import { useQuery } from '@tanstack/react-query'
 function UserProfileClient({ id, initialData }) {
   const { data } = useQuery({
     queryKey: ['user', id],
-    queryFn: () => fetch(`/api/users?id=${id}`).then(res => res.json()),
+    queryFn: () => fetch(`/users?id=${id}`).then(res => res.json()),
     initialData
   })
   return <div>{data.name}</div>

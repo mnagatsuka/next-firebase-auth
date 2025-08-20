@@ -1,37 +1,26 @@
 # syntax=docker/dockerfile:1
 
-# Base stage with dependencies
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+FROM node:20-alpine
+
 WORKDIR /app
 
-# Enable corepack and install pnpm
-RUN corepack enable
+# Install pnpm globally and dependencies
+RUN corepack enable && apk add --no-cache libc6-compat
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
+# Copy package files and tsconfig.base.json  
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+COPY tsconfig.base.json ../
 
-# Install dependencies only
+# Install dependencies with correct architecture
 RUN pnpm install --frozen-lockfile --prod=false
 
-# Development stage
-FROM node:20-alpine AS dev
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
+# Copy source code only (avoid copying node_modules)
+COPY frontend/src ./src
+COPY frontend/public ./public  
+COPY frontend/*.json frontend/*.js frontend/*.mjs frontend/*.ts frontend/*.md ./
 
-# Enable corepack
-RUN corepack enable
-
-# Copy installed dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/package.json ./package.json
-COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
-
-# Copy source code
-COPY . .
-
-# Expose ports
+# Expose ports for development and Storybook
 EXPOSE 3000 6006
 
-# Default command for development
+# Start development server
 CMD ["pnpm", "dev"]

@@ -144,7 +144,7 @@ afterAll(() => server.close())
 import { rest } from 'msw'
 
 export const handlers = [
-  rest.get('/api/users', (_req, res, ctx) =>
+  rest.get('/users', (_req, res, ctx) =>
     res(ctx.status(200), ctx.json({ id: 'u1', name: 'Jane Doe' }))
   )
 ]
@@ -285,7 +285,7 @@ export default function UserCard() {
   const { data: user, isLoading, isError } = useQuery<User>({
     queryKey: ['user'],
     queryFn: async () => {
-      const res = await fetch('/api/users')
+      const res = await fetch('/users')
       if (!res.ok) throw new Error('Request failed')
       return res.json()
     }
@@ -317,7 +317,7 @@ describe('UserCard', () => {
   })
 
   it('handles API error', async () => {
-    server.use(rest.get('/api/users', (_req, res, ctx) => res(ctx.status(500))))
+    server.use(rest.get('/users', (_req, res, ctx) => res(ctx.status(500))))
     renderWithQuery(<UserCard />)
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent('Failed to load user')
@@ -342,7 +342,7 @@ export async function GET() {
 import { describe, it, expect } from 'vitest'
 import { GET } from './route'
 
-describe('GET /api/users', () => {
+describe('GET /users', () => {
   it('returns a user json', async () => {
     const res = await GET()
     expect(res.headers.get('content-type')).toMatch(/application\/json/)

@@ -1,15 +1,11 @@
-"use client"
+"use client";
 
-import { ReactNode } from "react"
+import type { ReactNode } from "react";
 
 interface PageTransitionProps {
-  children: ReactNode
+	children: ReactNode;
 }
 
 export function PageTransition({ children }: PageTransitionProps) {
-  return (
-    <div className="w-full page-transition">
-      {children}
-    </div>
-  )
+	return <div className="w-full page-transition">{children}</div>;
 }

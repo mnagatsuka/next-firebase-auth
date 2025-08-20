@@ -1,0 +1,15 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"jsx": "preserve",
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["../src/*"],
+			"@tests/*": ["./*"]
+		},
+		"types": ["vitest/globals", "@testing-library/jest-dom"],
+		"incremental": false
+	},
+	"include": ["./**/*.ts", "./**/*.tsx"],
+	"exclude": ["node_modules"]
+}

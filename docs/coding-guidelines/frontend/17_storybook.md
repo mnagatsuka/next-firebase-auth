@@ -253,7 +253,7 @@ export const Default: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/posts', () => {
+        http.get('/posts', () => {
           return HttpResponse.json({
             status: 'success',
             data: {
@@ -284,7 +284,7 @@ export const Loading: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/posts', () => {
+        http.get('/posts', () => {
           return new Promise(() => {}) // Never resolves to simulate loading
         }),
       ],
@@ -296,7 +296,7 @@ export const ErrorState: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/posts', () => {
+        http.get('/posts', () => {
           return HttpResponse.json({
             status: 'error',
             error: {
@@ -328,7 +328,7 @@ export const SubmitSuccess: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post('/api/posts', async ({ request }) => {
+        http.post('/posts', async ({ request }) => {
           const body = await request.json()
           return HttpResponse.json({
             status: 'success',
@@ -357,7 +357,7 @@ For handlers used across multiple stories, create a shared handlers file:
 import { http, HttpResponse } from 'msw'
 
 export const blogHandlers = [
-  http.get('/api/posts', () => {
+  http.get('/posts', () => {
     return HttpResponse.json({
       status: 'success',
       data: { posts: [], pagination: { page: 1, total: 0 } },

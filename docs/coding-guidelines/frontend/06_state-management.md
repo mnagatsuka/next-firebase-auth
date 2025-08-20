@@ -83,7 +83,7 @@ import { useQuery } from '@tanstack/react-query'
 function UserProfile({ id }) {
   const { data, isLoading } = useQuery({
     queryKey: ['user', id],
-    queryFn: () => fetch(`/api/users?id=${id}`).then(res => res.json())
+    queryFn: () => fetch(`/users?id=${id}`).then(res => res.json())
   })
 
   if (isLoading) return <div>Loading...</div>
@@ -127,7 +127,7 @@ import { useQuery } from '@tanstack/react-query'
 export default function UserProfileClient({ initialData }) {
   const { data } = useQuery({
     queryKey: ['user', initialData.id],
-    queryFn: () => fetch(`/api/users?id=${initialData.id}`).then(res => res.json()),
+    queryFn: () => fetch(`/users?id=${initialData.id}`).then(res => res.json()),
     initialData
   })
   return <div>{data.name}</div>

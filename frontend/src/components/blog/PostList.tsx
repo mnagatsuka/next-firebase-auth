@@ -1,44 +1,54 @@
-import { PostCard, PostCardProps } from "./PostCard"
+import type { BlogPostSummary } from "@/lib/api/generated/schemas";
+import { PostCard } from "./PostCard";
+import { PostListSkeleton } from "./PostCardSkeleton";
 
 export interface PostListProps {
-  /** Array of blog posts to display */
-  posts: PostCardProps[]
-  /** Loading state */
-  isLoading?: boolean
-  /** Empty state message */
-  emptyMessage?: string
+	/** Array of blog posts to display */
+	posts: BlogPostSummary[];
+	/** Loading state */
+	isLoading?: boolean;
+	/** Empty state message */
+	emptyMessage?: string;
+	/** Whether to show post status badges */
+	showStatus?: boolean;
+	/** Action buttons style for each item */
+	actions?: "default" | "view-and-edit";
 }
 
-export function PostList({ 
-  posts, 
-  isLoading = false, 
-  emptyMessage = "No posts found." 
+export function PostList({
+	posts,
+	isLoading = false,
+	emptyMessage = "No posts found.",
+	showStatus = false,
+	actions = "default",
 }: PostListProps) {
-  if (isLoading) {
-    return (
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="animate-pulse">
-            <div className="h-64 bg-gray-200 rounded-lg"></div>
-          </div>
-        ))}
-      </div>
-    )
-  }
+	if (isLoading) {
+		return <PostListSkeleton count={6} />;
+	}
 
-  if (posts.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground text-lg">{emptyMessage}</p>
-      </div>
-    )
-  }
+	if (posts.length === 0) {
+		return (
+			<div className="text-center py-12">
+				<p className="text-muted-foreground text-lg">{emptyMessage}</p>
+			</div>
+		);
+	}
 
-  return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {posts.map((post) => (
-        <PostCard key={post.id} {...post} />
-      ))}
-    </div>
-  )
+	return (
+		<div className="grid gap-6 md:grid-cols-2">
+			{posts.map((post) => (
+				<PostCard
+					key={post.id}
+					id={post.id}
+					title={post.title}
+					excerpt={post.excerpt}
+					author={post.author}
+					publishedAt={post.publishedAt}
+					status={showStatus ? (post as any).status ?? "draft" : "published"}
+					showStatus={showStatus}
+					actions={actions}
+				/>
+			))}
+		</div>
+	);
 }

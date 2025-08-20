@@ -40,7 +40,7 @@ To run Storybook using Docker Compose, follow these steps:
 2.  **Start the Storybook service:**
     Navigate to the `frontend` directory and run the following command:
     ```bash
-    docker compose up storybook -d
+    docker compose -f docker-compose.storybook.yml up storybook -d
     ```
     This will build the Storybook image (if not already built) and start the Storybook container.
 

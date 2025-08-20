@@ -24,6 +24,7 @@ stateDiagram-v2
     }
 
     state "Blog Management" as Management {
+        MyPostsPage: User-scoped posts list
         CreatePostPage: New post form
         EditPostPage: Edit post form
     }
@@ -31,14 +32,20 @@ stateDiagram-v2
     HomePage --> PostDetailPage: Clicks a post
     PostDetailPage --> HomePage: Navigates back
 
+    HomePage --> MyPostsPage: Clicks "My Posts" (Header)
+    MyPostsPage --> PostDetailPage: Clicks a post
+    MyPostsPage --> CreatePostPage: Clicks "Create Post"
+
     HomePage --> CreatePostPage: Clicks "Create Post"
     PostDetailPage --> EditPostPage: Clicks "Edit"
 
-    CreatePostPage --> HomePage: Post submitted
+    CreatePostPage --> PostDetailPage: Post submitted
     EditPostPage --> PostDetailPage: Post updated
 
     CreatePostPage --> HomePage: Action cancelled
     EditPostPage --> PostDetailPage: Action cancelled
+
+    PostDetailPage --> MyPostsPage: Navigates back (from My Posts)
 ```
 
 ## Transition Animation Details
@@ -48,8 +55,11 @@ stateDiagram-v2
 This transition is used for navigating between primary pages at the same hierarchical level, such as moving from the `HomePage` to the `PostDetailPage`.
 
 - **Description**: The new page slides in from the right, covering the old page. When navigating back, the old page slides out to the right, revealing the previous page.
-- **Use Cases**: 
+- **Use Cases**:
     - `HomePage` -> `PostDetailPage`
+    - `HomePage` -> `MyPostsPage` (Header nav)
+    - `MyPostsPage` -> `PostDetailPage`
+    - `MyPostsPage` -> `CreatePostPage`
     - `PostDetailPage` -> `EditPostPage`
 
 ```mermaid
@@ -75,6 +85,9 @@ sequenceDiagram
 This indicates that the application is processing a user request, like submitting a form or saving data.
 
 - **Description**: The button that triggered the action will display a loading spinner. The form fields will be disabled to prevent further input. Upon completion, a success or error message may be displayed before transitioning to the next page.
+- **Default Redirects**:
+    - On successful create (from `CreatePostPage`), navigate to `PostDetailPage` of the new post.
+    - On successful edit (from `EditPostPage`), remain in `PostDetailPage` and show a success notification.
 
 ```mermaid
 sequenceDiagram
@@ -84,17 +97,42 @@ sequenceDiagram
 
     User->>UI: Clicks "Publish" button
     UI->>UI: Disable form fields & show spinner on button
-    UI->>Server: POST /api/posts
+    UI->>Server: POST /posts
     activate Server
     Server-->>UI: Respond with success/error
     deactivate Server
     UI->>UI: Re-enable form & hide spinner
     alt On Success
         UI->>UI: Show success notification
-        UI->>UI: Transition to new page (e.g., PostDetailPage)
+        UI->>UI: Transition to PostDetailPage
     else On Error
         UI->>UI: Show error message
     end
+```
+
+### 3. Auth Initialization (My Posts)
+
+This covers the automatic anonymous sign-in used by `MyPostsPage` when a user is not authenticated.
+
+- **Description**: If no auth session exists, initialize anonymous sign-in before fetching user-scoped posts. During initialization, show a lightweight loading state for the list area; the page chrome (Header/Footer) remains interactive.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI
+    participant Auth
+    participant API
+
+    User->>UI: Navigate to MyPostsPage
+    UI->>Auth: Ensure session (anonymous if needed)
+    alt No session
+        Auth-->>UI: Anonymous user created
+    else Existing session
+        Auth-->>UI: Session ready
+    end
+    UI->>API: GET /users/[uid]/posts
+    API-->>UI: Posts list
+    UI->>User: Render list (or EmptyState)
 ```
 
 ## Implementation Notes
@@ -102,3 +140,4 @@ sequenceDiagram
 - **Library**: It is recommended to use a dedicated animation library like `framer-motion` to handle these transitions in a declarative way.
 - **CSS**: Define transition properties and animations in the global CSS file to ensure consistency and reusability.
 - **Accessibility**: Ensure that animations do not negatively impact users with motion sensitivity. A `prefers-reduced-motion` media query should be used to disable or simplify animations for these users.
+- **Header Navigation**: Add a persistent `My Posts` item to the global `Header`. The Home → My Posts transition uses the standard slide-in animation.

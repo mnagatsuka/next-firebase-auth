@@ -1,209 +1,262 @@
 interface FetcherOptions extends RequestInit {
-  baseURL?: string;
-  timeout?: number;
+	baseURL?: string;
+	timeout?: number;
+	skipAuth?: boolean; // Skip auth token injection
+	retries?: number;
+	retryDelay?: number;
 }
 
-interface ApiResponse<T = any> {
-  status: "success" | "error";
-  data: T;
-  error?: {
-    code: string;
-    message: string;
-  };
-}
+type ApiEnvelope<T = unknown> =
+	| { status: "success"; data: T }
+	| { status: "error"; error: { code: string; message: string } };
+
+// Function to get auth header from client (Zustand)
+const getClientAuthHeader = async (): Promise<string | null> => {
+	if (typeof window === "undefined") return null;
+	try {
+		const { useAppStore } = await import("../../stores/app-store");
+		const token = useAppStore.getState().idToken;
+		return token ? `Bearer ${token}` : null;
+	} catch {
+		return null;
+	}
+};
 
 class FetchError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public statusText: string,
-    public response?: Response
-  ) {
-    super(message);
-    this.name = "FetchError";
-  }
+	constructor(
+		message: string,
+		public status: number,
+		public statusText: string,
+		public response?: Response,
+	) {
+		super(message);
+		this.name = "FetchError";
+	}
 }
 
-/**
- * Universal customFetch that works for client components, server components, and API routes
- * Handles JSON responses with consistent error handling and type safety
- */
-export async function customFetch<T = any>(
-  url: string,
-  options: FetcherOptions = {}
-): Promise<T> {
-  const {
-    baseURL = typeof window === 'undefined' 
-      ? process.env.API_BASE_URL || "http://backend:8000"  // Server-side: use Docker network
-      : process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",  // Client-side: use localhost
-    timeout = 10000,
-    headers = {},
-    ...fetchOptions
-  } = options;
+// Simplified, best-practice customFetch: single options object, robust JSON handling, 204/null handling
+export async function customFetch<T = any>(url: string, options: FetcherOptions = {}): Promise<T> {
+	const {
+		baseURL,
+		timeout = 10000,
+		headers: userHeaders = {},
+		signal: userSignal,
+		body,
+		skipAuth = false,
+		retries = 0,
+		retryDelay = 1000,
+		...rest
+	} = options;
 
-  // Build a valid URL for the current runtime
-  // - On the server, always use an absolute URL (Node fetch requires absolute URLs)
-  // - On the client, allow relative paths so the browser resolves against the current origin
-  const isServerSide = typeof window === 'undefined'
-  const fullURL = url.startsWith('http')
-    ? url
-    : isServerSide
-    ? `${baseURL}${url}`
-    : url
+	// Import getApiBaseUrl dynamically to avoid circular imports
+	const apiBaseUrl = baseURL ?? (await import("../config/env").then((m) => m.getApiBaseUrl()));
 
-  // Default headers
-  const defaultHeaders: HeadersInit = {
-    "Content-Type": "application/json",
-    ...headers,
-  };
+	const fullURL = url.startsWith("http") ? url : `${apiBaseUrl}${url}`;
 
-  // Create AbortController for timeout
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+	// Headers: default Accept JSON; set Content-Type only if sending a body and not provided by user
+	const headers: HeadersInit = {
+		Accept: "application/json",
+		...userHeaders,
+	};
 
-  try {
-    const response = await fetch(fullURL, {
-      ...fetchOptions,
-      headers: defaultHeaders,
-      signal: controller.signal,
-    });
+	// Inject Authorization header (client: Zustand token only)
+	if (!skipAuth && typeof window !== "undefined") {
+		try {
+			const authHeader = await getClientAuthHeader();
+			if (authHeader) {
+				(headers as Record<string, string>)["Authorization"] = authHeader;
+			}
+		} catch {
+			// proceed without auth
+		}
+	}
+	const hasBody = body !== undefined && body !== null;
+	if (hasBody) {
+		const hasContentType = Object.keys(headers as Record<string, string>).some(
+			(k) => k.toLowerCase() === "content-type",
+		);
+		if (!hasContentType) {
+			(headers as Record<string, string>)["Content-Type"] = "application/json";
+		}
+	}
 
-    clearTimeout(timeoutId);
+	// Merge timeout signal and user signal
+	const controller = new AbortController();
+	const onUserAbort = () => controller.abort(userSignal?.reason);
+	if (userSignal) {
+		if (userSignal.aborted) controller.abort(userSignal.reason);
+		else userSignal.addEventListener("abort", onUserAbort);
+	}
+	const timeoutId = setTimeout(() => controller.abort("timeout"), timeout);
 
-    // Handle non-JSON responses
-    const contentType = response.headers.get("content-type");
-    if (!contentType?.includes("application/json")) {
-      if (!response.ok) {
-        throw new FetchError(
-          `HTTP ${response.status}: ${response.statusText}`,
-          response.status,
-          response.statusText,
-          response
-        );
-      }
-      return response as T;
-    }
+	try {
+		const response = await fetch(fullURL, {
+			...rest,
+			headers,
+			body,
+			signal: controller.signal,
+		});
 
-    // Parse JSON response
-    const data: ApiResponse<T> = await response.json();
+		clearTimeout(timeoutId);
+		if (userSignal) userSignal.removeEventListener("abort", onUserAbort);
 
-    // Handle API error responses
-    if (data.status === "error") {
-      throw new FetchError(
-        data.error?.message || "An unknown error occurred",
-        response.status,
-        response.statusText,
-        response
-      );
-    }
+		// No Content
+		if (response.status === 204 || response.status === 205) {
+			return null as T;
+		}
 
-    // Handle HTTP errors
-    if (!response.ok) {
-      throw new FetchError(
-        data.error?.message || `HTTP ${response.status}: ${response.statusText}`,
-        response.status,
-        response.statusText,
-        response
-      );
-    }
+		// Determine content type
+		const contentType = response.headers.get("content-type") || "";
 
-    return data.data;
-  } catch (error) {
-    clearTimeout(timeoutId);
+		// Handle error responses first, regardless of content type
+		if (!response.ok) {
+			let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
 
-    if (error instanceof FetchError) {
-      throw error;
-    }
+			// Try to extract error message from response body
+			try {
+				if (contentType.includes("application/json")) {
+					const json = await response.json();
+					const maybeMsg = (json as any)?.error?.message || (json as any)?.message;
+					if (maybeMsg) errorMessage = maybeMsg;
+				} else if (contentType.includes("text/")) {
+					// Handle plain text error messages
+					const text = await response.text();
+					if (text.trim()) errorMessage = text.trim();
+				}
+			} catch {
+				// If we can't parse the error body, use the status text
+			}
 
-    if (error instanceof DOMException && error.name === "AbortError") {
-      throw new FetchError("Request timeout", 408, "Request Timeout");
-    }
+			// Handle auth errors by triggering token refresh
+			if (response.status === 401 || response.status === 403) {
+				if (typeof window !== "undefined") {
+					try {
+						// Try to refresh token
+						const store = require("../../stores/app-store").useAppStore.getState();
+						store.refreshToken().catch(() => {
+							// If refresh fails, trigger re-authentication
+							if (store.user?.isAnonymous) {
+								// For anonymous users, sign in anonymously again
+								store.signInAnonymously().catch(console.error);
+							} else {
+								// For regular users, redirect to login
+								window.location.href = "/login";
+							}
+						});
+					} catch (error) {
+						console.error("Token refresh error:", error);
+					}
+				}
+			}
 
-    if (error instanceof TypeError) {
-      throw new FetchError("Network error", 0, "Network Error");
-    }
+			throw new FetchError(errorMessage, response.status, response.statusText, response);
+		}
 
-    throw new FetchError(
-      error instanceof Error ? error.message : "Unknown error",
-      0,
-      "Unknown Error"
-    );
-  }
+		// Attempt to parse JSON when indicated for successful responses
+		if (contentType.includes("application/json")) {
+			let json: unknown;
+			try {
+				json = await response.json();
+			} catch {
+				// If server claimed JSON but body is empty
+				return null as T;
+			}
+
+			// Envelope support
+			const maybeEnvelope = json as Partial<ApiEnvelope<T>>;
+			if (maybeEnvelope?.status === "error") {
+				const err = maybeEnvelope.error;
+				throw new FetchError(
+					err?.message || "An unknown error occurred",
+					response.status,
+					response.statusText,
+					response,
+				);
+			}
+			// Do not unwrap envelope; return the full JSON to match generated types
+			return json as T;
+		}
+
+		// Non-JSON success without content-type: treat empty as null, otherwise error
+		if (response.ok) {
+			const contentLength = response.headers.get("content-length");
+			if (!contentType && (!contentLength || contentLength === "0")) {
+				return null as T;
+			}
+		}
+
+		// Unexpected non-JSON response for successful requests
+		throw new FetchError(
+			`Unexpected content-type: ${contentType || "none"}`,
+			response.status,
+			response.statusText,
+			response,
+		);
+	} catch (error: any) {
+		clearTimeout(timeoutId);
+		if (userSignal) userSignal.removeEventListener("abort", onUserAbort);
+
+		if (error instanceof FetchError) throw error;
+
+		if (
+			typeof DOMException !== "undefined" &&
+			error instanceof DOMException &&
+			error.name === "AbortError"
+		) {
+			const reason = (error as any)?.message || "Request aborted";
+			throw new FetchError(reason, 499, "Client Closed Request");
+		}
+
+		if (error instanceof TypeError) {
+			throw new FetchError("Network error", 0, "Network Error");
+		}
+
+		throw new FetchError(error?.message || "Unknown error", 0, "Unknown Error");
+	}
 }
 
-/**
- * GET request wrapper
- */
+// Convenience wrappers (keep signatures simple; signal provided via options)
 export function get<T = any>(url: string, options?: FetcherOptions): Promise<T> {
-  return customFetch<T>(url, { ...options, method: "GET" });
+	return customFetch<T>(url, { ...options, method: "GET" });
 }
 
-/**
- * POST request wrapper
- */
-export function post<T = any>(
-  url: string,
-  data?: any,
-  options?: FetcherOptions
-): Promise<T> {
-  return customFetch<T>(url, {
-    ...options,
-    method: "POST",
-    body: data ? JSON.stringify(data) : undefined,
-  });
+export function post<T = any>(url: string, data?: any, options?: FetcherOptions): Promise<T> {
+	return customFetch<T>(url, {
+		...options,
+		method: "POST",
+		body: data !== undefined ? JSON.stringify(data) : undefined,
+	});
 }
 
-/**
- * PUT request wrapper
- */
-export function put<T = any>(
-  url: string,
-  data?: any,
-  options?: FetcherOptions
-): Promise<T> {
-  return customFetch<T>(url, {
-    ...options,
-    method: "PUT",
-    body: data ? JSON.stringify(data) : undefined,
-  });
+export function put<T = any>(url: string, data?: any, options?: FetcherOptions): Promise<T> {
+	return customFetch<T>(url, {
+		...options,
+		method: "PUT",
+		body: data !== undefined ? JSON.stringify(data) : undefined,
+	});
 }
 
-/**
- * PATCH request wrapper
- */
-export function patch<T = any>(
-  url: string,
-  data?: any,
-  options?: FetcherOptions
-): Promise<T> {
-  return customFetch<T>(url, {
-    ...options,
-    method: "PATCH",
-    body: data ? JSON.stringify(data) : undefined,
-  });
+export function patch<T = any>(url: string, data?: any, options?: FetcherOptions): Promise<T> {
+	return customFetch<T>(url, {
+		...options,
+		method: "PATCH",
+		body: data !== undefined ? JSON.stringify(data) : undefined,
+	});
 }
 
-/**
- * DELETE request wrapper
- */
-export function del<T = any>(
-  url: string,
-  options?: FetcherOptions
-): Promise<T> {
-  return customFetch<T>(url, { ...options, method: "DELETE" });
+export function del<T = any>(url: string, options?: FetcherOptions): Promise<T> {
+	return customFetch<T>(url, { ...options, method: "DELETE" });
 }
 
-/**
- * Type-safe customFetch with automatic type inference for API responses
- */
 export const api = {
-  get,
-  post,
-  put,
-  patch,
-  delete: del,
-  customFetch,
+	get,
+	post,
+	put,
+	patch,
+	delete: del,
+	customFetch,
 } as const;
 
 export { FetchError };
-export type { FetcherOptions, ApiResponse };
+export type ApiResponse<T = unknown> = ApiEnvelope<T>;
+export type { FetcherOptions, ApiEnvelope };

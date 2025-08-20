@@ -1,5 +1,5 @@
-import { setupServer } from 'msw/node'
-import { handlers } from './handlers'
+import { setupServer } from "msw/node";
+import { handlers } from "./handlers";
 
 // Setup MSW server for Node.js (Jest/Vitest) testing
-export const server = setupServer(...handlers)
+export const server = setupServer(...handlers);

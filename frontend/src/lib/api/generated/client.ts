@@ -51,6 +51,7 @@ import type {
   Error,
   GetBlogPostsParams,
   GetPostCommentsParams,
+  GetUserPostsParams,
   NotFoundResponse,
   UnauthorizedResponse
 } from './schemas';
@@ -693,3 +694,121 @@ export const useCreateComment = <TError = BadRequestResponse | UnauthorizedRespo
       return useMutation(mutationOptions , queryClient);
     }
     
+/**
+ * Retrieves a paginated list of blog posts owned by the specified user (identified by Firebase `uid`).
+
+Requires Firebase Authentication. The caller must be the same user as `{uid}` or have admin permissions.
+
+Supports filtering by `status`. When `status` is omitted, returns all posts for the user
+(both `published` and `draft`).
+
+ * @summary Get Posts For User
+ */
+export const getGetUserPostsUrl = (uid: string,
+    params?: GetUserPostsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/users/${uid}/posts?${stringifiedParams}` : `/users/${uid}/posts`
+}
+
+export const getUserPosts = async (uid: string,
+    params?: GetUserPostsParams, options?: RequestInit): Promise<BlogPostListResponse> => {
+  
+  return customFetch<BlogPostListResponse>(getGetUserPostsUrl(uid,params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getGetUserPostsQueryKey = (uid?: string,
+    params?: GetUserPostsParams,) => {
+    return [`/users/${uid}/posts`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getGetUserPostsQueryOptions = <TData = Awaited<ReturnType<typeof getUserPosts>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(uid: string,
+    params?: GetUserPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPosts>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUserPostsQueryKey(uid,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserPosts>>> = ({ signal }) => getUserPosts(uid,params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(uid), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUserPosts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetUserPostsQueryResult = NonNullable<Awaited<ReturnType<typeof getUserPosts>>>
+export type GetUserPostsQueryError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error
+
+
+export function useGetUserPosts<TData = Awaited<ReturnType<typeof getUserPosts>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(
+ uid: string,
+    params: undefined |  GetUserPostsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPosts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserPosts>>,
+          TError,
+          Awaited<ReturnType<typeof getUserPosts>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserPosts<TData = Awaited<ReturnType<typeof getUserPosts>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(
+ uid: string,
+    params?: GetUserPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPosts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserPosts>>,
+          TError,
+          Awaited<ReturnType<typeof getUserPosts>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserPosts<TData = Awaited<ReturnType<typeof getUserPosts>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(
+ uid: string,
+    params?: GetUserPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPosts>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Posts For User
+ */
+
+export function useGetUserPosts<TData = Awaited<ReturnType<typeof getUserPosts>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(
+ uid: string,
+    params?: GetUserPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPosts>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetUserPostsQueryOptions(uid,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
