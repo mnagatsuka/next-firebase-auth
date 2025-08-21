@@ -8,12 +8,9 @@ services:
     env_file:
       - ./backend/.env.local
     # environment:
-      # - SERVICES=dynamodb,s3
-      # - DEBUG=1
-      # - PERSISTENCE=1
-      # # Pass table names so the init script picks them up
-      # - APP_DYNAMODB_TABLE_POSTS=${APP_DYNAMODB_TABLE_POSTS}
-      # - APP_DYNAMODB_TABLE_COMMENTS=${APP_DYNAMODB_TABLE_COMMENTS}
+    #   - SERVICES=dynamodb,apigateway
+    #   - DEBUG=1
+    #   - PERSISTENCE=1
     volumes:
       - localstack-data:/var/lib/localstack
       - /var/run/docker.sock:/var/run/docker.sock
@@ -75,6 +72,7 @@ services:
       - ./frontend/package.json:/app/package.json
       - ./frontend/tsconfig.json:/app/tsconfig.json
       - ./frontend/next.config.ts:/app/next.config.ts
+      - ./frontend/middleware.ts:/app/middleware.ts
       - ./tsconfig.base.json:/tsconfig.base.json
       # Exclude node_modules and build artifacts
       - /app/node_modules
