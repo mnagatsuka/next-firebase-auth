@@ -4,7 +4,7 @@ import pytest
 import asyncio
 import sys
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, AsyncMock
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 
@@ -21,7 +21,8 @@ from app.shared.dependencies import (
     get_post_repository, 
     get_comment_repository,
     get_post_application_service,
-    get_comment_application_service
+    get_comment_application_service,
+    get_apigateway_websocket_service
 )
 from app.shared.auth import (
     AuthenticatedUser,
@@ -91,7 +92,7 @@ def mock_anonymous_user():
 
 
 @pytest.fixture
-def test_app(post_repository, comment_repository, mock_authenticated_user):
+def test_app(post_repository, comment_repository, mock_authenticated_user, mock_websocket_service):
     """FastAPI app with test dependencies."""
     app = create_app()
     
@@ -100,6 +101,7 @@ def test_app(post_repository, comment_repository, mock_authenticated_user):
     app.dependency_overrides[get_comment_repository] = lambda: comment_repository
     app.dependency_overrides[get_post_application_service] = lambda: PostApplicationService(post_repository, comment_repository)
     app.dependency_overrides[get_comment_application_service] = lambda: CommentApplicationService(comment_repository, post_repository)
+    app.dependency_overrides[get_apigateway_websocket_service] = lambda: mock_websocket_service
     
     # Override auth dependencies with mock user
     app.dependency_overrides[require_authenticated_user] = lambda: mock_authenticated_user
@@ -113,7 +115,7 @@ def test_app(post_repository, comment_repository, mock_authenticated_user):
 
 
 @pytest.fixture
-def test_app_different_user(post_repository, comment_repository, mock_authenticated_user_different):
+def test_app_different_user(post_repository, comment_repository, mock_authenticated_user_different, mock_websocket_service):
     """FastAPI app with different authenticated user for testing authorization."""
     app = create_app()
     
@@ -122,6 +124,7 @@ def test_app_different_user(post_repository, comment_repository, mock_authentica
     app.dependency_overrides[get_comment_repository] = lambda: comment_repository
     app.dependency_overrides[get_post_application_service] = lambda: PostApplicationService(post_repository, comment_repository)
     app.dependency_overrides[get_comment_application_service] = lambda: CommentApplicationService(comment_repository, post_repository)
+    app.dependency_overrides[get_apigateway_websocket_service] = lambda: mock_websocket_service
     
     # Override auth dependencies with different mock user
     app.dependency_overrides[require_authenticated_user] = lambda: mock_authenticated_user_different
@@ -135,7 +138,7 @@ def test_app_different_user(post_repository, comment_repository, mock_authentica
 
 
 @pytest.fixture
-def test_app_no_auth(post_repository, comment_repository):
+def test_app_no_auth(post_repository, comment_repository, mock_websocket_service):
     """FastAPI app with no authentication for testing unauthorized access."""
     app = create_app()
     
@@ -144,6 +147,7 @@ def test_app_no_auth(post_repository, comment_repository):
     app.dependency_overrides[get_comment_repository] = lambda: comment_repository
     app.dependency_overrides[get_post_application_service] = lambda: PostApplicationService(post_repository, comment_repository)
     app.dependency_overrides[get_comment_application_service] = lambda: CommentApplicationService(comment_repository, post_repository)
+    app.dependency_overrides[get_apigateway_websocket_service] = lambda: mock_websocket_service
     
     # Don't override auth dependencies - they will raise HTTPException
     
@@ -201,3 +205,15 @@ def sample_comment_data():
         "content": "This is a test comment with valuable feedback.",
         "author": "test-commenter"
     }
+
+
+@pytest.fixture
+def mock_websocket_service():
+    """Mock WebSocket service for testing."""
+    mock_service = Mock()
+    mock_service.broadcast_comments_list = AsyncMock()
+    mock_service.broadcast_comment_update = AsyncMock()
+    mock_service.get_connection_count = Mock(return_value=0)
+    mock_service.add_connection = AsyncMock()
+    mock_service.remove_connection = AsyncMock()
+    return mock_service

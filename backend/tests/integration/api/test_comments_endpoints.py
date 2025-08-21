@@ -25,7 +25,7 @@ class TestCommentsEndpoints:
         assert response.status_code == 201
         data = response.json()
         assert data["content"] == sample_comment_data["content"]
-        assert data["author"] == "test-user-uid"
+        assert data["userId"] == "test-user-uid"
         assert data["postId"] == post_id
         assert "id" in data
         assert "createdAt" in data
@@ -59,7 +59,7 @@ class TestCommentsEndpoints:
         assert "Post not found" in response.json()["detail"]
     
     def test_get_comments_for_existing_post_returns_200(self, test_client, sample_create_post_request, sample_comment_data):
-        """Test getting comments for existing post returns 200."""
+        """Test getting comments for existing post returns acknowledgment response (WebSocket sends actual data)."""
         # Arrange - create a post and comment
         post_response = test_client.post("/posts", json=sample_create_post_request)
         post_id = post_response.json()["data"]["id"]
@@ -69,17 +69,16 @@ class TestCommentsEndpoints:
         # Act
         response = test_client.get(f"/posts/{post_id}/comments")
         
-        # Assert
+        # Assert - Now returns acknowledgment response, data sent via WebSocket
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
-        assert "data" in data
-        assert len(data["data"]) == 1
-        assert data["data"][0]["content"] == sample_comment_data["content"]
-        assert data["data"][0]["author"] == "test-user-uid"
+        assert data["message"] == "Comments retrieved successfully"
+        assert data["count"] == 1
+        # WebSocket data is not included in REST response
     
     def test_get_comments_for_post_with_no_comments_returns_empty_list(self, test_client, sample_create_post_request):
-        """Test getting comments for post with no comments returns empty list."""
+        """Test getting comments for post with no comments returns acknowledgment with count 0."""
         # Arrange - create a post without comments
         post_response = test_client.post("/posts", json=sample_create_post_request)
         post_id = post_response.json()["data"]["id"]
@@ -87,11 +86,12 @@ class TestCommentsEndpoints:
         # Act
         response = test_client.get(f"/posts/{post_id}/comments")
         
-        # Assert
+        # Assert - Returns acknowledgment response
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
-        assert len(data["data"]) == 0
+        assert data["message"] == "Comments retrieved successfully"
+        assert data["count"] == 0
     
     def test_get_comments_for_nonexistent_post_returns_404(self, test_client):
         """Test getting comments for nonexistent post returns 404."""
@@ -104,7 +104,7 @@ class TestCommentsEndpoints:
         assert "Post not found" in response.json()["detail"]
     
     def test_get_comments_with_limit_parameter(self, test_client, sample_create_post_request):
-        """Test getting comments with limit parameter."""
+        """Test getting comments with limit parameter returns acknowledgment with correct count."""
         # Arrange - create a post and multiple comments
         post_response = test_client.post("/posts", json=sample_create_post_request)
         post_id = post_response.json()["data"]["id"]
@@ -120,10 +120,12 @@ class TestCommentsEndpoints:
         # Act
         response = test_client.get(f"/posts/{post_id}/comments?limit=3")
         
-        # Assert
+        # Assert - Returns acknowledgment with count (actual data via WebSocket)
         assert response.status_code == 200
         data = response.json()
-        assert len(data["data"]) == 3
+        assert data["status"] == "success"
+        assert data["message"] == "Comments retrieved successfully"
+        assert data["count"] == 3  # Limited to 3 as requested
     
     def test_create_multiple_comments_on_same_post(self, test_client, sample_create_post_request):
         """Test creating multiple comments on the same post."""
@@ -142,14 +144,10 @@ class TestCommentsEndpoints:
             response = test_client.post(f"/posts/{post_id}/comments", json=comment)
             assert response.status_code == 201
         
-        # Assert - verify all comments are retrieved
+        # Assert - verify GET returns acknowledgment with correct count
         response = test_client.get(f"/posts/{post_id}/comments")
         assert response.status_code == 200
         data = response.json()
-        assert len(data["data"]) == 3
-        
-        # Verify comment contents
-        comment_contents = [comment["content"] for comment in data["data"]]
-        assert "First comment" in comment_contents
-        assert "Second comment" in comment_contents
-        assert "Third comment" in comment_contents
+        assert data["status"] == "success"
+        assert data["message"] == "Comments retrieved successfully"
+        assert data["count"] == 3

@@ -1,16 +1,16 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // Name input removed; user identity comes from auth on server
 import { Textarea } from "@/components/ui/textarea";
 import {
-	getGetPostCommentsQueryKey,
 	useCreateComment,
-	useGetPostComments,
+	getPostComments,
 } from "@/lib/api/generated/client";
+import { useCommentsWebSocket } from "@/hooks/useCommentsWebSocket";
+import type { Comment } from "@/lib/api/generated/schemas";
 import { formatBlogPostDate } from "@/lib/utils/date";
 
 export interface CommentsSectionProps {
@@ -20,21 +20,44 @@ export interface CommentsSectionProps {
 
 export function CommentsSection({ postId }: CommentsSectionProps) {
 	const [newComment, setNewComment] = useState("");
-	const queryClient = useQueryClient();
+	const [comments, setComments] = useState<Comment[]>([]);
+	const [isLoadingComments, setIsLoadingComments] = useState(true);
 
-	const { data: commentsResponse, isLoading } = useGetPostComments(postId);
+	// WebSocket connection for real-time comments
+	useCommentsWebSocket({
+		onCommentsReceived: (receivedPostId, receivedComments) => {
+			if (receivedPostId === postId) {
+				setComments(receivedComments);
+				setIsLoadingComments(false);
+			}
+		}
+	});
+
 	const createCommentMutation = useCreateComment({
 		mutation: {
 			onSuccess: () => {
-				// Invalidate the comments query to refetch the latest comments
-				queryClient.invalidateQueries({
-					queryKey: getGetPostCommentsQueryKey(postId),
-				});
+				// After successful comment creation, fetch comments to trigger WebSocket response
+				loadComments();
 			},
 		},
 	});
 
-	const comments = commentsResponse?.data || [];
+	// Function to load comments (triggers WebSocket response)
+	const loadComments = useCallback(async () => {
+		try {
+			setIsLoadingComments(true);
+			// This API call returns acknowledgment and sends data via WebSocket
+			await getPostComments(postId);
+		} catch (error) {
+			console.error("Failed to load comments:", error);
+			setIsLoadingComments(false);
+		}
+	}, [postId]);
+
+	// Load comments on component mount
+	useEffect(() => {
+		loadComments();
+	}, [loadComments]);
 
 	const handleSubmit = async () => {
 		if (newComment.trim()) {
@@ -83,7 +106,7 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
 
 					{/* Comments List */}
 					<div className="space-y-4">
-						{isLoading ? (
+						{isLoadingComments ? (
 							<div className="space-y-4">
 								{Array.from({ length: 3 }).map((_, i) => (
 									<div key={i} className="animate-pulse">

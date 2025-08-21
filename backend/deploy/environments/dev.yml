@@ -1,0 +1,27 @@
+# Development Environment Configuration
+Environment: dev
+FirebaseProjectId: demo-project
+
+# Resource Configuration
+MemorySize: 512
+Timeout: 30
+
+# Monitoring
+LogRetentionDays: 7
+EnableXRayTracing: false
+
+# DynamoDB
+PointInTimeRecovery: false
+EnableBackup: false
+
+# CORS Configuration
+CorsOrigins:
+  - "http://localhost:3000"
+  - "http://localhost:3001" 
+  - "*"
+
+# Tags
+Tags:
+  Environment: dev
+  Project: BlogAPI
+  CostCenter: Development

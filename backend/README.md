@@ -115,14 +115,15 @@ cp backend/.env.local.example backend/.env.local
 docker compose --env-file backend/.env.local up -d
 ```
 
-This mounts `scripts/localstack-init.sh` which creates DynamoDB tables (`dev_posts`, `dev_comments`).
+This mounts `scripts/localstack-init.sh` which creates DynamoDB tables (posts, comments, favorites).
 
 3) Use DynamoDB repositories
 ```bash
 # In backend/.env.local, set (example):
 APP_REPOSITORY_PROVIDER=dynamodb
-APP_DYNAMODB_TABLE_POSTS=dev_posts
-APP_DYNAMODB_TABLE_COMMENTS=dev_comments
+APP_DYNAMODB_TABLE_POSTS=posts
+APP_DYNAMODB_TABLE_COMMENTS=comments
+APP_DYNAMODB_TABLE_FAVORITES=favorites
 ```
 
 4) Seed sample data

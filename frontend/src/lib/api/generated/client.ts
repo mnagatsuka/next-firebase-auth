@@ -45,7 +45,7 @@ import type {
   BlogPostListResponse,
   BlogPostResponse,
   Comment,
-  CommentsResponse,
+  CommentsAcknowledgmentResponse,
   CreateCommentRequest,
   CreatePostRequest,
   Error,
@@ -502,7 +502,28 @@ export const useDeleteBlogPost = <TError = UnauthorizedResponse | Error | NotFou
     }
     
 /**
- * Retrieves all comments for a specific blog post.
+ * Initiates retrieval of comments for a specific blog post.
+
+**Response Pattern:**
+- HTTP Response: Immediate acknowledgment with comment count
+- WebSocket Delivery: Full comments data delivered via API Gateway WebSocket
+
+**WebSocket Connection:**
+- Development: `ws://localhost:4566` (LocalStack API Gateway)
+- Production: `wss://your-api-gateway-id.execute-api.us-east-1.amazonaws.com/dev`
+
+**WebSocket Message Format:**
+```json
+{
+  "type": "comments_list",
+  "data": {
+    "post_id": "string",
+    "comments": [...],
+    "count": 5
+  },
+  "timestamp": "2024-01-01T00:00:00Z"
+}
+```
 
 Comments are returned in chronological order (oldest first).
 This endpoint is public and does not require authentication.
@@ -526,9 +547,9 @@ export const getGetPostCommentsUrl = (id: string,
 }
 
 export const getPostComments = async (id: string,
-    params?: GetPostCommentsParams, options?: RequestInit): Promise<CommentsResponse> => {
+    params?: GetPostCommentsParams, options?: RequestInit): Promise<CommentsAcknowledgmentResponse> => {
   
-  return customFetch<CommentsResponse>(getGetPostCommentsUrl(id,params),
+  return customFetch<CommentsAcknowledgmentResponse>(getGetPostCommentsUrl(id,params),
   {      
     ...options,
     method: 'GET'

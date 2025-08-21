@@ -3,7 +3,28 @@ get:
     - comments
   summary: Get Post Comments
   description: |
-    Retrieves all comments for a specific blog post.
+    Initiates retrieval of comments for a specific blog post.
+    
+    **Response Pattern:**
+    - HTTP Response: Immediate acknowledgment with comment count
+    - WebSocket Delivery: Full comments data delivered via API Gateway WebSocket
+    
+    **WebSocket Connection:**
+    - Development: `ws://localhost:4566` (LocalStack API Gateway)
+    - Production: `wss://your-api-gateway-id.execute-api.us-east-1.amazonaws.com/dev`
+    
+    **WebSocket Message Format:**
+    ```json
+    {
+      "type": "comments_list",
+      "data": {
+        "post_id": "string",
+        "comments": [...],
+        "count": 5
+      },
+      "timestamp": "2024-01-01T00:00:00Z"
+    }
+    ```
     
     Comments are returned in chronological order (oldest first).
     This endpoint is public and does not require authentication.
@@ -13,7 +34,7 @@ get:
     - $ref: "../components/parameters/post-id.yml"
     - name: limit
       in: query
-      description: Maximum number of comments to return
+      description: Maximum number of comments to return via WebSocket
       required: false
       schema:
         type: integer
@@ -22,14 +43,18 @@ get:
         default: 50
   responses:
     "200":
-      description: Successfully retrieved post comments
+      description: |
+        Comments request acknowledged successfully. 
+        
+        The actual comments data will be delivered via API Gateway WebSocket 
+        to all connected clients.
       content:
         application/json:
           schema:
-            $ref: "../openapi.yml#/components/schemas/CommentsResponse"
+            $ref: "../openapi.yml#/components/schemas/CommentsAcknowledgmentResponse"
           examples:
             default:
-              $ref: "../components/examples/comments-response.yml"
+              $ref: "../components/examples/comments-acknowledgment-response.yml"
     "404":
       $ref: "../components/responses/not-found.yml"
     "500":

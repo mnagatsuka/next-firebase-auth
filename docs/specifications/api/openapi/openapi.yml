@@ -114,6 +114,8 @@ components:
       $ref: './components/schemas/blog-post-list-response.yml'
     CommentsResponse:
       $ref: './components/schemas/comments-response.yml'
+    CommentsAcknowledgmentResponse:
+      $ref: './components/schemas/comments-acknowledgment-response.yml'
     Error:
       $ref: './components/schemas/error.yml'
     ErrorDetail:
@@ -136,6 +138,8 @@ components:
       $ref: './components/examples/comment.yml'
     CommentsResponse:
       $ref: './components/examples/comments-response.yml'
+    CommentsAcknowledgmentResponse:
+      $ref: './components/examples/comments-acknowledgment-response.yml'
     CreatePostRequest:
       $ref: './components/examples/create-post-request.yml'
     CreateCommentRequest:

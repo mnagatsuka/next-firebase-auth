@@ -1,0 +1,20 @@
+type: object
+required:
+  - status
+  - message
+  - count
+properties:
+  status:
+    type: string
+    enum: ["success"]
+    description: Operation status
+  message:
+    type: string
+    description: Human-readable status message
+    example: "Comments retrieved successfully"
+  count:
+    type: integer
+    description: Number of comments that will be delivered via WebSocket
+    minimum: 0
+    example: 5
+additionalProperties: false

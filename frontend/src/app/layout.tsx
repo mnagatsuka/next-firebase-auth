@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { RealtimeNotifications } from "@/components/common/RealtimeNotifications";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { PageTransition } from "@/components/ui/PageTransition";
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 									<Footer />
 								</div>
 								<Toaster />
+								<RealtimeNotifications />
 							</AuthProvider>
 						</QueryProvider>
 					</MswProvider>

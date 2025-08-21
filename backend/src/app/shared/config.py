@@ -44,8 +44,17 @@ class Settings(BaseSettings):
     
     # Firebase Auth Emulator (for development)
     FIREBASE_AUTH_EMULATOR_HOST: Optional[str] = None
+    
+    # API Gateway WebSocket configuration  
+    # For LocalStack: use AWS_ENDPOINT_URL
+    # For AWS Production: set via APP_API_GATEWAY_WEBSOCKET_URL env var
+    API_GATEWAY_WEBSOCKET_URL: str = ""
+    API_GATEWAY_WEBSOCKET_API_ID: str = ""  # API Gateway WebSocket API ID
 
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     return Settings()  # type: ignore[call-arg]
+
+# Create global settings instance
+settings = get_settings()

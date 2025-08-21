@@ -18,6 +18,7 @@ from app.infra.repositories.comments_repository import (
 from app.application.services.posts_service import PostApplicationService
 from app.application.services.comments_service import CommentApplicationService
 from app.application.services.favorites_service import FavoriteApplicationService
+from app.application.services.apigateway_websocket_service import apigateway_websocket_service
 from app.infra.repositories.favorites_repository import InMemoryFavoriteRepository, DynamoDBFavoriteRepository
 
 
@@ -92,3 +93,9 @@ def get_favorite_application_service(
     post_repository=Depends(get_post_repository),
 ) -> FavoriteApplicationService:
     return FavoriteApplicationService(favorite_repository, post_repository)
+
+
+# WebSocket service dependency
+def get_apigateway_websocket_service():
+    """FastAPI dependency for API Gateway WebSocket service."""
+    return apigateway_websocket_service

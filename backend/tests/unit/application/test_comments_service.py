@@ -32,7 +32,7 @@ class TestCommentApplicationService:
         created_comment = Comment(
             id="comment-123",
             content="Test comment",
-            author="test-author",
+            user_id="test-user-uid",
             post_id="post-123",
             created_at=datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         )
@@ -44,20 +44,20 @@ class TestCommentApplicationService:
         result = await self.comment_service.create_comment(
             post_id="post-123",
             content="Test comment",
-            author="test-author"
+            user_id="test-user-uid"
         )
         
         # Assert
         assert result["id"] == "comment-123"
         assert result["content"] == "Test comment"
-        assert result["author"] == "test-author"
+        assert result["userId"] == "test-user-uid"
         assert result["postId"] == "post-123"
         assert result["createdAt"] == datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         
         # Verify domain service was called
         self.comment_service.comment_service.create_comment.assert_called_once_with(
             content="Test comment",
-            author="test-author",
+            user_id="test-user-uid",
             post_id="post-123"
         )
     
@@ -74,7 +74,7 @@ class TestCommentApplicationService:
             await self.comment_service.create_comment(
                 post_id="post-123",
                 content="Test comment",
-                author="test-author"
+                user_id="test-user-uid"
             )
     
     @pytest.mark.asyncio
@@ -85,14 +85,14 @@ class TestCommentApplicationService:
             Comment(
                 id="comment-1",
                 content="First comment",
-                author="author-1",
+                user_id="user-1",
                 post_id="post-123",
                 created_at=datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
             ),
             Comment(
                 id="comment-2",
                 content="Second comment",
-                author="author-2",
+                user_id="user-2",
                 post_id="post-123",
                 created_at=datetime(2024, 1, 1, 13, 0, 0, tzinfo=timezone.utc)
             )
@@ -131,7 +131,7 @@ class TestCommentApplicationService:
         comment = Comment(
             id="comment-123",
             content="Test content",
-            author="test-author",
+            user_id="test-user-uid",
             post_id="post-123",
             created_at=datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         )
@@ -143,7 +143,7 @@ class TestCommentApplicationService:
         expected = {
             "id": "comment-123",
             "content": "Test content",
-            "author": "test-author",
+            "userId": "test-user-uid",
             "postId": "post-123",
             "createdAt": datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         }

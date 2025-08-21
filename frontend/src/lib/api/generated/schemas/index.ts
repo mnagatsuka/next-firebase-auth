@@ -32,6 +32,8 @@ export * from './blogPostStatus';
 export * from './blogPostSummary';
 export * from './blogPostSummaryStatus';
 export * from './comment';
+export * from './commentsAcknowledgmentResponse';
+export * from './commentsAcknowledgmentResponseStatus';
 export * from './commentsResponse';
 export * from './createCommentRequest';
 export * from './createPostRequest';

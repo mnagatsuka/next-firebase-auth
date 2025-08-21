@@ -1,0 +1,6 @@
+summary: Comments Request Acknowledged
+description: Acknowledgment response for comments request - actual comments delivered via WebSocket
+value:
+  status: "success"
+  message: "Comments retrieved successfully"
+  count: 5

@@ -1,0 +1,78 @@
+version = 0.1
+
+[default.global.parameters]
+stack_name = "blog-api-backend"
+
+[default.build.parameters]
+cached = true
+parallel = true
+use_container = false
+
+[default.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+resolve_s3 = true
+region = "us-east-1"
+disable_rollback = false
+fail_on_empty_changeset = false
+
+[default.local_start_api.parameters]
+warm_containers = "EAGER"
+
+[default.local_start_lambda.parameters]
+warm_containers = "EAGER"
+
+# Development Environment
+[dev.global.parameters]
+stack_name = "blog-api-backend-dev"
+
+[dev.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+resolve_s3 = true
+region = "us-east-1"
+parameter_overrides = [
+    "Environment=dev",
+    "FirebaseProjectId=demo-project"
+]
+tags = [
+    "Environment=dev",
+    "Project=BlogAPI"
+]
+
+# Staging Environment
+[staging.global.parameters]
+stack_name = "blog-api-backend-staging"
+
+[staging.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+resolve_s3 = true
+region = "us-east-1"
+parameter_overrides = [
+    "Environment=staging",
+    "FirebaseProjectId=your-staging-firebase-project"
+]
+tags = [
+    "Environment=staging",
+    "Project=BlogAPI"
+]
+
+# Production Environment
+[prod.global.parameters]
+stack_name = "blog-api-backend-prod"
+
+[prod.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+region = "us-east-1"
+parameter_overrides = [
+    "Environment=prod",
+    "FirebaseProjectId=your-production-firebase-project"
+]
+tags = [
+    "Environment=prod",
+    "Project=BlogAPI",
+    "CostCenter=Production"
+]

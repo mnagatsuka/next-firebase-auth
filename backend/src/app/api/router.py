@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from app.api.routes.posts import posts_router
 from app.api.routes.comments import comments_router
 from app.api.routes.users import users_router
+from app.api.routes.websocket import websocket_router
 
 api_router = APIRouter()
 
@@ -17,3 +18,4 @@ async def health_check():
 api_router.include_router(posts_router)
 api_router.include_router(comments_router)
 api_router.include_router(users_router)
+api_router.include_router(websocket_router)

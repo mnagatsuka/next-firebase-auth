@@ -22,6 +22,7 @@ src/generated_fastapi_server/models/blog_post_list_response.py
 src/generated_fastapi_server/models/blog_post_response.py
 src/generated_fastapi_server/models/blog_post_summary.py
 src/generated_fastapi_server/models/comment.py
+src/generated_fastapi_server/models/comments_acknowledgment_response.py
 src/generated_fastapi_server/models/comments_response.py
 src/generated_fastapi_server/models/create_comment_request.py
 src/generated_fastapi_server/models/create_post_request.py

@@ -24,7 +24,7 @@ Authorization: Bearer <firebase-id-token>
 
 export type GetPostCommentsParams = {
 /**
- * Maximum number of comments to return
+ * Maximum number of comments to return via WebSocket
  * @minimum 1
  * @maximum 100
  */

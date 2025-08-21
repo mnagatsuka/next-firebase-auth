@@ -12,10 +12,11 @@ setup_generated_imports()
 from generated_fastapi_server.models.comment import Comment
 from generated_fastapi_server.models.create_comment_request import CreateCommentRequest
 from generated_fastapi_server.models.comments_response import CommentsResponse
+from generated_fastapi_server.models.comments_acknowledgment_response import CommentsAcknowledgmentResponse
 from generated_fastapi_server.models.api_response_status import ApiResponseStatus
 
 from app.application.services.comments_service import CommentApplicationService
-from app.shared.dependencies import get_comment_application_service
+from app.shared.dependencies import get_comment_application_service, get_apigateway_websocket_service
 from app.shared.auth import AuthenticatedUser, get_current_user_optional, require_authenticated_user
 from app.domain.exceptions import CommentNotFoundError, CommentValidationError, PostNotFoundError
 from app.application.exceptions import ValidationError, NotFoundError, ApplicationError, AuthenticationError
@@ -62,9 +63,10 @@ async def get_post_comments(
     id: str,
     limit: int = 10,
     current_user: Optional[AuthenticatedUser] = Depends(get_current_user_optional),
-    comment_service: CommentApplicationService = Depends(get_comment_application_service)
-) -> CommentsResponse:
-    """Get comments for a specific blog post. Authentication optional."""
+    comment_service: CommentApplicationService = Depends(get_comment_application_service),
+    websocket_service = Depends(get_apigateway_websocket_service)
+) -> CommentsAcknowledgmentResponse:
+    """Get comments for a specific blog post. Returns acknowledgment, sends data via API Gateway WebSocket."""
     try:
         comments_data = await comment_service.get_comments_by_post(
             post_id=id,
@@ -79,11 +81,16 @@ async def get_post_comments(
                 userId=comment_data["userId"],
                 createdAt=comment_data["createdAt"],
                 postId=comment_data["postId"]
-            ))
+            ).model_dump())
         
-        return CommentsResponse(
-            status=ApiResponseStatus.SUCCESS,
-            data=comments
+        # Send response via API Gateway WebSocket
+        await websocket_service.broadcast_comments_list(id, comments)
+        
+        # Return typed acknowledgment response
+        return CommentsAcknowledgmentResponse(
+            status="success",
+            message="Comments retrieved successfully",
+            count=len(comments)
         )
         
     except (PostNotFoundError, NotFoundError):
