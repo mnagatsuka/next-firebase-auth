@@ -9,7 +9,7 @@ Our OpenAPI specification generates **FastAPI/Pydantic models** in `backend/src/
 ### 1. **One Schema Per File**
 - Each `.yml` file in `components/schemas/` should define exactly one reusable schema
 - Use kebab-case naming for file names (e.g., `blog-post-summary.yml`)
-- Use PascalCase for schema references in `openapi/openapi.yml` (e.g., `BlogPostSummary`)
+- Use PascalCase for schema references in `openapi/spec/openapi.yml` (e.g., `BlogPostSummary`)
 - Generated Python models use snake_case for field names (e.g., `published_at` from `publishedAt`)
 
 ### 2. **No Inline Schemas**
@@ -36,7 +36,7 @@ properties:
 - **Within external files**: Use relative paths back to openapi.yml: `$ref: "../../openapi.yml#/components/schemas/SchemaName"`
 - **Component references**: Always use `#/components/schemas/PascalCaseName` format for internal references
 - Use descriptive names that match the schema purpose
-- Group related schemas logically in the main `openapi/openapi.yml`
+- Group related schemas logically in the main `openapi/spec/openapi.yml`
 
 ## 📁 File Organization
 
@@ -223,7 +223,7 @@ Manual validation ensures:
 
 ### Adding New Schemas
 1. **Create the schema file** in `components/schemas/` using kebab-case naming
-2. **Add reference** in main `openapi/openapi.yml` under appropriate section (use PascalCase)
+2. **Add reference** in main `openapi/spec/openapi.yml` under appropriate section (use PascalCase)
 3. **Create examples** in `components/examples/` with same base name
 4. **Validate the changes** using redocly commands
 5. **Test backend integration** to verify Pydantic model creation
@@ -247,7 +247,7 @@ required:
   - name
 EOF
 
-# 2. Add to openapi/openapi.yml schemas section
+# 2. Add to openapi/spec/openapi.yml schemas section
 # NewEntity:
 #   $ref: './components/schemas/new-entity.yml'
 
@@ -271,7 +271,7 @@ pnpm oas:lint
 ### Removing Schemas
 1. Check all references before removal
 2. Ensure no external consumers depend on it
-3. Remove from main `openapi/openapi.yml` references
+3. Remove from main `openapi/spec/openapi.yml` references
 4. Archive or delete the file
 
 ## 🎉 Success Criteria
@@ -295,7 +295,7 @@ A well-maintained schema structure should:
 ### Schema Duplication Errors
 **Problem**: Orval reports "Duplicate schema names detected"
 **Solution**: Follow the [schema-fix.md](./schema-fix.md) playbook:
-1. Ensure PascalCase schema keys in `openapi.yml` 
+1. Ensure PascalCase schema keys in `openapi/spec/openapi.yml` 
 2. Use proper relative references from external files
 3. Bundle with `--remove-unused-components` flag
 4. Verify no duplicate schema definitions exist
@@ -315,5 +315,5 @@ mock: {
 ### Reference Resolution Errors
 **Problem**: Bundling fails with "Can't resolve $ref"
 **Solution**: Check reference patterns:
-- From `openapi.yml`: `$ref: "./components/schemas/filename.yml"`
+- From `openapi/spec/openapi.yml`: `$ref: "./components/schemas/filename.yml"`
 - From external files: `$ref: "../../openapi.yml#/components/schemas/SchemaName"`

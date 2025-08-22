@@ -9,16 +9,16 @@ By keeping our API specifications here, we ensure consistency, enable automated 
 
 ```
 .
-├── openapi/openapi.yml
-├── openapi-schema-guideline.md
-├── paths/
+├── openapi/spec/openapi.yml
+├── openapi/openapi-schema-guideline.md
+├── openapi/spec/paths/
 │   ├── posts.yml
 │   ├── posts@{id}.yml
 │   ├── posts@{id}@comments.yml
 │   ├── posts@{id}@favorite.yml
 │   ├── users@{uid}@posts.yml
 │   └── users@{uid}@favorites.yml
-└── components/
+└── openapi/spec/components/
     ├── parameters/
     │   ├── pagination.yml
     │   ├── post-id.yml
@@ -55,7 +55,7 @@ By keeping our API specifications here, we ensure consistency, enable automated 
         └── error-404.yml
 ```
 
-### `openapi/openapi.yml`
+### `openapi/spec/openapi.yml`
 This is the main entry point for the API specification. It references all paths and components using `$ref` to maintain a clean, modular structure. The API integrates with Firebase Authentication and supports blog post management with commenting functionality. Anonymous users are supported via Firebase anonymous auth for favoriting posts; creating posts requires a non-anonymous (normal) login.
 
 ### `openapi-schema-guideline.md`
@@ -80,10 +80,10 @@ This directory contains all the reusable building blocks of the API specificatio
 ## Rules and Best Practices
 
 ### Single Source of Truth
-The `openapi/openapi.yml` file and its referenced components are the definitive contract for our API. Do not hardcode API paths or schemas in the application code without first defining them here.
+The `openapi/spec/openapi.yml` file and its referenced components are the definitive contract for our API. Do not hardcode API paths or schemas in the application code without first defining them here.
 
 ### Modularity
-All schemas should be defined in separate `.yml` files within the `/schemas` directory. This keeps the main `openapi/openapi.yml` file clean and focused on paths.
+All schemas should be defined in separate `.yml` files within the `/schemas` directory. This keeps the main `openapi/spec/openapi.yml` file clean and focused on paths.
 
 ### Naming Conventions
  `PascalCase` for schema names (e.g., `UserDashboard`, `ProductItem`). Use `camelCase` for property names within schemas (e.g., `userName`, `renewalDate`).
@@ -92,7 +92,7 @@ All schemas should be defined in separate `.yml` files within the `/schemas` dir
 All endpoints, parameters, and schemas must include a clear `description`. This is essential for both human understanding and for AI agents to generate correct code and documentation.
 
 ### Versioning
-When making breaking changes to the API, update the `info.version` field in the `openapi/openapi.yml` file.
+When making breaking changes to the API, update the `info.version` field in the `openapi/spec/openapi.yml` file.
 
 ### Schema Development
 When creating or modifying schemas, follow these essential rules (see `openapi-schema-guideline.md` for details):
@@ -114,7 +114,7 @@ You can view the interactive API documentation in your browser using **redoc-cli
 cd /path/to/your/project
 
 # Bundle all references into a single file and serve (one command)
-npx @redocly/cli bundle docs/specifications/api/openapi/openapi.yml --output temp-openapi.yml && npx redoc-cli serve temp-openapi.yml
+npx @redocly/cli bundle openapi/spec/openapi.yml --output temp-openapi.yml && npx redoc-cli serve temp-openapi.yml
 ```
 
 
@@ -130,10 +130,10 @@ If you prefer to run commands separately:
 
 ```bash
 # Step 1: Validate the OpenAPI specification
-npx @redocly/cli lint docs/specifications/api/openapi/openapi.yml
+npx @redocly/cli lint openapi/spec/openapi.yml
 
 # Step 2: Bundle the modular files into a single specification
-npx @redocly/cli bundle docs/specifications/api/openapi/openapi.yml --output temp-openapi.yml
+npx @redocly/cli bundle openapi/spec/openapi.yml --output temp-openapi.yml
 
 # Step 3: Serve the bundled specification
 npx redoc-cli serve temp-openapi.yml
@@ -169,8 +169,8 @@ Add these scripts to your `package.json` for convenience:
 ```json
 {
   "scripts": {
-    "oas:lint": "pnpm exec redocly lint docs/specifications/api/openapi/openapi.yml",
-    "oas:bundle": "mkdir -p openapi/dist && pnpm exec redocly bundle docs/specifications/api/openapi/openapi.yml --remove-unused-components -o openapi/dist/openapi.yml",
+    "oas:lint": "pnpm exec redocly lint openapi/spec/openapi.yml",
+    "oas:bundle": "mkdir -p openapi/dist && pnpm exec redocly bundle openapi/spec/openapi.yml --remove-unused-components -o openapi/dist/openapi.yml",
     "oas:docs:project": "redocly preview --product=redoc --project-dir=./ --port=8081",
     "oas:docs:api": "pnpm oas:bundle && pnpm exec redocly build-docs openapi/dist/openapi.yml -o openapi/dist/index.html && open openapi/dist/index.html",
   }
@@ -182,7 +182,7 @@ For projects using `pnpm`, you can also add:
 ```json
 {
   "scripts": {
-    "oas:bundle": "@redocly/cli bundle docs/specifications/api/openapi/openapi.yml --output temp-openapi.yml",
+    "oas:bundle": "@redocly/cli bundle openapi/spec/openapi.yml --output temp-openapi.yml",
     "orval:gen": "orval --config orval.config.ts"
   }
 }
@@ -214,7 +214,7 @@ The ReDoc interface provides:
 1. **Edit** the OpenAPI specification files in this directory
 2. **Validate and bundle** the docs with the quick start command:
    ```bash
-   npx @redocly/cli bundle docs/specifications/api/openapi/openapi.yml --output temp-openapi.yml && npx redoc-cli serve temp-openapi.yml
+   npx @redocly/cli bundle openapi/spec/openapi.yml --output temp-openapi.yml && npx redoc-cli serve temp-openapi.yml
    ```
 3. **Refresh** your browser to see changes (you'll need to re-run the bundle command after changes)
 4. **Share** the documentation URL with team members for review

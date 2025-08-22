@@ -2,7 +2,6 @@ type: object
 required:
   - status
   - message
-  - count
 properties:
   status:
     type: string
@@ -11,10 +10,5 @@ properties:
   message:
     type: string
     description: Human-readable status message
-    example: "Comments retrieved successfully"
-  count:
-    type: integer
-    description: Number of comments that will be delivered via WebSocket
-    minimum: 0
-    example: 5
+    example: "Comment created successfully"
 additionalProperties: false

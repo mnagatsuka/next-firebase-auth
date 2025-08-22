@@ -33,10 +33,10 @@ servers:
     description: API server
     variables:
       environment:
-        default: prod
+        default: production
         enum:
-          - prod
-          - dev
+          - production
+          - development
           - staging
         description: The environment to use
 
