@@ -22,6 +22,7 @@ const mockPosts = [
 		author: "John Doe",
 		publishedAt: "2024-01-15T10:30:00Z",
 		tags: ["Next.js", "React", "TypeScript"],
+		status: "published",
 	},
 	{
 		id: "post-124",
@@ -31,6 +32,7 @@ const mockPosts = [
 		author: "Jane Smith",
 		publishedAt: "2024-01-14T09:15:00Z",
 		tags: ["React", "Patterns", "Hooks"],
+		status: "published",
 	},
 	{
 		id: "post-125",
@@ -39,6 +41,7 @@ const mockPosts = [
 		author: "Bob Johnson",
 		publishedAt: "2024-01-13T14:45:00Z",
 		tags: ["TypeScript", "Best Practices"],
+		status: "published",
 	},
 ];
 
