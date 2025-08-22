@@ -4,7 +4,7 @@ This document explains how the frontend leverages OpenAPI specifications for typ
 
 ## 🎯 Overview
 
-Our frontend follows a **schema-first** approach where all TypeScript types, React Query hooks, and MSW mocks are automatically generated from the OpenAPI specification in `docs/specifications/api/`. This ensures complete type safety from API contracts down to React components.
+Our frontend follows a **schema-first** approach where all TypeScript types, React Query hooks, and MSW mocks are automatically generated from the OpenAPI specification in `openapi/spec/`. This ensures complete type safety from API contracts down to React components.
 
 ### Key Benefits
 
@@ -62,7 +62,7 @@ This runs:
 
 ### 2. Generated TypeScript Types
 
-**OpenAPI Schema** (`docs/specifications/api/openapi/components/schemas/blog-post.yml`):
+**OpenAPI Schema** (`openapi/spec/components/schemas/blog-post.yml`):
 ```yaml
 type: object
 properties:
@@ -467,8 +467,8 @@ cd frontend && pnpm test src/components/blog/
 
 ## 📚 Related Files
 
-- **OpenAPI Specification**: `docs/specifications/api/openapi/openapi.yml`
-- **Schema Guidelines**: `docs/specifications/api/openapi-schema-guideline.md`
+- **OpenAPI Specification**: `openapi/spec/openapi.yml`
+- **Schema Guidelines**: `openapi/openapi-schema-guideline.md`
 - **Generated Types**: `frontend/src/lib/api/generated/schemas/`
 - **Generated Hooks**: `frontend/src/lib/api/generated/client.ts`
 - **Generated Mocks**: `frontend/src/lib/api/generated/client.msw.ts`

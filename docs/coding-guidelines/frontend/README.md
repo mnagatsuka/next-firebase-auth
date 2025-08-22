@@ -124,7 +124,7 @@ It is intended for both **human developers** and **AI-based tools** to ensure co
 ## 18. Deployment on Vercel
 - [18_vercel-deployment.md](./18_vercel-deployment.md)
 - Connecting Git repository to Vercel  
-- Environment variables management (`.env.local`, `.env.production`)  
+- Environment variables management (`.env.development`, `.env.production`)  
 - Build settings and output configuration  
 - Preview, staging, and production environments  
 - Using Vercel analytics and monitoring  

@@ -33,6 +33,7 @@ export function useWebSocket({
 
   const connect = useCallback(() => {
     try {
+      console.log('Connecting to WebSocket:', url)
       ws.current = new WebSocket(url)
 
       ws.current.onopen = () => {
@@ -63,7 +64,12 @@ export function useWebSocket({
       }
 
       ws.current.onerror = (error) => {
-        console.error('WebSocket error:', error)
+        console.error('WebSocket error:', {
+          type: error.type,
+          target: error.target,
+          readyState: ws.current?.readyState,
+          url: url
+        })
         onError?.(error)
       }
     } catch (error) {

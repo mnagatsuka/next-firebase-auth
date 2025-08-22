@@ -21,12 +21,24 @@ Authorization: Bearer <firebase-id-token>
 
  * OpenAPI spec version: 1.0.0
  */
+import type { PageParameter } from './pageParameter';
+import type { LimitParameter } from './limitParameter';
+import type { GetUserPostsStatus } from './getUserPostsStatus';
 
-export type GetPostCommentsParams = {
+export type GetUserPostsParams = {
 /**
- * Maximum number of comments to return
+ * Page number for pagination
  * @minimum 1
- * @maximum 100
  */
-limit?: number;
+page?: PageParameter;
+/**
+ * Number of items per page
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: LimitParameter;
+/**
+ * Optional status filter for user-owned posts
+ */
+status?: GetUserPostsStatus;
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { PostList } from "@/components/blog/PostList";
 import { BlogPagination } from "@/components/blog/BlogPagination";
@@ -23,7 +23,9 @@ export default function FavoritePostsPage() {
     }
   }, [uid, authLoading, signInAnonymously]);
 
-  const favQuery = useGetUserFavorites(uid ?? "", { page, limit });
+  // Memoize params to keep React Query key stable across renders
+  const favParams = useMemo(() => ({ page, limit }), [page, limit]);
+  const favQuery = useGetUserFavorites(uid ?? "", favParams);
   const posts = (favQuery.data as any)?.data?.posts ?? [];
   const pagination = (favQuery.data as any)?.data?.pagination ?? { page, limit, total: 0, hasNext: false };
 

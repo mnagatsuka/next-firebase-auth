@@ -22,7 +22,7 @@ frontend/
 │   ├── styles/                  # Global styles and Tailwind config
 │   └── types/                   # TypeScript type definitions
 ├── public/                      # Static assets
-├── .env.local                   # Environment variables (not committed)
+├── .env.development                   # Environment variables (not committed)
 ├── .env.example                 # Example environment variables
 ├── next.config.ts               # Next.js configuration
 ├── tsconfig.json                # TypeScript configuration

@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// Name input removed; user identity comes from auth on server
 import { Textarea } from "@/components/ui/textarea";
 import {
 	useCreateComment,
-	getPostComments,
+	useGetPostComments,
 } from "@/lib/api/generated/client";
 import { useCommentsWebSocket } from "@/hooks/useCommentsWebSocket";
-import type { Comment } from "@/lib/api/generated/schemas";
+import { useWebSocketStatus } from "@/hooks/useWebSocketManager";
 import { formatBlogPostDate } from "@/lib/utils/date";
+import { useErrorHandler } from "@/lib/errors";
 
 export interface CommentsSectionProps {
 	/** Post ID to fetch comments for */
@@ -20,59 +20,62 @@ export interface CommentsSectionProps {
 
 export function CommentsSection({ postId }: CommentsSectionProps) {
 	const [newComment, setNewComment] = useState("");
-	const [comments, setComments] = useState<Comment[]>([]);
-	const [isLoadingComments, setIsLoadingComments] = useState(true);
+	const { showError } = useErrorHandler();
 
-	// WebSocket connection for real-time comments
-	useCommentsWebSocket({
-		onCommentsReceived: (receivedPostId, receivedComments) => {
-			if (receivedPostId === postId) {
-				setComments(receivedComments);
-				setIsLoadingComments(false);
-			}
-		}
-	});
+    // Fetch comments directly via REST API
+    // Memoize params so React Query key stays stable across renders
+    const commentsParams = useMemo(() => ({ limit: 50 as const }), []);
+    const {
+        data: commentsResponse,
+        isLoading: isLoadingComments,
+        refetch: refetchComments,
+        error: commentsError,
+    } = useGetPostComments(postId, commentsParams);
 
-	const createCommentMutation = useCreateComment({
-		mutation: {
-			onSuccess: () => {
-				// After successful comment creation, fetch comments to trigger WebSocket response
-				loadComments();
-			},
-		},
-	});
+	const comments = commentsResponse?.data || [];
 
-	// Function to load comments (triggers WebSocket response)
-	const loadComments = useCallback(async () => {
-		try {
-			setIsLoadingComments(true);
-			// This API call returns acknowledgment and sends data via WebSocket
-			await getPostComments(postId);
-		} catch (error) {
-			console.error("Failed to load comments:", error);
-			setIsLoadingComments(false);
-		}
-	}, [postId]);
+    // WebSocket connection for real-time new comment notifications
+    useCommentsWebSocket({
+        onCommentsReceived: (receivedPostId) => {
+            // When a new comment notification comes via WebSocket, refetch from REST API
+            if (receivedPostId === postId) {
+                refetchComments();
+            }
+        }
+    });
 
-	// Load comments on component mount
-	useEffect(() => {
-		loadComments();
-	}, [loadComments]);
+    // Determine if WebSocket is connected to avoid duplicate refetches
+    const { isConnected } = useWebSocketStatus();
+
+    const createCommentMutation = useCreateComment({
+        mutation: {
+            onSuccess: () => {
+                // If WebSocket is not connected, refetch here as a fallback.
+                // Otherwise the comment.created event will trigger refetch.
+                if (!isConnected) {
+                    refetchComments();
+                }
+                setNewComment("");
+            },
+            onError: (error) => {
+                showError(error, "Failed to add comment");
+            },
+        },
+    });
 
 	const handleSubmit = async () => {
-		if (newComment.trim()) {
-			try {
-				await createCommentMutation.mutateAsync({
-					id: postId,
-					data: {
-						content: newComment.trim(),
-						postId,
-					} as any,
-				});
-				setNewComment("");
-			} catch (error) {
-				console.error("Failed to add comment:", error);
-			}
+		if (!newComment.trim()) return;
+		
+		try {
+			// Create comment - returns acknowledgment only
+			await createCommentMutation.mutateAsync({
+				id: postId,
+				data: {
+					content: newComment.trim(),
+				},
+			});
+		} catch {
+			// Error is already handled by onError callback
 		}
 	};
 
@@ -115,6 +118,17 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
 									</div>
 								))}
 							</div>
+						) : commentsError ? (
+							<div className="text-center py-8">
+								<p className="text-destructive mb-2">Failed to load comments</p>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => refetchComments()}
+								>
+									Try Again
+								</Button>
+							</div>
 						) : comments.length === 0 ? (
 							<p className="text-muted-foreground text-center py-8">
 								No comments yet. Be the first to comment!
@@ -123,7 +137,7 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
 							comments.map((comment) => (
 								<div key={comment.id} className="border-l-2 border-muted pl-4 space-y-2">
 									<div className="flex items-center space-x-2 text-sm text-muted-foreground">
-											<span className="font-medium text-foreground">{(comment as any).userId ?? (comment as any).author}</span>
+										<span className="font-medium text-foreground">{comment.userId}</span>
 										<span>•</span>
 										<span>{formatBlogPostDate(comment.createdAt)}</span>
 									</div>

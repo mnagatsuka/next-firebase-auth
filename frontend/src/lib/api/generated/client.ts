@@ -44,8 +44,8 @@ import type {
   BadRequestResponse,
   BlogPostListResponse,
   BlogPostResponse,
-  Comment,
   CommentsAcknowledgmentResponse,
+  CommentsResponse,
   CreateCommentRequest,
   CreatePostRequest,
   Error,
@@ -502,28 +502,11 @@ export const useDeleteBlogPost = <TError = UnauthorizedResponse | Error | NotFou
     }
     
 /**
- * Initiates retrieval of comments for a specific blog post.
+ * Retrieves all comments for a specific blog post via standard REST API.
 
 **Response Pattern:**
-- HTTP Response: Immediate acknowledgment with comment count
-- WebSocket Delivery: Full comments data delivered via API Gateway WebSocket
-
-**WebSocket Connection:**
-- Development: `ws://localhost:4566` (LocalStack API Gateway)
-- Production: `wss://your-api-gateway-id.execute-api.us-east-1.amazonaws.com/dev`
-
-**WebSocket Message Format:**
-```json
-{
-  "type": "comments_list",
-  "data": {
-    "post_id": "string",
-    "comments": [...],
-    "count": 5
-  },
-  "timestamp": "2024-01-01T00:00:00Z"
-}
-```
+- HTTP Response: Direct JSON response with comments array
+- No WebSocket involvement for this endpoint
 
 Comments are returned in chronological order (oldest first).
 This endpoint is public and does not require authentication.
@@ -547,9 +530,9 @@ export const getGetPostCommentsUrl = (id: string,
 }
 
 export const getPostComments = async (id: string,
-    params?: GetPostCommentsParams, options?: RequestInit): Promise<CommentsAcknowledgmentResponse> => {
+    params?: GetPostCommentsParams, options?: RequestInit): Promise<CommentsResponse> => {
   
-  return customFetch<CommentsAcknowledgmentResponse>(getGetPostCommentsUrl(id,params),
+  return customFetch<CommentsResponse>(getGetPostCommentsUrl(id,params),
   {      
     ...options,
     method: 'GET'
@@ -641,6 +624,25 @@ export function useGetPostComments<TData = Awaited<ReturnType<typeof getPostComm
 /**
  * Creates a new comment on a specific blog post. Requires authentication.
 
+**Response Pattern:**
+- HTTP Response: Acknowledgment response only (no comment data)
+- WebSocket Broadcast: New comment data is broadcast to all connected clients via API Gateway WebSocket
+
+**WebSocket Message Format (sent to all clients after successful creation):**
+```json
+{
+  "type": "NEW_COMMENT",
+  "postId": "string",
+  "comment": {
+    "id": "string",
+    "content": "string",
+    "authorId": "string", 
+    "authorName": "string",
+    "createdAt": "timestamp"
+  }
+}
+```
+
 The userId will be automatically set based on the authenticated user's Firebase UID.
 Comments are moderated and may not appear immediately.
 
@@ -655,9 +657,9 @@ export const getCreateCommentUrl = (id: string,) => {
 }
 
 export const createComment = async (id: string,
-    createCommentRequest: CreateCommentRequest, options?: RequestInit): Promise<Comment> => {
+    createCommentRequest: CreateCommentRequest, options?: RequestInit): Promise<CommentsAcknowledgmentResponse> => {
   
-  return customFetch<Comment>(getCreateCommentUrl(id),
+  return customFetch<CommentsAcknowledgmentResponse>(getCreateCommentUrl(id),
   {      
     ...options,
     method: 'POST',

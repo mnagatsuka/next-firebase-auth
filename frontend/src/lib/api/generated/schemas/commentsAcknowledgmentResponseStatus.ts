@@ -22,11 +22,13 @@ Authorization: Bearer <firebase-id-token>
  * OpenAPI spec version: 1.0.0
  */
 
-export type GetPostCommentsParams = {
 /**
- * Maximum number of comments to return
- * @minimum 1
- * @maximum 100
+ * Operation status
  */
-limit?: number;
-};
+export type CommentsAcknowledgmentResponseStatus = typeof CommentsAcknowledgmentResponseStatus[keyof typeof CommentsAcknowledgmentResponseStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CommentsAcknowledgmentResponseStatus = {
+  success: 'success',
+} as const;

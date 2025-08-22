@@ -21,12 +21,11 @@ Authorization: Bearer <firebase-id-token>
 
  * OpenAPI spec version: 1.0.0
  */
+import type { CommentsAcknowledgmentResponseStatus } from './commentsAcknowledgmentResponseStatus';
 
-export type GetPostCommentsParams = {
-/**
- * Maximum number of comments to return
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
-};
+export interface CommentsAcknowledgmentResponse {
+  /** Operation status */
+  status: CommentsAcknowledgmentResponseStatus;
+  /** Human-readable status message */
+  message: string;
+}

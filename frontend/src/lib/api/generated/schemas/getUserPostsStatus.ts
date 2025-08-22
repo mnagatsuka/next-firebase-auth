@@ -22,11 +22,11 @@ Authorization: Bearer <firebase-id-token>
  * OpenAPI spec version: 1.0.0
  */
 
-export type GetPostCommentsParams = {
-/**
- * Maximum number of comments to return
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
-};
+export type GetUserPostsStatus = typeof GetUserPostsStatus[keyof typeof GetUserPostsStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetUserPostsStatus = {
+  published: 'published',
+  draft: 'draft',
+} as const;

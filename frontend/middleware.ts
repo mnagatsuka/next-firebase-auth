@@ -25,7 +25,10 @@ export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request: { headers: requestHeaders } })
 
   // Build CSP connect-src with WebSocket support from env
-  const isProd = process.env.NODE_ENV === 'production'
+  const env = process.env.NODE_ENV
+  const isProd = env === 'production'
+  const isStaging = (env as string) === 'staging'
+  const applyCsp = isProd || isStaging
   const publicApiUrl = process.env.NEXT_PUBLIC_API_BASE_URL
   const serverApiUrl = process.env.API_BASE_URL
 
@@ -36,7 +39,7 @@ export async function middleware(request: NextRequest) {
 
   if (publicApiUrl) connectSources.push(publicApiUrl, toWs(publicApiUrl))
   if (serverApiUrl) connectSources.push(serverApiUrl, toWs(serverApiUrl))
-  if (!isProd && !publicApiUrl && !serverApiUrl) connectSources.push('http://localhost:8000', 'ws://localhost:8000')
+  if (!applyCsp && !publicApiUrl && !serverApiUrl) connectSources.push('http://localhost:8000', 'ws://localhost:8000')
 
   const csp = [
     "default-src 'self'",
@@ -64,8 +67,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Apply CSP only in production to avoid dev/HMR conflicts
-  if (isProd) {
+  // Apply CSP in production and staging (NODE_ENV=staging). Skip in local dev to avoid HMR conflicts.
+  if (applyCsp) {
     response.headers.set('Content-Security-Policy', csp)
   }
 

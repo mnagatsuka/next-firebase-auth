@@ -49,9 +49,10 @@ This section defines the unique behavior and logic that integrates the component
 - Page loads and the `CommentsSection` component mounts (Client-Side Rendering).
 
 #### Behavior
-1. After the main post content is rendered, the comments section loads dynamically.
-2. API call to `GET /posts/[id]/comments` fetches existing comments.
-3. Comments are rendered without full page refreshes.
+1. The client establishes a WebSocket connection to the comments service.
+2. An initial API call to `GET /posts/[id]/comments` is made. This HTTP request does not return the comments directly. Instead, it returns an acknowledgment and triggers the backend to start sending comments over the established WebSocket connection.
+3. The client listens for messages on the WebSocket.
+4. As comment data arrives via WebSocket messages, the `CommentsSection` is updated in real-time without full page refreshes.
 
 #### Component Reference
 - [Link to CommentsSection Storybook entry](https://storybook-link)
@@ -86,8 +87,6 @@ This section defines the unique behavior and logic that integrates the component
 
 ## 4. Data Requirements
 
-## 4. Data Requirements
-
 This section outlines the API endpoints this page interacts with. For complete request and response schemas, refer to the **OpenAPI spec**.
 
 ### `GET /posts/[id]`
@@ -101,7 +100,7 @@ This section outlines the API endpoints this page interacts with. For complete r
 ### `GET /posts/[id]/comments`
 
 #### Description
-- Fetches all comments associated with a specific blog post for client-side rendering.
+- Initiates the retrieval of comments for a specific blog post. This endpoint returns an immediate acknowledgment, and the actual comment data is delivered to the client via an established WebSocket connection.
 
 #### API Spec Reference
 - See the `getPostComments` endpoint in the [OpenAPI spec](https://link-to-your-openapi-spec)

@@ -49,7 +49,7 @@ describe('useWebSocket', () => {
     const onConnect = vi.fn()
     const { result } = renderHook(() => 
       useWebSocket({
-        url: 'ws://localhost:4566',
+        url: 'ws://localhost:3001',
         onConnect
       })
     )
@@ -73,7 +73,7 @@ describe('useWebSocket', () => {
 
     renderHook(() => 
       useWebSocket({
-        url: 'ws://localhost:4566',
+        url: 'ws://localhost:3001',
         onMessage
       })
     )
@@ -97,7 +97,7 @@ describe('useWebSocket', () => {
     const onDisconnect = vi.fn()
     const { result } = renderHook(() => 
       useWebSocket({
-        url: 'ws://localhost:4566',
+        url: 'ws://localhost:3001',
         onDisconnect
       })
     )

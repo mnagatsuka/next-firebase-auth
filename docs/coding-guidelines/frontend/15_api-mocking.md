@@ -38,7 +38,7 @@ This creates `frontend/public/mockServiceWorker.js` required for CSR mocking.
 
 ### Environment Variables
 
-Configure mocking behavior in `frontend/.env.local`:
+Configure mocking behavior in `frontend/.env.development`:
 
 ```env
 NEXT_PUBLIC_API_MOCKING=enabled
@@ -449,7 +449,7 @@ const mocking = true  // Should be configurable
 
 ```bash
 # 1. Update OpenAPI specification
-vim docs/specifications/api/openapi/openapi.yml
+vim openapi/spec/openapi.yml
 
 # 2. Regenerate client and mocks
 pnpm orval:gen

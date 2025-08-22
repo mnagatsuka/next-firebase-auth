@@ -13,7 +13,7 @@ Our goals are:
 ### 1. General Project Practices
 - **Follow the coding guidelines** defined in `01_introduction.md` to `18_vercel-deployment.md`.
 - Use **pnpm** for all package installations to ensure consistency.
-- Keep `.env.local` out of version control.
+- Keep `.env.development` out of version control.
 - Regularly update dependencies to patch security vulnerabilities.
 
 ### 2. Components & Architecture
@@ -59,7 +59,7 @@ Our goals are:
 ## ❌ Don’ts — Common Pitfalls to Avoid
 
 ### 1. General Project Mistakes
-- ❌ Commit `.env.local` or other sensitive files.
+- ❌ Commit `.env.development` or other sensitive files.
 - ❌ Install packages without `pnpm` — it may break dependency consistency.
 - ❌ Disable TypeScript strict mode.
 
@@ -92,7 +92,7 @@ Our goals are:
 - ❌ Ignore Lighthouse performance or accessibility warnings.
 
 ### 8. Deployment
-- ❌ Use `.env.local` in production builds.
+- ❌ Use `.env.development` in production builds.
 - ❌ Push directly to the main branch without PR review.
 - ❌ Deploy untested code to production.
 

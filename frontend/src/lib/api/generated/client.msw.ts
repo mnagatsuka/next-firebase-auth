@@ -29,8 +29,8 @@ import {
 import type {
   BlogPostListResponse,
   BlogPostResponse,
-  Comment,
-  CommentsAcknowledgmentResponse
+  CommentsAcknowledgmentResponse,
+  CommentsResponse
 } from './schemas';
 
 
@@ -42,9 +42,9 @@ export const getGetBlogPostByIdResponseMock = (): BlogPostResponse => ({"status"
 
 export const getUpdateBlogPostResponseMock = (): BlogPostResponse => ({"status":"success","data":{"id":"post-123","title":"Getting Started with Next.js","content":"# Introduction\n\nNext.js is a powerful React framework that enables you to build full-stack web applications by extending the latest React features.\n\n## Key Features\n\n- **Server-Side Rendering (SSR)**: Pre-render pages on the server\n- **Static Site Generation (SSG)**: Generate static HTML at build time\n- **Client-Side Rendering (CSR)**: Render pages in the browser\n- **API Routes**: Build API endpoints within your Next.js app\n\n## Getting Started\n\nTo create a new Next.js project, run:\n\n```bash\nnpx create-next-app@latest my-app\ncd my-app\nnpm run dev\n```\n\nYour application will be available at `http://localhost:3000`.\n\n## Conclusion\n\nNext.js provides a great developer experience with many features out of the box. It's perfect for building modern web applications.\n","excerpt":"Learn the basics of Next.js in this comprehensive guide covering SSR, SSG, and CSR.","author":"John Doe","publishedAt":"2024-01-15T10:30:00Z","status":"published"}})
 
-export const getGetPostCommentsResponseMock = (): CommentsAcknowledgmentResponse => ({"status":"success","message":"Comments retrieved successfully","count":5})
+export const getGetPostCommentsResponseMock = (): CommentsResponse => ({"status":"success","data":[{"id":"comment-456","content":"Great article! Very helpful explanation of Next.js features. I especially liked the section on SSR vs SSG.","userId":"uid_abc123xyz","createdAt":"2024-01-15T14:20:00Z","postId":"post-123"},{"id":"comment-457","content":"Thanks for sharing this! The code examples are really clear and easy to follow.","userId":"uid_def456uvw","createdAt":"2024-01-15T16:45:00Z","postId":"post-123"},{"id":"comment-458","content":"Could you write a follow-up article about Next.js deployment strategies?","userId":"uid_xyz789rst","createdAt":"2024-01-16T08:30:00Z","postId":"post-123"}]})
 
-export const getCreateCommentResponseMock = (): Comment => ({"id":"comment-456","content":"Great article! Very helpful explanation of Next.js features. I especially liked the section on SSR vs SSG.","userId":"uid_abc123xyz","createdAt":"2024-01-15T14:20:00Z","postId":"post-123"})
+export const getCreateCommentResponseMock = (): CommentsAcknowledgmentResponse => ({"status":"success","message":"Comment created successfully"})
 
 export const getGetUserPostsResponseMock = (): BlogPostListResponse => ({"status":"success","data":{"posts":[{"id":"post-123","title":"Getting Started with Next.js","excerpt":"Learn the basics of Next.js in this comprehensive guide covering SSR, SSG, and CSR.","author":"John Doe","publishedAt":"2024-01-15T10:30:00Z"},{"id":"post-124","title":"Advanced React Patterns","excerpt":"Explore advanced React patterns including hooks, context, and state management techniques.","author":"Jane Smith","publishedAt":"2024-01-14T09:15:00Z"},{"id":"post-125","title":"TypeScript Best Practices","excerpt":"Learn TypeScript best practices for building scalable and maintainable applications.","author":"Bob Johnson","publishedAt":"2024-01-13T14:45:00Z"}],"pagination":{"page":1,"limit":10,"total":3,"hasNext":false}}})
 
@@ -109,7 +109,7 @@ export const getDeleteBlogPostMockHandler = (overrideResponse?: null | ((info: P
   })
 }
 
-export const getGetPostCommentsMockHandler = (overrideResponse?: CommentsAcknowledgmentResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<CommentsAcknowledgmentResponse> | CommentsAcknowledgmentResponse)) => {
+export const getGetPostCommentsMockHandler = (overrideResponse?: CommentsResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<CommentsResponse> | CommentsResponse)) => {
   return http.get('*/posts/:id/comments', async (info) => {
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
@@ -121,7 +121,7 @@ export const getGetPostCommentsMockHandler = (overrideResponse?: CommentsAcknowl
   })
 }
 
-export const getCreateCommentMockHandler = (overrideResponse?: Comment | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Comment> | Comment)) => {
+export const getCreateCommentMockHandler = (overrideResponse?: CommentsAcknowledgmentResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<CommentsAcknowledgmentResponse> | CommentsAcknowledgmentResponse)) => {
   return http.post('*/posts/:id/comments', async (info) => {
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined

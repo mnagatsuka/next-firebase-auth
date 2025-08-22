@@ -176,13 +176,13 @@ services:
 
 Follow the Next.js convention:
 
-* `.env.local` — Local development (not committed)
+* `.env.development` — Local development (not committed)
 * `.env.test` — Testing environment
 * `.env.production` — Production environment
 
 **Rules:**
 
-* Do **not** commit `.env.local` or secrets.
+* Do **not** commit `.env.development` or secrets.
 * Document all required variables in `docs/env.md`.
 * Use `process.env.MY_VAR` with explicit typing.
 
