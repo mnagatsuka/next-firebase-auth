@@ -276,7 +276,7 @@ class TestDynamoDBUserRepository:
         self.settings.aws_endpoint_url = None  # Use moto mock
         
         # Create DynamoDB table
-        dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+        dynamodb = boto3.resource('dynamodb', region_name='ap-northeast-1')
         self.table = dynamodb.create_table(
             TableName='users',
             KeySchema=[
@@ -538,7 +538,7 @@ async def dynamodb_table(localstack_container):
         endpoint_url=endpoint_url,
         aws_access_key_id='test',
         aws_secret_access_key='test',
-        region_name='us-east-1'
+        region_name='ap-northeast-1'
     )
     
     table = dynamodb.create_table(

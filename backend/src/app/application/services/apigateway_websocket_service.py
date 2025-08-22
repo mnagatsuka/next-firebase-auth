@@ -1,106 +1,85 @@
-"""API Gateway WebSocket service for broadcasting messages to connected clients."""
+"""API Gateway WebSocket service for broadcasting via Serverless Framework."""
 
+import asyncio
+import aiohttp
 import json
-import boto3
-from typing import List, Dict, Any, Set
+from typing import Dict, Any, List
 from datetime import datetime, timezone
 import logging
-import asyncio
+
+class DateTimeEncoder(json.JSONEncoder):
+    """JSON encoder that handles datetime objects."""
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
+
 from app.shared.config import settings
 
 logger = logging.getLogger(__name__)
 
 class ApiGatewayWebSocketService:
-    """Service for managing WebSocket connections and broadcasting via API Gateway."""
+    """Service for broadcasting messages via Serverless WebSocket API."""
     
     def __init__(self):
-        # Initialize API Gateway Management API client
-        self.apigateway_client = self._create_client()
-        
-        # Store active connections (in production, use DynamoDB)
-        self.connections: Set[str] = set()
+        self.serverless_endpoint = settings.SERVERLESS_WEBSOCKET_ENDPOINT
+        self.session = None
+        logger.info(f"🔧 WebSocket service initialized with endpoint: {self.serverless_endpoint}")
     
-    def _create_client(self):
-        """Create boto3 client for API Gateway Management API."""
-        client_config = {
-            'region_name': settings.AWS_REGION,
-            'aws_access_key_id': settings.AWS_ACCESS_KEY_ID,
-            'aws_secret_access_key': settings.AWS_SECRET_ACCESS_KEY
-        }
-        
-        # Determine endpoint URL based on environment
-        if settings.AWS_ENDPOINT_URL and "localhost" in settings.AWS_ENDPOINT_URL:
-            # LocalStack development - use AWS_ENDPOINT_URL
-            client_config['endpoint_url'] = settings.AWS_ENDPOINT_URL
-        elif settings.API_GATEWAY_WEBSOCKET_URL:
-            # AWS production - use specific WebSocket management API URL
-            client_config['endpoint_url'] = settings.API_GATEWAY_WEBSOCKET_URL
-        
-        return boto3.client('apigatewaymanagementapi', **client_config)
-    
-    async def add_connection(self, connection_id: str) -> None:
-        """Add a WebSocket connection to the active connections set."""
-        self.connections.add(connection_id)
-        logger.info(f"Added WebSocket connection: {connection_id}. Total connections: {len(self.connections)}")
-    
-    async def remove_connection(self, connection_id: str) -> None:
-        """Remove a WebSocket connection from the active connections set."""
-        self.connections.discard(connection_id)
-        logger.info(f"Removed WebSocket connection: {connection_id}. Total connections: {len(self.connections)}")
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create HTTP session for Serverless API calls."""
+        if self.session is None or self.session.closed:
+            self.session = aiohttp.ClientSession()
+        return self.session
     
     async def broadcast_to_all(self, message: Dict[str, Any]) -> None:
-        """Send message to all connected clients via API Gateway WebSocket."""
-        if not self.connections:
-            logger.info("No active WebSocket connections to broadcast to")
-            return
-        
-        message_data = json.dumps(message)
-        disconnected_connections: Set[str] = set()
-        
-        # Send message to each connected client
-        for connection_id in self.connections:
-            try:
-                await self._send_to_connection(connection_id, message_data)
-                logger.debug(f"Sent WebSocket message to connection: {connection_id}")
-            except self.apigateway_client.exceptions.GoneException:
-                # Connection is stale, mark for removal
-                disconnected_connections.add(connection_id)
-                logger.info(f"WebSocket connection gone: {connection_id}")
-            except Exception as e:
-                logger.error(f"Error sending WebSocket message to connection {connection_id}: {e}")
-                # Add to disconnected list to clean up
-                disconnected_connections.add(connection_id)
-        
-        # Clean up disconnected clients
-        if disconnected_connections:
-            self.connections -= disconnected_connections
-            logger.info(f"Cleaned up {len(disconnected_connections)} disconnected WebSocket connections")
-    
-    async def _send_to_connection(self, connection_id: str, message_data: str) -> None:
-        """Send message data to a specific connection."""
-        # Run boto3 call in thread pool to avoid blocking
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(
-            None,
-            lambda: self.apigateway_client.post_to_connection(
-                ConnectionId=connection_id,
-                Data=message_data
-            )
-        )
+        """Broadcast message to all connected WebSocket clients via Serverless."""
+        try:
+            session = await self._get_session()
+            
+            # Serialize message with datetime support
+            json_data = json.dumps(message, cls=DateTimeEncoder)
+            
+            async with session.post(
+                f"{self.serverless_endpoint}/development/broadcast/comments",
+                data=json_data,
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                if response.status == 200:
+                    result = await response.json()
+                    logger.info(f"✅ Broadcast successful: {result.get('connectionCount', 0)} connections")
+                else:
+                    error_text = await response.text()
+                    logger.error(f"❌ Broadcast failed: {response.status} - {error_text}")
+                    
+        except Exception as e:
+            logger.error(f"❌ Broadcast error: {str(e)}")
     
     async def broadcast_comments_list(self, post_id: str, comments: List[Dict[str, Any]]) -> None:
-        """Broadcast comments list to all clients via API Gateway WebSocket."""
+        """Broadcast comments list for a specific post using envelope."""
         message = {
-            "type": "comments_list",
+            "type": "comments.list",
             "data": {
-                "post_id": post_id,
+                "postId": post_id,
                 "comments": comments,
-                "count": len(comments)
+                "count": len(comments),
             },
-            "timestamp": datetime.now(timezone.utc).isoformat()
         }
-        
-        logger.info(f"Broadcasting comments list for post {post_id} to {len(self.connections)} connections")
+        await self.broadcast_to_all(message)
+
+    async def broadcast_new_comment(self, post_id: str, comment: Dict[str, Any]) -> None:
+        """Broadcast a comment.created event with full comment payload.
+
+        Envelope fields like version/id/source are added by the serverless handler.
+        """
+        message = {
+            "type": "comment.created",
+            "data": {
+                "postId": post_id,
+                "comment": comment,
+            },
+        }
+        logger.info(f"Broadcasting comment.created for post {post_id}")
         await self.broadcast_to_all(message)
     
     async def broadcast_comment_update(self, post_id: str, comment_id: str, action: str) -> None:
@@ -111,16 +90,36 @@ class ApiGatewayWebSocketService:
                 "post_id": post_id,
                 "comment_id": comment_id,
                 "action": action
-            },
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            }
         }
         
-        logger.info(f"Broadcasting comment {action} for post {post_id} to {len(self.connections)} connections")
+        logger.info(f"Broadcasting comment {action} for post {post_id}")
         await self.broadcast_to_all(message)
     
+    async def close(self) -> None:
+        """Close the HTTP session."""
+        if self.session and not self.session.closed:
+            await self.session.close()
+    
+    # Legacy compatibility methods (no-op for Serverless approach)
+    async def add_connection(self, connection_id: str) -> None:
+        """Legacy method - connections managed by Serverless Framework."""
+        logger.debug(f"Connection management handled by Serverless: {connection_id}")
+    
+    async def remove_connection(self, connection_id: str) -> None:
+        """Legacy method - connections managed by Serverless Framework."""
+        logger.debug(f"Connection management handled by Serverless: {connection_id}")
+    
     def get_connection_count(self) -> int:
-        """Get the number of active connections."""
-        return len(self.connections)
+        """Legacy method - connection count managed by Serverless Framework."""
+        return 0  # Not available in HTTP broadcast approach
 
-# Global service instance
-apigateway_websocket_service = ApiGatewayWebSocketService()
+# Global service instance - will be created lazily
+apigateway_websocket_service = None
+
+def get_apigateway_websocket_service_instance():
+    """Get or create the global WebSocket service instance."""
+    global apigateway_websocket_service
+    if apigateway_websocket_service is None:
+        apigateway_websocket_service = ApiGatewayWebSocketService()
+    return apigateway_websocket_service

@@ -4,7 +4,7 @@ This document explains how the backend leverages OpenAPI specifications for type
 
 ## 🎯 Overview
 
-Our backend follows a **schema-first** approach where all Pydantic models, API routes, and data validation are derived from the centralized OpenAPI specification in `docs/specifications/api/`. This ensures complete type safety and API contract compliance throughout the backend stack.
+Our backend follows a **schema-first** approach where all Pydantic models, API routes, and data validation are derived from the centralized OpenAPI specification in `openapi/spec/`. This ensures complete type safety and API contract compliance throughout the backend stack.
 
 ### Key Benefits
 
@@ -72,7 +72,7 @@ This runs:
 
 ### 2. Generated Pydantic Models
 
-**OpenAPI Schema** (`docs/specifications/api/openapi/components/schemas/blog-post.yml`):
+**OpenAPI Schema** (`openapi/spec/components/schemas/blog-post.yml`):
 ```yaml
 type: object
 properties:
@@ -733,7 +733,7 @@ uv run pytest tests/backend/ --cov=backend --cov-report=html
 
 ## 📚 Related Files
 
-- **OpenAPI Specification**: `docs/specifications/api/openapi/openapi.yml`
+- **OpenAPI Specification**: `openapi/spec/openapi.yml`
 - **Generated Models**: `backend/src/app/generated/src/generated_fastapi_server/models/`
 - **API Routes**: `backend/src/app/api/routes/`
 - **Domain Entities**: `backend/src/app/domain/entities.py`

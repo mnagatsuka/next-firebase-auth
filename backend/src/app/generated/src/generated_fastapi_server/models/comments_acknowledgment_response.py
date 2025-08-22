@@ -23,7 +23,6 @@ import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List
-from typing_extensions import Annotated
 try:
     from typing import Self
 except ImportError:
@@ -35,8 +34,7 @@ class CommentsAcknowledgmentResponse(BaseModel):
     """ # noqa: E501
     status: StrictStr = Field(description="Operation status")
     message: StrictStr = Field(description="Human-readable status message")
-    count: Annotated[int, Field(strict=True, ge=0)] = Field(description="Number of comments that will be delivered via WebSocket")
-    __properties: ClassVar[List[str]] = ["status", "message", "count"]
+    __properties: ClassVar[List[str]] = ["status", "message"]
 
     @field_validator('status')
     def status_validate_enum(cls, value):
@@ -95,8 +93,7 @@ class CommentsAcknowledgmentResponse(BaseModel):
 
         _obj = cls.model_validate({
             "status": obj.get("status"),
-            "message": obj.get("message"),
-            "count": obj.get("count")
+            "message": obj.get("message")
         })
         return _obj
 

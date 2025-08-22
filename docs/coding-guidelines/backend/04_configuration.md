@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:3000"]
     
     # AWS (if using DynamoDB/S3)
-    aws_region: str = "us-east-1"
+    aws_region: str = "ap-northeast-1"
     dynamodb_table_name: Optional[str] = None
     s3_bucket_name: Optional[str] = None
     
@@ -91,7 +91,7 @@ validate_config()
 
 **Rules:**
 
-* Never commit `.env.local` files with secrets
+* Never commit `.env.development` files with secrets
 * Use environment variables for production secrets
 * Validate configuration at application startup
 * Keep configuration simple for small/medium applications

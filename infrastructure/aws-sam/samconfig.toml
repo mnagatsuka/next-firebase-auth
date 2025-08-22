@@ -1,0 +1,97 @@
+# SAM Configuration for Full-Stack Blog Application
+# 
+# SECURITY NOTE: This file uses placeholder values for production.
+# Copy to samconfig.development.toml and replace placeholders for actual deployment.
+#
+version = 0.1
+
+[default.global.parameters]
+stack_name = "blogapp"
+
+[default.build.parameters]
+cached = true
+parallel = true
+use_container = false
+
+[default.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+resolve_s3 = true
+region = "ap-northeast-1"
+disable_rollback = false
+fail_on_empty_changeset = false
+
+[default.local_start_api.parameters]
+warm_containers = "EAGER"
+
+[default.local_start_lambda.parameters]
+warm_containers = "EAGER"
+
+# =============================================================================
+# DEVELOPMENT ENVIRONMENT (Safe to commit) (Local Only)
+# =============================================================================
+[development.global.parameters]
+stack_name = "blogapp-development"
+
+[development.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+resolve_s3 = true
+region = "ap-northeast-1"
+parameter_overrides = [
+    "Environment=development",
+    # https://<branch名>--<プロジェクト名>.vercel.app / https://<デプロイ固有のID>-<プロジェクト名>.vercel.app
+    # e.g. https://feature-login--myapp.vercel.app / https://abc12345-myapp.vercel.app
+    "AllowedOrigins=http://localhost:3000",
+    "FirebaseProjectId=demo-project",
+    "LambdaAdapterLayerVersion=25"
+]
+tags = [
+    "Environment=development",
+    "Project=BlogFullStack"
+]
+
+# =============================================================================
+# STAGING ENVIRONMENT (Update FirebaseProjectId before deployment)
+# =============================================================================
+[staging.global.parameters]
+stack_name = "blogapp-staging"
+
+[staging.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+resolve_s3 = true
+region = "ap-northeast-1"
+parameter_overrides = [
+    "Environment=staging",
+    "AllowedOrigins=REPLACE_WITH_STAGING_DOMAIN",  # e.g., https://staging.example.com
+    "FirebaseProjectId=REPLACE_WITH_STAGING_PROJECT_ID",
+    "LambdaAdapterLayerVersion=25"
+]
+tags = [
+    "Environment=staging",
+    "Project=BlogFullStack"
+]
+
+# =============================================================================
+# PRODUCTION ENVIRONMENT (SECURITY: Update all placeholders before deployment)
+# =============================================================================
+[production.global.parameters] 
+stack_name = "blogapp-production"
+
+[production.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true  # Always confirm production changes
+resolve_s3 = true
+region = "ap-northeast-1"
+parameter_overrides = [
+    "Environment=production",
+    "AllowedOrigins=REPLACE_WITH_PRODUCTION_DOMAIN",  # e.g., https://yourdomain.com
+    "FirebaseProjectId=REPLACE_WITH_PRODUCTION_PROJECT_ID",
+    "LambdaAdapterLayerVersion=25"
+]
+tags = [
+    "Environment=production",
+    "Project=BlogFullStack",
+    "CostCenter=Production"
+]

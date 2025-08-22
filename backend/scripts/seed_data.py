@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seed LocalStack DynamoDB with sample posts and comments for local development."""
+"""Seed DynamoDB Local with sample posts and comments for local development."""
 
 from __future__ import annotations
 
@@ -31,8 +31,8 @@ def main() -> None:
     post_id = str(uuid.uuid4())
     post_item = {
         "id": post_id,
-        "title": "Hello LocalStack",
-        "content": "This is a sample post stored in DynamoDB via LocalStack.",
+        "title": "Hello DynamoDB Local",
+        "content": "This is a sample post stored in DynamoDB Local.",
         "excerpt": "Sample post",
         "author": "seed-user",
         "status": "published",
@@ -78,4 +78,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -98,7 +98,7 @@ class DatabasePostRepository(PostRepository):
 
 
 class DynamoDBPostRepository(PostRepository):
-    """DynamoDB implementation of PostRepository for local dev via LocalStack."""
+    """DynamoDB implementation of PostRepository for local dev via DynamoDB Local."""
 
     def __init__(
         self,
@@ -110,7 +110,7 @@ class DynamoDBPostRepository(PostRepository):
         aws_secret_access_key: str,
     ) -> None:
         self._table_name = table_name
-        # Create a dedicated resource bound to LocalStack/AWS per settings
+        # Create a dedicated resource bound to DynamoDB Local/AWS per settings
         self._dynamodb: ServiceResource = boto3.resource(
             "dynamodb",
             endpoint_url=endpoint_url,

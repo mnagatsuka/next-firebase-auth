@@ -352,7 +352,7 @@ Structure environment variables following the 12-factor app methodology.
 
 Environment files:
 * `.env`  Development defaults (committed)
-* `.env.local`  Local overrides (not committed)
+* `.env.development`  Local overrides (not committed)
 * `.env.test`  Testing environment
 * `.env.production`  Production environment
 
@@ -376,7 +376,7 @@ mkdir -p backend/src/app/{api,application,domain,infra,shared}
 mkdir -p tests/backend/{unit,integration,e2e}
 
 # Project-level directories  
-mkdir -p docs/specifications/api/{components/{schemas,examples,parameters,responses},paths}
+mkdir -p openapi/spec/{components/{schemas,examples,parameters,responses},paths}
 mkdir -p docs/coding-guidelines/{frontend,backend}
 ```
 
@@ -384,7 +384,7 @@ mkdir -p docs/coding-guidelines/{frontend,backend}
 
 * Follow the Clean Architecture layer separation within `backend/src/`.
 * Mirror the `backend/src/` structure in `tests/backend/`.
-* Keep OpenAPI specifications in `docs/specifications/api/` with proper component organization.
+* Keep OpenAPI specifications in `openapi/spec/` with proper component organization.
 * Place documentation in `docs/` at project root.
 
 

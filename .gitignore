@@ -34,7 +34,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+.venv/
 lib64/
 parts/
 sdist/
@@ -44,6 +44,10 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+.pytest_cache/
+
+# pnpm
+.pnpm-store/
 
 # docker
 .dockerignore
@@ -58,3 +62,15 @@ openapi/dist
 test-results/
 playwright-report/
 blob-report/
+
+# AWS SAM
+.aws-sam/
+samconfig.development.toml
+**/samconfig.development.toml
+
+# Firebase
+next-firebase-auth-firebase-service-account.json
+
+# Infrastructure secrets
+infrastructure/**/.env.development
+infrastructure/**/parameters.development.*

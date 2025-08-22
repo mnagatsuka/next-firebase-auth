@@ -1,28 +1,37 @@
+import os
 from functools import lru_cache
+from pathlib import Path
 from typing import List, Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    # Determine a single env file to load based on APP_ENVIRONMENT (OS env only)
+    # Falls back to "development" if unset/invalid. Only loads backend/.env.{env}.
+    _env_name = os.getenv("APP_ENVIRONMENT", "development").strip().lower()
+    if _env_name not in {"development", "staging", "production"}:
+        _env_name = "development"
+    _env_file = Path("backend") / f".env.{_env_name}"
+
     model_config = SettingsConfigDict(
-        env_file=(".env", ".env.local", "backend/.env", "backend/.env.local"), 
+        env_file=str(_env_file),
         env_prefix="APP_",
         extra="ignore"  # Ignore extra environment variables
     )
 
     PROJECT_NAME: str = "Next Firebase Auth Backend"
     VERSION: str = "0.1.0"
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://frontend:3000"]
+    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://frontend:3000", "http://localhost:6006"]
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
 
     # Repository provider: "memory" or "dynamodb"
     REPOSITORY_PROVIDER: str = "memory"
 
-    # AWS / LocalStack configuration
-    AWS_ENDPOINT_URL: str = "http://localhost:4566"
-    AWS_REGION: str = "us-east-1"
+    # AWS / DynamoDB Local configuration
+    AWS_ENDPOINT_URL: str = "http://localhost:8002"
+    AWS_REGION: str = "ap-northeast-1"
     AWS_ACCESS_KEY_ID: str = "test"
     AWS_SECRET_ACCESS_KEY: str = "test"
 
@@ -45,11 +54,8 @@ class Settings(BaseSettings):
     # Firebase Auth Emulator (for development)
     FIREBASE_AUTH_EMULATOR_HOST: Optional[str] = None
     
-    # API Gateway WebSocket configuration  
-    # For LocalStack: use AWS_ENDPOINT_URL
-    # For AWS Production: set via APP_API_GATEWAY_WEBSOCKET_URL env var
-    API_GATEWAY_WEBSOCKET_URL: str = ""
-    API_GATEWAY_WEBSOCKET_API_ID: str = ""  # API Gateway WebSocket API ID
+    # Serverless WebSocket Configuration
+    SERVERLESS_WEBSOCKET_ENDPOINT: str = "http://serverless:3000"
 
 
 @lru_cache(maxsize=1)

@@ -53,7 +53,7 @@ class UserRepository(ABC):
 class DynamoDBUserRepository(UserRepository):
     """DynamoDB implementation of user repository."""
     
-    def __init__(self, table_name: str, region: str = "us-east-1"):
+    def __init__(self, table_name: str, region: str = "ap-northeast-1"):
         self.dynamodb = boto3.resource('dynamodb', region_name=region)
         self.table = self.dynamodb.Table(table_name)
     

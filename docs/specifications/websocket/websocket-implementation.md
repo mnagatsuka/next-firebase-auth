@@ -312,7 +312,7 @@ services:
 
 ### Environment Variables
 ```bash
-# .env.local (Frontend)
+# .env.development (Frontend)
 NEXT_PUBLIC_WS_URL=ws://localhost:8000/api/v1/ws
 
 # .env (Backend)

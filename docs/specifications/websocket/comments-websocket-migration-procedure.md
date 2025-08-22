@@ -51,7 +51,7 @@ class Settings:
     # ... existing settings ...
     
     # API Gateway WebSocket settings
-    AWS_REGION: str = "us-east-1"
+    AWS_REGION: str = "ap-northeast-1"
     LOCALSTACK_ENDPOINT: Optional[str] = "http://localhost:4566"  # LocalStack
     API_GATEWAY_WEBSOCKET_URL: str = ""  # Set based on environment
     AWS_ACCESS_KEY_ID: Optional[str] = None
@@ -64,7 +64,7 @@ class Settings:
             self.API_GATEWAY_WEBSOCKET_URL = f"{self.LOCALSTACK_ENDPOINT}/restapis/your-api-id/dev/_user_request_"
         else:
             # AWS production
-            self.API_GATEWAY_WEBSOCKET_URL = "https://your-api-id.execute-api.us-east-1.amazonaws.com/dev"
+            self.API_GATEWAY_WEBSOCKET_URL = "https://your-api-id.execute-api.ap-northeast-1.amazonaws.com/dev"
 
 settings = Settings()
 ```
@@ -283,7 +283,7 @@ export function RealtimeNotifications() {
   const { disconnect } = useWebSocket({
     url: process.env.NODE_ENV === 'development' 
       ? 'ws://localhost:4566'  // LocalStack API Gateway WebSocket
-      : 'wss://your-api-gateway-id.execute-api.us-east-1.amazonaws.com/dev',  // AWS API Gateway
+      : 'wss://your-api-gateway-id.execute-api.ap-northeast-1.amazonaws.com/dev',  // AWS API Gateway
     
     onMessage: (message) => {
       switch (message.type) {
@@ -348,7 +348,7 @@ export function useCommentsWebSocket({
   const { disconnect } = useWebSocket({
     url: process.env.NODE_ENV === 'development' 
       ? 'ws://localhost:4566'  // LocalStack API Gateway
-      : 'wss://your-api-gateway-id.execute-api.us-east-1.amazonaws.com/dev',  // AWS API Gateway
+      : 'wss://your-api-gateway-id.execute-api.ap-northeast-1.amazonaws.com/dev',  // AWS API Gateway
     onMessage: handleMessage
   })
 

@@ -1,0 +1,136 @@
+service: comments-websocket-api
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-northeast-1
+  stage: ${opt:stage, 'development'}
+  environment:
+    WEBSOCKET_API_ENDPOINT: ${self:custom.websocketApiEndpoint.${self:provider.stage}}
+    DYNAMODB_CONNECTIONS_TABLE: blogapp-websocket-connections-${self:provider.stage}
+    CORS_ORIGIN: ${self:custom.corsOrigin.${self:provider.stage}}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - execute-api:ManageConnections
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:DeleteItem
+            - dynamodb:Scan
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DYNAMODB_CONNECTIONS_TABLE}
+
+custom:
+  websocketApiEndpoint:
+    development: ws://localhost:3001
+    staging: wss://${self:service}-${self:provider.stage}.execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}
+    production: wss://${self:service}-${self:provider.stage}.execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}
+  corsOrigin:
+    development: http://localhost:3000
+    staging: https://staging.yourdomain.com
+    production: https://yourdomain.com
+  serverless-offline:
+    websocketPort: 3001
+    httpPort: 3000
+    host: 0.0.0.0
+    noAuth: true
+
+plugins:
+  - serverless-offline
+
+functions:
+  # WebSocket connection handlers
+  connectHandler:
+    handler: dist/handlers/connect.handler
+    events:
+      - websocket:
+          route: $connect
+  
+  disconnectHandler:
+    handler: dist/handlers/disconnect.handler
+    events:
+      - websocket:
+          route: $disconnect
+  
+  defaultHandler:
+    handler: dist/handlers/broadcast.handler
+    events:
+      - websocket:
+          route: $default
+
+  # HTTP endpoint for broadcasting from FastAPI
+  broadcastComments:
+    handler: dist/handlers/broadcast.broadcastToAll
+    timeout: 30
+    events:
+      - http:
+          path: broadcast/comments
+          method: post
+          cors:
+            origin: ${self:custom.corsOrigin.${self:provider.stage}}
+            headers:
+              - Content-Type
+              - Authorization
+
+resources:
+  Resources:
+    PostsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: posts
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    CommentsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: comments
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    FavoritesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: favorites
+        AttributeDefinitions:
+          - AttributeName: user_id
+            AttributeType: S
+          - AttributeName: post_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: user_id
+            KeyType: HASH
+          - AttributeName: post_id
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+
+    ConnectionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_CONNECTIONS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: connectionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: connectionId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true

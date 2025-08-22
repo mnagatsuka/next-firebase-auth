@@ -1,52 +1,76 @@
 services:
-  # Local AWS emulation via LocalStack
+  # =============================================================================
+  # INFRASTRUCTURE SERVICES
+  # =============================================================================
+  
+  # LocalStack service for AWS services emulation
+  # - DynamoDB available at http://localstack:4566
   localstack:
     image: localstack/localstack:latest
+    container_name: localstack
     ports:
       - "4566:4566"
-      # - "4510-4559:4510-4559" # optional service range
     env_file:
-      - ./backend/.env.local
-    # environment:
-    #   - SERVICES=dynamodb,apigateway
-    #   - DEBUG=1
-    #   - PERSISTENCE=1
+      - ./infrastructure/localstack/.env.development
     volumes:
-      - localstack-data:/var/lib/localstack
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./backend/scripts/localstack-init.sh:/etc/localstack/init/ready.d/init-aws.sh
+      - "./infrastructure/localstack/scripts/init-dynamodb.sh:/etc/localstack/init/ready.d/init-dynamodb.sh"
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -s http://localhost:4566 >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Serverless Offline service (WebSocket only)
+  # - WebSocket API exposed at host port 3001
+  serverless:
+    image: node:20-alpine
+    container_name: serverless
+    working_dir: /app/infrastructure/serverless
+    ports:
+      - "3001:3001"
+      - "3002:3000"
+    env_file:
+      - ./infrastructure/serverless/.env.development
+    volumes:
+      - .:/app
+      - node_modules_serverless:/app/infrastructure/serverless/node_modules
+    # Ensure pnpm is available (prefer Corepack, fallback to npm -g)
+    command: >-
+      sh -c "apk add --no-cache openjdk11-jre \
+      && (corepack enable && corepack prepare pnpm@9 --activate || npm i -g pnpm) \
+      && pnpm install \
+      && pnpm run dev"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # =============================================================================
+  # APPLICATION SERVICES  
+  # =============================================================================
 
   # Backend API service
   backend:
     build: 
       context: .
       dockerfile: ./backend/Dockerfile
+    container_name: backend
     ports:
       - "8000:8000"
     env_file:
-      - ./backend/.env.local
-    # environment:
-      # - APP_ENVIRONMENT=${APP_ENVIRONMENT}
-      # - APP_DEBUG=${APP_DEBUG}
-      # - APP_AWS_ENDPOINT_URL=${APP_AWS_ENDPOINT_URL}
-      # - APP_AWS_REGION=${APP_AWS_REGION}
-      # - APP_AWS_ACCESS_KEY_ID=${APP_AWS_ACCESS_KEY_ID}
-      # - APP_AWS_SECRET_ACCESS_KEY=${APP_AWS_SECRET_ACCESS_KEY}
-      # - APP_DYNAMODB_TABLE_POSTS=${APP_DYNAMODB_TABLE_POSTS}
-      # - APP_DYNAMODB_TABLE_COMMENTS=${APP_DYNAMODB_TABLE_COMMENTS}
-      # - APP_REPOSITORY_PROVIDER=${APP_REPOSITORY_PROVIDER}
-      # - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://frontend:3000,http://localhost:6006}
+      - ./backend/.env.development
     volumes:
       - ./backend:/app/backend
       - ./pyproject.toml:/app/pyproject.toml
       - ./uv.lock:/app/uv.lock
-      - /app/.venv/c
+      - /app/.venv
     networks:
       - app-network
     depends_on:
-      - localstack
+      localstack:
+        condition: service_healthy
     restart: unless-stopped
 
   # Frontend Next.js service
@@ -54,19 +78,12 @@ services:
     build:
       context: .
       dockerfile: ./frontend/Dockerfile
+    container_name: frontend
     ports:
       - "3000:3000"
     env_file:
-      - ./frontend/.env.local
-    # environment:
-      # - NODE_ENV=${NODE_ENV:-development}
-      # - CHOKIDAR_USEPOLLING=true
-      # - WATCHPACK_POLLING=true
-      # - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
-      # - NEXT_PUBLIC_API_MOCKING=${NEXT_PUBLIC_API_MOCKING:-enabled}
-      # - API_BASE_URL=${API_BASE_URL:-http://backend:8000}
+      - ./frontend/.env.development
     volumes:
-      # Mount source files to match Dockerfile structure
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
       - ./frontend/package.json:/app/package.json
@@ -74,13 +91,13 @@ services:
       - ./frontend/next.config.ts:/app/next.config.ts
       - ./frontend/middleware.ts:/app/middleware.ts
       - ./tsconfig.base.json:/tsconfig.base.json
-      # Exclude node_modules and build artifacts
-      - /app/node_modules
+      - node_modules_frontend:/app/node_modules
       - /app/.next
     networks:
       - app-network
-    # depends_on:
-    #   - backend
+    depends_on:
+      backend:
+        condition: service_started
     restart: unless-stopped
 
   # Storybook service
@@ -88,19 +105,12 @@ services:
     build:
       context: .
       dockerfile: ./frontend/Dockerfile
+    container_name: storybook
     ports:
       - "6006:6006"
     env_file:
-      - ./frontend/.env.local
-    # environment:
-    #   - NODE_ENV=${NODE_ENV:-development}
-    #   - CHOKIDAR_USEPOLLING=true
-    #   - WATCHPACK_POLLING=true
-    #   - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
-    #   - NEXT_PUBLIC_API_MOCKING=${NEXT_PUBLIC_API_MOCKING:-enabled}
-    #   - API_BASE_URL=${API_BASE_URL:-http://backend:8000}
+      - ./frontend/.env.development
     volumes:
-      # Mount source files to match Dockerfile structure
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
       - ./frontend/.storybook:/app/.storybook
@@ -108,18 +118,23 @@ services:
       - ./frontend/tsconfig.json:/app/tsconfig.json
       - ./frontend/next.config.ts:/app/next.config.ts
       - ./tsconfig.base.json:/tsconfig.base.json
-      # Exclude node_modules and build artifacts
-      - /app/node_modules
+      - node_modules_frontend:/app/node_modules
       - /app/.next
     command: pnpm storybook -- --host 0.0.0.0
     networks:
       - app-network
-    # depends_on:
-    #   - backend
+    depends_on:
+      frontend:
+        condition: service_started
     restart: unless-stopped
 
 networks:
   app-network:
     driver: bridge
+
 volumes:
-  localstack-data:
+  # Node modules volumes for better performance
+  node_modules_frontend:
+    driver: local
+  node_modules_serverless:
+    driver: local

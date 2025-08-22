@@ -28,22 +28,20 @@ Since LocalStack Free Plan doesn't support API Gateway V2 WebSocket APIs, we mig
 
 ### Step 1: Update Environment Variables
 
-**Backend `.env.local`** - Add Serverless WebSocket endpoint:
+**Backend `.env.development`** - Add Serverless WebSocket endpoint:
 ```bash
 # ADD: Serverless WebSocket Configuration
 APP_SERVERLESS_WEBSOCKET_ENDPOINT="http://localhost:3001"
 
 # KEEP: LocalStack for DynamoDB (working and free)
 APP_AWS_ENDPOINT_URL="http://localstack:4566"
-APP_AWS_REGION="us-east-1"
+APP_AWS_REGION="ap-northeast-1"
 APP_AWS_ACCESS_KEY_ID="test" 
 APP_AWS_SECRET_ACCESS_KEY="test"
 
-# UPDATE: Remove API Gateway WebSocket (LocalStack Pro required)
-# APP_API_GATEWAY_WEBSOCKET_URL="http://localstack:4566"  # Remove this line
 ```
 
-**Frontend `.env.local`** - Update WebSocket URL:
+**Frontend `.env.development`** - Update WebSocket URL:
 ```bash
 # UPDATE: Point to Serverless WebSocket
 NEXT_PUBLIC_WEBSOCKET_URL=ws://localhost:3001
@@ -151,7 +149,7 @@ services:
     ports:
       - "4566:4566"
     env_file:
-      - ./backend/.env.local
+      - ./backend/.env.development
     environment:
       - SERVICES=dynamodb  # REMOVE apigateway from services
       - DEBUG=1
@@ -357,7 +355,7 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: nodejs18.x
-  region: us-east-1
+  region: ap-northeast-1
   stage: ${opt:stage, 'development'}
   environment:
     WEBSOCKET_API_ENDPOINT: ${self:custom.websocketApiEndpoint.${self:provider.stage}}
@@ -480,7 +478,7 @@ import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } f
 import * as AWS from 'aws-sdk';
 
 const dynamodb = new AWS.DynamoDB.DocumentClient({
-  region: process.env.AWS_REGION || 'us-east-1',
+  region: process.env.AWS_REGION || 'ap-northeast-1',
   ...(process.env.IS_OFFLINE && {
     endpoint: 'http://localhost:4566',  // LocalStack DynamoDB endpoint
     accessKeyId: 'test',
@@ -546,7 +544,7 @@ import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } f
 import * as AWS from 'aws-sdk';
 
 const dynamodb = new AWS.DynamoDB.DocumentClient({
-  region: process.env.AWS_REGION || 'us-east-1',
+  region: process.env.AWS_REGION || 'ap-northeast-1',
   ...(process.env.IS_OFFLINE && {
     endpoint: 'http://localhost:4566',  // LocalStack DynamoDB endpoint
     accessKeyId: 'test',
@@ -636,7 +634,7 @@ interface ConnectionItem {
 }
 
 const dynamodb = new AWS.DynamoDB.DocumentClient({
-  region: process.env.AWS_REGION || 'us-east-1',
+  region: process.env.AWS_REGION || 'ap-northeast-1',
   ...(process.env.IS_OFFLINE && {
     endpoint: 'http://localhost:4566',  // LocalStack DynamoDB endpoint
     accessKeyId: 'test',
@@ -881,7 +879,7 @@ import { beforeEach, vi } from 'vitest';
 
 // Mock environment variables
 beforeEach(() => {
-  vi.stubEnv('AWS_REGION', 'us-east-1');
+  vi.stubEnv('AWS_REGION', 'ap-northeast-1');
   vi.stubEnv('DYNAMODB_CONNECTIONS_TABLE', 'test-connections');
   vi.stubEnv('WEBSOCKET_API_ENDPOINT', 'http://localhost:3001');
   vi.stubEnv('CORS_ORIGIN', 'http://localhost:3000');
@@ -973,7 +971,7 @@ SERVERLESS_WEBSOCKET_ENDPOINT: str = Field(
 
 ### 3. Update Environment Variables
 
-Add to `backend/.env.local`:
+Add to `backend/.env.development`:
 
 ```bash
 # Serverless WebSocket Configuration
@@ -998,7 +996,7 @@ export function useWebSocket({ url, onMessage, onConnect, onDisconnect, onError 
 
 ### 2. Update Environment Variables
 
-Add to `frontend/.env.local`:
+Add to `frontend/.env.development`:
 
 ```bash
 # Serverless WebSocket Configuration
@@ -1328,12 +1326,12 @@ pnpm exec serverless deploy --stage production
 
 **Development (Local):**
 ```bash
-# Backend (.env.local)
+# Backend (.env.development)
 APP_ENVIRONMENT=development
 APP_SERVERLESS_WEBSOCKET_ENDPOINT=http://localhost:3001
 APP_AWS_ENDPOINT_URL=http://localstack:4566
 
-# Frontend (.env.local)
+# Frontend (.env.development)
 NODE_ENV=development
 NEXT_PUBLIC_WEBSOCKET_URL=ws://localhost:3001
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
@@ -1345,12 +1343,12 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 APP_ENVIRONMENT=staging
 APP_DYNAMODB_TABLE_POSTS=staging-posts
 APP_DYNAMODB_TABLE_COMMENTS=staging-comments
-APP_SERVERLESS_WEBSOCKET_ENDPOINT=https://your-staging-api-id.execute-api.us-east-1.amazonaws.com/staging
+APP_SERVERLESS_WEBSOCKET_ENDPOINT=https://your-staging-api-id.execute-api.ap-northeast-1.amazonaws.com/staging
 
 # Frontend (Vercel environment variables)
 NODE_ENV=production
-NEXT_PUBLIC_WEBSOCKET_URL=wss://your-staging-websocket-api-id.execute-api.us-east-1.amazonaws.com/staging
-NEXT_PUBLIC_API_BASE_URL=https://your-staging-rest-api-id.execute-api.us-east-1.amazonaws.com/staging
+NEXT_PUBLIC_WEBSOCKET_URL=wss://your-staging-websocket-api-id.execute-api.ap-northeast-1.amazonaws.com/staging
+NEXT_PUBLIC_API_BASE_URL=https://your-staging-rest-api-id.execute-api.ap-northeast-1.amazonaws.com/staging
 ```
 
 **Production (Cloud):**
@@ -1359,12 +1357,12 @@ NEXT_PUBLIC_API_BASE_URL=https://your-staging-rest-api-id.execute-api.us-east-1.
 APP_ENVIRONMENT=production
 APP_DYNAMODB_TABLE_POSTS=production-posts
 APP_DYNAMODB_TABLE_COMMENTS=production-comments
-APP_SERVERLESS_WEBSOCKET_ENDPOINT=https://your-production-api-id.execute-api.us-east-1.amazonaws.com/production
+APP_SERVERLESS_WEBSOCKET_ENDPOINT=https://your-production-api-id.execute-api.ap-northeast-1.amazonaws.com/production
 
 # Frontend (Vercel environment variables)
 NODE_ENV=production
-NEXT_PUBLIC_WEBSOCKET_URL=wss://your-production-websocket-api-id.execute-api.us-east-1.amazonaws.com/production
-NEXT_PUBLIC_API_BASE_URL=https://your-production-rest-api-id.execute-api.us-east-1.amazonaws.com/production
+NEXT_PUBLIC_WEBSOCKET_URL=wss://your-production-websocket-api-id.execute-api.ap-northeast-1.amazonaws.com/production
+NEXT_PUBLIC_API_BASE_URL=https://your-production-rest-api-id.execute-api.ap-northeast-1.amazonaws.com/production
 ```
 
 ## Infrastructure Organization
@@ -1381,7 +1379,7 @@ services:
     ports:
       - "4566:4566"
     env_file:
-      - ../../backend/.env.local
+      - ../../backend/.env.development
     environment:
       - SERVICES=dynamodb  # Only DynamoDB, no API Gateway
       - DEBUG=1
@@ -1401,7 +1399,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - ../../backend/.env.local
+      - ../../backend/.env.development
     environment:
       - APP_AWS_ENDPOINT_URL=http://localstack:4566  # DynamoDB via LocalStack
       - APP_SERVERLESS_WEBSOCKET_ENDPOINT=http://host.docker.internal:3001  # WebSocket via Serverless
@@ -1418,7 +1416,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - ../../frontend/.env.local
+      - ../../frontend/.env.development
     networks:
       - app-network
 

@@ -1,0 +1,141 @@
+name: Deploy Backend API
+
+on:
+  push:
+    branches:
+      - main        # Deploy to staging
+      - production  # Deploy to production
+    paths: 
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ steps.env.outputs.environment }}
+    
+    defaults:
+      run:
+        working-directory: backend/deploy/sam
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/production" ]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "environment=staging" >> $GITHUB_OUTPUT
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: |
+          cd ../../src/app
+          uv sync --frozen
+
+      - name: Run tests
+        run: |
+          cd ../../
+          uv run pytest tests/ -v --tb=short
+
+      - name: Make run script executable
+        run: chmod +x ../scripts/run.sh
+
+      - name: SAM build
+        run: sam build --use-container
+
+      - name: SAM deploy
+        run: sam deploy --config-env ${{ steps.env.outputs.environment }} --no-confirm-changeset
+
+      - name: Get API URL
+        id: url
+        run: |
+          STACK_NAME="blog-api-backend-${{ steps.env.outputs.environment }}"
+          URL=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
+            --output text)
+          HEALTH_URL=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query 'Stacks[0].Outputs[?OutputKey==`HealthCheckUrl`].OutputValue' \
+            --output text)
+          echo "api-url=$URL" >> $GITHUB_OUTPUT
+          echo "health-url=$HEALTH_URL" >> $GITHUB_OUTPUT
+
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Health check
+        run: |
+          echo "Testing health endpoint: ${{ steps.url.outputs.health-url }}"
+          for i in {1..5}; do
+            if curl -f "${{ steps.url.outputs.health-url }}" --max-time 30; then
+              echo "✅ Health check passed"
+              exit 0
+            else
+              echo "❌ Health check failed (attempt $i/5)"
+              if [ $i -eq 5 ]; then
+                exit 1
+              fi
+              sleep 10
+            fi
+          done
+
+      - name: Test API endpoints
+        run: |
+          API_URL="${{ steps.url.outputs.api-url }}"
+          echo "Testing API endpoints at: $API_URL"
+          
+          # Test posts endpoint
+          echo "Testing GET /api/posts"
+          curl -f "$API_URL/api/posts" --max-time 30
+          
+          echo "✅ All API tests passed"
+
+      - name: Deployment summary
+        run: |
+          echo "🚀 Deployment completed successfully!"
+          echo "Environment: ${{ steps.env.outputs.environment }}"
+          echo "API URL: ${{ steps.url.outputs.api-url }}"
+          echo "Health Check: ${{ steps.url.outputs.health-url }}"

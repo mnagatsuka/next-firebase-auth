@@ -1,0 +1,38 @@
+{
+  "name": "comments-websocket-api",
+  "version": "1.0.0",
+  "description": "WebSocket API for real-time comments",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "prebuild": "rm -rf dist",
+    "predev": "pnpm run build",
+    "dev": "pnpm exec serverless offline",
+    "deploy": "pnpm run build && pnpm exec serverless deploy",
+    "remove": "pnpm exec serverless remove", 
+    "logs": "pnpm exec serverless logs -f broadcastComments --tail",
+    "info": "pnpm exec serverless info",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1691.0",
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.637.0",
+    "@aws-sdk/client-dynamodb": "^3.637.0",
+    "@aws-sdk/lib-dynamodb": "^3.637.0",
+    "@smithy/node-http-handler": "^3.2.0"
+  },
+  "devDependencies": {
+    "serverless": "^3.38.0",
+    "serverless-offline": "^13.8.0",
+    "typescript": "^5.3.0",
+    "@types/node": "^20.0.0",
+    "@types/aws-lambda": "^8.10.0",
+    "vitest": "^1.0.0",
+    "@vitest/ui": "^1.0.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

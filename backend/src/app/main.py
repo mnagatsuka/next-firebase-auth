@@ -1,6 +1,5 @@
 import logging
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 # Import generated code setup (must be before other app imports)
@@ -34,13 +33,8 @@ def create_app() -> FastAPI:
         redoc_url="/redoc",
     )
 
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.ALLOWED_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    # Note: CORS is handled by Lambda Function URL configuration.
+    # Avoid app-level CORS to prevent conflicting headers.
 
     # Initialize Firebase Admin SDK
     try:
@@ -73,4 +67,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-

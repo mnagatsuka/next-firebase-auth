@@ -31,6 +31,10 @@ tests/backend/
 # From repository root
 uv venv && source .venv/bin/activate
 
+# or
+
+source .venv/bin/activate
+
 # Install backend dependencies (including dev/test)
 cd backend
 uv sync --active --extra dev
@@ -99,27 +103,25 @@ curl http://localhost:8000/health
 curl "http://localhost:8000/posts?page=1&limit=10"
 ```
 
-## Local AWS (LocalStack) Setup
+## Local DynamoDB (Serverless) Setup
 
-Local development can use LocalStack to emulate DynamoDB. Repositories can switch between in-memory and DynamoDB via env.
+Local development uses DynamoDB Local managed by Serverless Offline. Repositories can switch between in-memory and DynamoDB via env.
 
 1) Copy the example env and adjust as needed
 ```bash
-cp backend/.env.local.example backend/.env.local
+cp backend/.env.development.example backend/.env.development
 # optional: set APP_REPOSITORY_PROVIDER=memory to keep in-memory repos
 ```
 
 2) Start services with Docker Compose (from repo root)
 ```bash
-# Recommended: pass env file so table names & provider are injected
-docker compose --env-file backend/.env.local up -d
+# Start websocket (Serverless Offline with DynamoDB Local), backend, and frontend
+docker compose up -d
 ```
-
-This mounts `scripts/localstack-init.sh` which creates DynamoDB tables (posts, comments, favorites).
 
 3) Use DynamoDB repositories
 ```bash
-# In backend/.env.local, set (example):
+# In backend/.env.development, set (example):
 APP_REPOSITORY_PROVIDER=dynamodb
 APP_DYNAMODB_TABLE_POSTS=posts
 APP_DYNAMODB_TABLE_COMMENTS=comments
@@ -142,10 +144,10 @@ Notes
 
 ## Docker Scripts (pnpm)
 
-Use package.json scripts to manage the stack with `.env.local` automatically:
+Use package.json scripts to manage the stack with `.env.development` automatically:
 
 ```bash
-# Start services with backend/.env.local
+# Start services with backend/.env.development
 pnpm dc:up
 
 # Rebuild images and start
@@ -159,7 +161,6 @@ pnpm dc:ps
 
 # Tail logs
 pnpm dc:logs:backend
-pnpm dc:logs:localstack
 
 # Seed DynamoDB through backend container
 pnpm dc:seed

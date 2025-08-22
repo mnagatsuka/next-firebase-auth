@@ -32,16 +32,17 @@ This guide will help you set up Firebase Authentication for the Next.js frontend
 
 ### 3. Environment Variables Configuration
 
-Create a `.env.local` file in the frontend directory with the following variables:
+Create a `.env.development` file in the frontend directory with the following variables (Storage/Messaging optional):
 
 ```bash
 # Firebase Client Configuration (Public)
 NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
 NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abc123def456
+# Optional (only if using Storage/Messaging)
+# NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+# NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
 
 # Firebase Admin SDK Configuration (Server-side only)
 FIREBASE_PROJECT_ID=your_project_id
@@ -94,7 +95,7 @@ pnpm install
 
    **Configure environment:**
    ```bash
-   # Add to frontend/.env.local
+   # Add to frontend/.env.development
    NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST=localhost:9099
    ```
    

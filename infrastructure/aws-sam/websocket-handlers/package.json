@@ -1,0 +1,25 @@
+{
+  "name": "websocket-handlers",
+  "version": "1.0.0",
+  "description": "WebSocket handlers for AWS Lambda with shared utilities",
+  "main": "index.js",
+  "scripts": {
+    "build": "esbuild connect.ts disconnect.ts default.ts broadcast.ts --bundle --platform=node --target=node20 --outdir=dist --external:@aws-sdk/*",
+    "build:dev": "esbuild connect.ts disconnect.ts default.ts broadcast.ts --bundle --platform=node --target=node20 --outdir=dist --external:@aws-sdk/* --sourcemap",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.658.1",
+    "@aws-sdk/lib-dynamodb": "^3.658.1",
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.658.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^20.0.0",
+    "esbuild": "^0.23.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": ["websocket", "lambda", "aws", "sam", "infrastructure"],
+  "license": "MIT"
+}

@@ -31,7 +31,7 @@ services:
       - AWS_ENDPOINT_URL=http://localstack:4566
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
-      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_DEFAULT_REGION=ap-northeast-1
     depends_on:
       - localstack
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
@@ -145,7 +145,7 @@ class Settings(BaseSettings):
     aws_endpoint_url: str = "http://localhost:4566"  # LocalStack endpoint
     aws_access_key_id: str = "test"
     aws_secret_access_key: str = "test"
-    aws_region: str = "us-east-1"
+    aws_region: str = "ap-northeast-1"
     
     # Database
     dynamodb_table_prefix: str = "dev_"
@@ -155,7 +155,7 @@ class Settings(BaseSettings):
     s3_bucket_static: str = "dev-static-assets"
     
     class Config:
-        env_file = ".env.local"
+        env_file = ".env.development"
 ```
 
 **Rules:**
@@ -402,7 +402,7 @@ S3_URL = "http://localhost:4566"
 
 ## 8. Environment Variables
 
-### .env.local Template
+### .env.development Template
 
 ```bash
 # Environment
@@ -412,7 +412,7 @@ ENVIRONMENT=development
 AWS_ENDPOINT_URL=http://localhost:4566
 AWS_ACCESS_KEY_ID=test
 AWS_SECRET_ACCESS_KEY=test
-AWS_DEFAULT_REGION=us-east-1
+AWS_DEFAULT_REGION=ap-northeast-1
 
 # Database
 DYNAMODB_TABLE_PREFIX=dev_
@@ -432,7 +432,7 @@ LOG_LEVEL=DEBUG
 
 **Rules:**
 
-* Use `.env.local` for local development overrides.
+* Use `.env.development` for local development overrides.
 * Never commit actual credentials to version control.
 * Provide template files with placeholder values.
 * Document all required environment variables.

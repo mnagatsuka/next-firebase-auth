@@ -32,11 +32,11 @@ servers:
   url: "https://api.{environment}.myapp.test"
   variables:
     environment:
-      default: prod
+      default: production
       description: The environment to use
       enum:
-      - prod
-      - dev
+      - production
+      - development
       - staging
 security:
 - firebaseAuth: []
@@ -331,28 +331,11 @@ paths:
   /posts/{id}/comments:
     get:
       description: |
-        Initiates retrieval of comments for a specific blog post.
+        Retrieves all comments for a specific blog post via standard REST API.
 
         **Response Pattern:**
-        - HTTP Response: Immediate acknowledgment with comment count
-        - WebSocket Delivery: Full comments data delivered via API Gateway WebSocket
-
-        **WebSocket Connection:**
-        - Development: `ws://localhost:4566` (LocalStack API Gateway)
-        - Production: `wss://your-api-gateway-id.execute-api.us-east-1.amazonaws.com/dev`
-
-        **WebSocket Message Format:**
-        ```json
-        {
-          "type": "comments_list",
-          "data": {
-            "post_id": "string",
-            "comments": [...],
-            "count": 5
-          },
-          "timestamp": "2024-01-01T00:00:00Z"
-        }
-        ```
+        - HTTP Response: Direct JSON response with comments array
+        - No WebSocket involvement for this endpoint
 
         Comments are returned in chronological order (oldest first).
         This endpoint is public and does not require authentication.
@@ -367,7 +350,7 @@ paths:
         schema:
           type: string
         style: simple
-      - description: Maximum number of comments to return via WebSocket
+      - description: Maximum number of comments to return
         explode: true
         in: query
         name: limit
@@ -384,12 +367,10 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/comments-acknowledgment-response"
+                  $ref: "#/components/examples/comments-response"
               schema:
-                $ref: "#/components/schemas/comments-acknowledgment-response"
-          description: "Comments request acknowledged successfully. \n\nThe actual\
-            \ comments data will be delivered via API Gateway WebSocket \nto all connected\
-            \ clients.\n"
+                $ref: "#/components/schemas/comments-response"
+          description: Comments retrieved successfully
         "404":
           $ref: "#/components/responses/not-found"
         "500":
@@ -403,11 +384,16 @@ paths:
       tags:
       - comments
     post:
-      description: |
-        Creates a new comment on a specific blog post. Requires authentication.
-
-        The userId will be automatically set based on the authenticated user's Firebase UID.
-        Comments are moderated and may not appear immediately.
+      description: "Creates a new comment on a specific blog post. Requires authentication.\n\
+        \n**Response Pattern:**\n- HTTP Response: Acknowledgment response only (no\
+        \ comment data)\n- WebSocket Broadcast: New comment data is broadcast to all\
+        \ connected clients via API Gateway WebSocket\n\n**WebSocket Message Format\
+        \ (sent to all clients after successful creation):**\n```json\n{\n  \"type\"\
+        : \"NEW_COMMENT\",\n  \"postId\": \"string\",\n  \"comment\": {\n    \"id\"\
+        : \"string\",\n    \"content\": \"string\",\n    \"authorId\": \"string\"\
+        , \n    \"authorName\": \"string\",\n    \"createdAt\": \"timestamp\"\n  }\n\
+        }\n```\n\nThe userId will be automatically set based on the authenticated\
+        \ user's Firebase UID.\nComments are moderated and may not appear immediately.\n"
       operationId: createComment
       parameters:
       - description: Unique identifier for the blog post
@@ -435,19 +421,11 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/comment"
+                  $ref: "#/components/examples/comments-acknowledgment-response"
               schema:
-                $ref: "#/components/schemas/comment"
-          description: Comment created successfully
-          headers:
-            Location:
-              description: URL of the created comment
-              explode: false
-              schema:
-                example: /posts/post-123/comments/comment-456
-                format: uri
-                type: string
-              style: simple
+                $ref: "#/components/schemas/comments-acknowledgment-response"
+          description: Comment creation acknowledged successfully. Comment data will
+            be delivered via WebSocket.
         "400":
           $ref: "#/components/responses/bad-request"
         "401":
@@ -856,28 +834,40 @@ components:
           code: NOT_FOUND
           message: Blog post not found
           details: The requested blog post with ID 'post-123' does not exist
-    comments-acknowledgment-response:
-      description: Acknowledgment response for comments request - actual comments
-        delivered via WebSocket
-      summary: Comments Request Acknowledged
+    comments-response:
+      summary: Comments list response
       value:
         status: success
-        message: Comments retrieved successfully
-        count: 5
+        data:
+        - id: comment-456
+          content: Great article! Very helpful explanation of Next.js features. I
+            especially liked the section on SSR vs SSG.
+          userId: uid_abc123xyz
+          createdAt: 2024-01-15T14:20:00Z
+          postId: post-123
+        - id: comment-457
+          content: Thanks for sharing this! The code examples are really clear and
+            easy to follow.
+          userId: uid_def456uvw
+          createdAt: 2024-01-15T16:45:00Z
+          postId: post-123
+        - id: comment-458
+          content: Could you write a follow-up article about Next.js deployment strategies?
+          userId: uid_xyz789rst
+          createdAt: 2024-01-16T08:30:00Z
+          postId: post-123
     create-comment-request:
       summary: Create comment request
       value:
         content: Great article! Very helpful explanation of Next.js features. I especially
           liked the section on SSR vs SSG.
-    comment:
-      summary: Blog post comment
+    comments-acknowledgment-response:
+      description: Acknowledgment response for comment creation - comment data delivered
+        via WebSocket
+      summary: Comment Creation Acknowledged
       value:
-        id: comment-456
-        content: Great article! Very helpful explanation of Next.js features. I especially
-          liked the section on SSR vs SSG.
-        userId: uid_abc123xyz
-        createdAt: 2024-01-15T14:20:00Z
-        postId: post-123
+        status: success
+        message: Comment created successfully
     blog-post:
       summary: Complete blog post example
       value:
@@ -924,28 +914,16 @@ components:
           \ SSR, SSG, and CSR."
         author: John Doe
         publishedAt: 2024-01-15T10:30:00Z
-    comments-response:
-      summary: Comments list response
+        status: published
+    comment:
+      summary: Blog post comment
       value:
-        status: success
-        data:
-        - id: comment-456
-          content: Great article! Very helpful explanation of Next.js features. I
-            especially liked the section on SSR vs SSG.
-          userId: uid_abc123xyz
-          createdAt: 2024-01-15T14:20:00Z
-          postId: post-123
-        - id: comment-457
-          content: Thanks for sharing this! The code examples are really clear and
-            easy to follow.
-          userId: uid_def456uvw
-          createdAt: 2024-01-15T16:45:00Z
-          postId: post-123
-        - id: comment-458
-          content: Could you write a follow-up article about Next.js deployment strategies?
-          userId: uid_xyz789rst
-          createdAt: 2024-01-16T08:30:00Z
-          postId: post-123
+        id: comment-456
+        content: Great article! Very helpful explanation of Next.js features. I especially
+          liked the section on SSR vs SSG.
+        userId: uid_abc123xyz
+        createdAt: 2024-01-15T14:20:00Z
+        postId: post-123
   parameters:
     page:
       description: Page number for pagination
@@ -1356,47 +1334,6 @@ components:
       - status
       title: blog-post-response
       type: object
-    comments-acknowledgment-response:
-      additionalProperties: false
-      example:
-        count: 5
-        message: Comments retrieved successfully
-        status: success
-      properties:
-        status:
-          description: Operation status
-          enum:
-          - success
-          title: status
-          type: string
-        message:
-          description: Human-readable status message
-          example: Comments retrieved successfully
-          title: message
-          type: string
-        count:
-          description: Number of comments that will be delivered via WebSocket
-          example: 5
-          minimum: 0
-          title: count
-          type: integer
-      required:
-      - count
-      - message
-      - status
-      title: comments-acknowledgment-response
-      type: object
-    create-comment-request:
-      properties:
-        content:
-          description: Content of the comment
-          example: Great article! Very helpful.
-          title: content
-          type: string
-      required:
-      - content
-      title: create-comment-request
-      type: object
     comment:
       example:
         createdAt: 2024-01-15T14:20:00Z
@@ -1440,6 +1377,19 @@ components:
       title: comment
       type: object
     comments-response:
+      example:
+        data:
+        - createdAt: 2024-01-15T14:20:00Z
+          id: comment-456
+          postId: post-123
+          userId: uid_abc123xyz
+          content: Great article! Very helpful.
+        - createdAt: 2024-01-15T14:20:00Z
+          id: comment-456
+          postId: post-123
+          userId: uid_abc123xyz
+          content: Great article! Very helpful.
+        status: success
       properties:
         status:
           $ref: "#/components/schemas/api-response-status"
@@ -1447,10 +1397,45 @@ components:
           description: Array of comments for the blog post
           items:
             $ref: "#/components/schemas/comment"
+          title: data
           type: array
       required:
       - data
       - status
+      title: comments-response
+      type: object
+    create-comment-request:
+      properties:
+        content:
+          description: Content of the comment
+          example: Great article! Very helpful.
+          title: content
+          type: string
+      required:
+      - content
+      title: create-comment-request
+      type: object
+    comments-acknowledgment-response:
+      additionalProperties: false
+      example:
+        message: Comment created successfully
+        status: success
+      properties:
+        status:
+          description: Operation status
+          enum:
+          - success
+          title: status
+          type: string
+        message:
+          description: Human-readable status message
+          example: Comment created successfully
+          title: message
+          type: string
+      required:
+      - message
+      - status
+      title: comments-acknowledgment-response
       type: object
   securitySchemes:
     firebaseAuth:

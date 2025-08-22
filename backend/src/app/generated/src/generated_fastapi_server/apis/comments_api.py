@@ -26,8 +26,8 @@ from generated_fastapi_server.models.extra_models import TokenModel  # noqa: F40
 from pydantic import Field, StrictStr
 from typing import Optional
 from typing_extensions import Annotated
-from generated_fastapi_server.models.comment import Comment
 from generated_fastapi_server.models.comments_acknowledgment_response import CommentsAcknowledgmentResponse
+from generated_fastapi_server.models.comments_response import CommentsResponse
 from generated_fastapi_server.models.create_comment_request import CreateCommentRequest
 from generated_fastapi_server.models.error import Error
 from generated_fastapi_server.security_api import get_token_firebaseAuth
@@ -42,7 +42,7 @@ for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
 @router.post(
     "/posts/{id}/comments",
     responses={
-        201: {"model": Comment, "description": "Comment created successfully"},
+        201: {"model": CommentsAcknowledgmentResponse, "description": "Comment creation acknowledged successfully. Comment data will be delivered via WebSocket."},
         400: {"model": Error, "description": "Bad Request. The request data is invalid."},
         401: {"model": Error, "description": "Unauthorized. Authentication is required."},
         404: {"model": Error, "description": "Resource not found."},
@@ -59,8 +59,8 @@ async def create_comment(
     token_firebaseAuth: TokenModel = Security(
         get_token_firebaseAuth
     ),
-) -> Comment:
-    """Creates a new comment on a specific blog post. Requires authentication.  The userId will be automatically set based on the authenticated user&#39;s Firebase UID. Comments are moderated and may not appear immediately. """
+) -> CommentsAcknowledgmentResponse:
+    """Creates a new comment on a specific blog post. Requires authentication.  **Response Pattern:** - HTTP Response: Acknowledgment response only (no comment data) - WebSocket Broadcast: New comment data is broadcast to all connected clients via API Gateway WebSocket  **WebSocket Message Format (sent to all clients after successful creation):** &#x60;&#x60;&#x60;json {   \&quot;type\&quot;: \&quot;NEW_COMMENT\&quot;,   \&quot;postId\&quot;: \&quot;string\&quot;,   \&quot;comment\&quot;: {     \&quot;id\&quot;: \&quot;string\&quot;,     \&quot;content\&quot;: \&quot;string\&quot;,     \&quot;authorId\&quot;: \&quot;string\&quot;,      \&quot;authorName\&quot;: \&quot;string\&quot;,     \&quot;createdAt\&quot;: \&quot;timestamp\&quot;   } } &#x60;&#x60;&#x60;  The userId will be automatically set based on the authenticated user&#39;s Firebase UID. Comments are moderated and may not appear immediately. """
     if not BaseCommentsApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseCommentsApi.subclasses[0]().create_comment(id, create_comment_request)
@@ -69,7 +69,7 @@ async def create_comment(
 @router.get(
     "/posts/{id}/comments",
     responses={
-        200: {"model": CommentsAcknowledgmentResponse, "description": "Comments request acknowledged successfully.   The actual comments data will be delivered via API Gateway WebSocket  to all connected clients. "},
+        200: {"model": CommentsResponse, "description": "Comments retrieved successfully"},
         404: {"model": Error, "description": "Resource not found."},
         500: {"model": Error, "description": "Internal server error"},
     },
@@ -79,9 +79,9 @@ async def create_comment(
 )
 async def get_post_comments(
     id: Annotated[StrictStr, Field(description="Unique identifier for the blog post")] = Path(..., description="Unique identifier for the blog post"),
-    limit: Annotated[Optional[Annotated[int, Field(le=100, strict=True, ge=1)]], Field(description="Maximum number of comments to return via WebSocket")] = Query(50, description="Maximum number of comments to return via WebSocket", alias="limit", ge=1, le=100),
-) -> CommentsAcknowledgmentResponse:
-    """Initiates retrieval of comments for a specific blog post.  **Response Pattern:** - HTTP Response: Immediate acknowledgment with comment count - WebSocket Delivery: Full comments data delivered via API Gateway WebSocket  **WebSocket Connection:** - Development: &#x60;ws://localhost:4566&#x60; (LocalStack API Gateway) - Production: &#x60;wss://your-api-gateway-id.execute-api.us-east-1.amazonaws.com/dev&#x60;  **WebSocket Message Format:** &#x60;&#x60;&#x60;json {   \&quot;type\&quot;: \&quot;comments_list\&quot;,   \&quot;data\&quot;: {     \&quot;post_id\&quot;: \&quot;string\&quot;,     \&quot;comments\&quot;: [...],     \&quot;count\&quot;: 5   },   \&quot;timestamp\&quot;: \&quot;2024-01-01T00:00:00Z\&quot; } &#x60;&#x60;&#x60;  Comments are returned in chronological order (oldest first). This endpoint is public and does not require authentication. """
+    limit: Annotated[Optional[Annotated[int, Field(le=100, strict=True, ge=1)]], Field(description="Maximum number of comments to return")] = Query(50, description="Maximum number of comments to return", alias="limit", ge=1, le=100),
+) -> CommentsResponse:
+    """Retrieves all comments for a specific blog post via standard REST API.  **Response Pattern:** - HTTP Response: Direct JSON response with comments array - No WebSocket involvement for this endpoint  Comments are returned in chronological order (oldest first). This endpoint is public and does not require authentication. """
     if not BaseCommentsApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseCommentsApi.subclasses[0]().get_post_comments(id, limit)
