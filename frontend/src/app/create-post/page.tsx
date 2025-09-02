@@ -49,6 +49,7 @@ export default function CreatePostPage() {
                     onSuccess: () => {
                         toast.success("Post updated successfully!");
                         router.push("/");
+                        router.refresh();
                     },
                     onError: (error) => {
                         console.error("Failed to update post:", error);
@@ -63,6 +64,7 @@ export default function CreatePostPage() {
                     onSuccess: () => {
                         toast.success("Post created successfully!");
                         router.push("/");
+                        router.refresh();
                     },
                     onError: (error) => {
                         console.error("Failed to create post:", error);
@@ -88,6 +90,7 @@ export default function CreatePostPage() {
                     onSuccess: () => {
                         toast.success("Draft saved successfully!");
                         router.push("/");
+                        router.refresh();
                     },
                     onError: (error) => {
                         console.error("Update error:", error);
@@ -102,6 +105,7 @@ export default function CreatePostPage() {
                     onSuccess: () => {
                         toast.success("Draft saved successfully!");
                         router.push("/");
+                        router.refresh();
                     },
                     onError: (error) => {
                         console.error("Create error:", error);
@@ -128,7 +132,7 @@ export default function CreatePostPage() {
   // Block anonymous users from creating or editing posts
   if (user?.isAnonymous) {
     toast.error("Please sign in to create or edit posts");
-    router.replace("/signup");
+    router.replace("/?auth=1");
     return null;
   }
 

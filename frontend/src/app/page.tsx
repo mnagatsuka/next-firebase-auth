@@ -3,6 +3,9 @@ import { PostList } from "@/components/blog/PostList";
 import { getBlogPosts } from "@/lib/api/generated/client";
 import type { BlogPostListResponse } from "@/lib/api/generated/schemas";
 
+// Always render dynamically so new posts and auth cookies are reflected immediately
+export const revalidate = 0;
+
 interface HomeProps {
 	searchParams: Promise<{ page?: string }>;
 }
@@ -12,9 +15,15 @@ export default async function Home({ searchParams }: HomeProps) {
 	const currentPage = Number(pageParam) || 1;
 
 	try {
-		// Get published posts only for Home
-		const response = (await getBlogPosts({ page: currentPage, limit: 10, status: "published" })) as BlogPostListResponse;
-
+		// Get published posts with pagination
+		const response = (await getBlogPosts({ 
+			page: currentPage, 
+			limit: 10, 
+			status: "published" 
+		}, { 
+			cache: 'no-store' // Disable Next.js caching for real-time data
+		})) as BlogPostListResponse;
+		
 		const posts = response?.data?.posts || [];
 		const pagination = response?.data?.pagination || {
 			page: currentPage,
@@ -51,7 +60,10 @@ export default async function Home({ searchParams }: HomeProps) {
 				<div className="flex items-center justify-between">
 					<h1 className="text-4xl font-bold">Blog</h1>
 				</div>
-				<PostList posts={[]} emptyMessage="Failed to load blog posts. Please try again later." />
+				<PostList 
+					posts={[]} 
+					emptyMessage="Failed to load blog posts. Please try again later." 
+				/>
 			</div>
 		);
 	}

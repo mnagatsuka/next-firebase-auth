@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
@@ -24,14 +25,23 @@ export const metadata: Metadata = {
 	description: "A modern blog application built with Next.js and Firebase Auth",
 	keywords: ["blog", "nextjs", "firebase", "typescript"],
 	authors: [{ name: "Blog App Team" }],
-	viewport: "width=device-width, initial-scale=1",
 	robots: "index, follow",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-	return (
-		<html lang="en">
-			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+export const viewport: Viewport = {
+	width: "device-width",
+	initialScale: 1,
+};
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+    const headerList = await headers();
+    const nonce = headerList.get("x-nonce") || undefined;
+    return (
+        <html lang="en">
+            <head>
+                {nonce ? <meta property="csp-nonce" content={nonce} /> : null}
+            </head>
+            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
 				<ErrorBoundary>
 					<MswProvider>
 						<QueryProvider>

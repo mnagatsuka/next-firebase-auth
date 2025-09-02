@@ -16,7 +16,8 @@ interface AppState {
 	// User authentication state
 	user: User | null;
 	isAuthenticated: boolean;
-	isLoading: boolean;
+	isLoading: boolean; // auth action or initialization state
+	authInitialized: boolean; // first onAuthStateChanged fired
 	idToken: string | null;
 
 	// App preferences
@@ -81,7 +82,8 @@ export const useAppStore = create<AppState>()(
 				// Initial state
 				user: null,
 				isAuthenticated: false,
-				isLoading: false,
+				isLoading: true,
+				authInitialized: false,
 				idToken: null,
 				theme: "system",
 				sidebarOpen: false,
@@ -184,10 +186,27 @@ export const useAppStore = create<AppState>()(
 					try {
 						set({ isLoading: true }, false, "signInAnonymously:start");
 
+						// If there's already a current user, just refresh cookie/token
+						const current = firebaseAuth.getCurrentUser();
+						if (current) {
+							const idToken = await current.getIdToken(true);
+							await makeAuthenticatedRequest(API_ENDPOINTS.AUTH.LOGIN, {
+								method: "POST",
+								body: JSON.stringify({ idToken }),
+							});
+							const user = mapFirebaseUser(current);
+							set(
+								{ user, isAuthenticated: true, idToken, isLoading: false },
+								false,
+								"signInAnonymously:refresh-session",
+							);
+							return;
+						}
+
+						// No current user: perform anonymous sign-in
 						const { user: firebaseUser } = await firebaseAuth.signInAnonymously();
 						const idToken = await firebaseUser.getIdToken();
 
-						// Set session cookie via API
 						await makeAuthenticatedRequest(API_ENDPOINTS.AUTH.LOGIN, {
 							method: "POST",
 							body: JSON.stringify({ idToken }),
@@ -195,12 +214,7 @@ export const useAppStore = create<AppState>()(
 
 						const user = mapFirebaseUser(firebaseUser);
 						set(
-							{
-								user,
-								isAuthenticated: true,
-								idToken,
-								isLoading: false,
-							},
+							{ user, isAuthenticated: true, idToken, isLoading: false },
 							false,
 							"signInAnonymously:success",
 						);
@@ -309,18 +323,19 @@ export const useAppStore = create<AppState>()(
 
 				initializeAuth: () => {
 					// Set up Firebase auth state listener
+					set({ isLoading: true }, false, "initializeAuth:start");
 					firebaseAuth.onAuthStateChanged(async (firebaseUser) => {
 						try {
 							if (firebaseUser) {
 								const user = mapFirebaseUser(firebaseUser);
 								const idToken = await firebaseUser.getIdToken();
-
 								set(
 									{
 										user,
 										isAuthenticated: true,
 										idToken,
 										isLoading: false,
+										authInitialized: true,
 									},
 									false,
 									"initializeAuth:userFound",
@@ -332,6 +347,7 @@ export const useAppStore = create<AppState>()(
 										isAuthenticated: false,
 										idToken: null,
 										isLoading: false,
+										authInitialized: true,
 									},
 									false,
 									"initializeAuth:noUser",
@@ -345,6 +361,7 @@ export const useAppStore = create<AppState>()(
 									isAuthenticated: false,
 									idToken: null,
 									isLoading: false,
+									authInitialized: true,
 								},
 								false,
 								"initializeAuth:error",

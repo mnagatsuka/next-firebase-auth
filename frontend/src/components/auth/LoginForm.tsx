@@ -2,10 +2,14 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "../../hooks/useAuth";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { getErrorMessage } from "@/lib/utils/error";
+import { auth } from "@/lib/firebase/client";
+import { useAuthStore } from "@/stores/auth-store";
+import { useRouter } from "next/navigation";
 
 interface LoginFormProps {
 	onSuccess?: () => void;
@@ -17,6 +21,7 @@ export function LoginForm({ onSuccess, allowAnonymous = false }: LoginFormProps)
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const { signInWithEmail, signInAnonymously, isLoading } = useAuth();
+    const router = useRouter();
 
 	const handleEmailLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -28,20 +33,54 @@ export function LoginForm({ onSuccess, allowAnonymous = false }: LoginFormProps)
 
 		try {
 			await signInWithEmail(email, password);
+			// Issue HttpOnly session cookie and sync client token
+			try {
+				const current = auth.currentUser;
+				if (current) {
+					const idToken = await current.getIdToken(true);
+					await fetch("/api/auth/login", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ idToken }),
+						cache: "no-store",
+					});
+					useAuthStore.getState().setIdToken(idToken);
+				}
+			} catch (e) {
+				console.warn("Post-login session sync failed", e);
+			}
 			toast.success("Signed in successfully!");
 			onSuccess?.();
-		} catch (error: any) {
-			toast.error(error.message || "Sign in failed");
+			router.refresh();
+		} catch (error) {
+			toast.error(getErrorMessage(error));
 		}
 	};
 
 	const handleAnonymousLogin = async () => {
 		try {
 			await signInAnonymously();
+			// Also issue a session cookie for guest sessions
+			try {
+				const current = auth.currentUser;
+				if (current) {
+					const idToken = await current.getIdToken(true);
+					await fetch("/api/auth/login", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ idToken }),
+						cache: "no-store",
+					});
+					useAuthStore.getState().setIdToken(idToken);
+				}
+			} catch (e) {
+				console.warn("Anonymous session sync failed", e);
+			}
 			toast.success("Signed in anonymously!");
 			onSuccess?.();
-		} catch (error: any) {
-			toast.error(error.message || "Anonymous sign in failed");
+			router.refresh();
+		} catch (error) {
+			toast.error(getErrorMessage(error));
 		}
 	};
 

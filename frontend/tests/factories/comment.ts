@@ -6,14 +6,14 @@ export function makeComment(overrides: Partial<Comment> = {}, seed = 1, postId?:
 	const rng = createRng(seed);
 	const id = overrides.id ?? makeId(rng, "comment");
 	const content = overrides.content ?? sentence(rng, 14);
-	const author = overrides.author ?? "Jane Smith";
+	const userId = overrides.userId ?? "uid_abc123xyz";
 	const createdAt = overrides.createdAt ?? addMinutesIso(fixedIso(), 230);
 	const finalPostId = overrides.postId ?? postId ?? "post-123";
 
 	return {
 		id,
 		content,
-		author,
+		userId,
 		createdAt,
 		postId: finalPostId,
 		...overrides,

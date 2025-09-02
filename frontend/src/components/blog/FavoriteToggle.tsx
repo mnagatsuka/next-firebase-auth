@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { useFavoritePost, useUnfavoritePost } from "@/lib/api/generated/client";
+import { useFavoritePost, useUnfavoritePost, useGetBlogPostById } from "@/lib/api/generated/client";
 
 interface FavoriteToggleProps {
   postId: string;
@@ -13,17 +13,42 @@ interface FavoriteToggleProps {
 }
 
 export function FavoriteToggle({ postId, initialFavorited = false }: FavoriteToggleProps) {
-  const { user, isAuthenticated, signInAnonymously } = useAuth();
+  const { user, isAuthenticated, authInitialized, signInAnonymously } = useAuth();
   const [isFavorited, setIsFavorited] = useState<boolean>(initialFavorited);
   const [loading, setLoading] = useState<boolean>(false);
 
   const favMutation = useFavoritePost();
   const unfavMutation = useUnfavoritePost();
 
+  // Fetch current post data to get accurate favorite status when user is authenticated
+  const { data: postResponse, refetch } = useGetBlogPostById(postId, {
+    query: {
+      enabled: isAuthenticated && authInitialized,
+      refetchOnWindowFocus: false,
+    }
+  });
+
+  // Update favorite status when post data changes or user authentication changes
+  useEffect(() => {
+    if (postResponse?.data) {
+      const post = postResponse.data as unknown as Record<string, unknown>;
+      const serverFavorited = Boolean(post.isFavorited);
+      setIsFavorited(serverFavorited);
+    } else if (!isAuthenticated) {
+      // Reset to initial value when not authenticated
+      setIsFavorited(initialFavorited);
+    }
+  }, [postResponse, isAuthenticated, authInitialized, initialFavorited]);
+
   const toggleFavorite = async () => {
     try {
       setLoading(true);
       if (!isAuthenticated || !user) {
+        if (!authInitialized) {
+          toast.error("Authentication not ready, please try again");
+          setLoading(false);
+          return;
+        }
         await signInAnonymously();
       }
 
@@ -34,6 +59,8 @@ export function FavoriteToggle({ postId, initialFavorited = false }: FavoriteTog
             onSuccess: () => {
               setIsFavorited(true);
               toast.success("Added to Favorites");
+              // Refetch to ensure sync with server
+              refetch();
             },
             onError: (e: any) => {
               toast.error(e?.message || "Failed to add favorite");
@@ -48,6 +75,8 @@ export function FavoriteToggle({ postId, initialFavorited = false }: FavoriteTog
             onSuccess: () => {
               setIsFavorited(false);
               toast.success("Removed from Favorites");
+              // Refetch to ensure sync with server
+              refetch();
             },
             onError: (e: any) => {
               toast.error(e?.message || "Failed to remove favorite");

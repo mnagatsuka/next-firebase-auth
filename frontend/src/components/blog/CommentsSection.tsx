@@ -11,7 +11,6 @@ import {
 import { useCommentsWebSocket } from "@/hooks/useCommentsWebSocket";
 import { useWebSocketStatus } from "@/hooks/useWebSocketManager";
 import { formatBlogPostDate } from "@/lib/utils/date";
-import { useErrorHandler } from "@/lib/errors";
 
 export interface CommentsSectionProps {
 	/** Post ID to fetch comments for */
@@ -20,7 +19,6 @@ export interface CommentsSectionProps {
 
 export function CommentsSection({ postId }: CommentsSectionProps) {
 	const [newComment, setNewComment] = useState("");
-	const { showError } = useErrorHandler();
 
     // Fetch comments directly via REST API
     // Memoize params so React Query key stays stable across renders
@@ -58,7 +56,8 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
                 setNewComment("");
             },
             onError: (error) => {
-                showError(error, "Failed to add comment");
+                console.error("Failed to add comment:", error);
+                // Error handling could be enhanced with toast notifications
             },
         },
     });

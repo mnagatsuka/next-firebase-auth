@@ -1,14 +1,14 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
-import { useErrorHandler } from "../lib/errors";
-import { useAppStore } from "../stores/app-store";
+import { useCallback } from "react";
+import { useAuthStore } from "@/stores/auth-store";
 
 export const useAuth = () => {
 	const {
 		user,
 		isAuthenticated,
 		isLoading,
+		authInitialized,
 		error,
 		signInWithEmail,
 		signUpWithEmail,
@@ -18,14 +18,9 @@ export const useAuth = () => {
 		refreshToken,
 		initializeAuth,
 		setError,
-	} = useAppStore();
+	} = useAuthStore();
 
-	const { showError } = useErrorHandler();
-
-	// Initialize Firebase Auth listener on first use
-	useEffect(() => {
-		initializeAuth();
-	}, [initializeAuth]);
+	// Auth listener is initialized centrally in AuthProvider
 
 	// Wrapped auth actions with error handling
 	const handleSignInWithEmail = useCallback(
@@ -34,11 +29,11 @@ export const useAuth = () => {
 				setError(null);
 				await signInWithEmail(email, password);
 			} catch (error) {
-				showError(error, "Failed to sign in");
+				// Error is already set in the store by the auth action
 				throw error;
 			}
 		},
-		[signInWithEmail, setError, showError],
+		[signInWithEmail, setError],
 	);
 
 	const handleSignUpWithEmail = useCallback(
@@ -47,11 +42,11 @@ export const useAuth = () => {
 				setError(null);
 				await signUpWithEmail(email, password);
 			} catch (error) {
-				showError(error, "Failed to create account");
+				// Error is already set in the store by the auth action
 				throw error;
 			}
 		},
-		[signUpWithEmail, setError, showError],
+		[signUpWithEmail, setError],
 	);
 
 	const handleSignInAnonymously = useCallback(async () => {
@@ -59,10 +54,10 @@ export const useAuth = () => {
 			setError(null);
 			await signInAnonymously();
 		} catch (error) {
-			showError(error, "Failed to sign in anonymously");
+			// Error is already set in the store by the auth action
 			throw error;
 		}
-	}, [signInAnonymously, setError, showError]);
+	}, [signInAnonymously, setError]);
 
 	const handleLinkAnonymousWithEmail = useCallback(
 		async (email: string, password: string) => {
@@ -70,11 +65,11 @@ export const useAuth = () => {
 				setError(null);
 				await linkAnonymousWithEmail(email, password);
 			} catch (error) {
-				showError(error, "Failed to upgrade account");
+				// Error is already set in the store by the auth action
 				throw error;
 			}
 		},
-		[linkAnonymousWithEmail, setError, showError],
+		[linkAnonymousWithEmail, setError],
 	);
 
 	const handleLogout = useCallback(async () => {
@@ -82,16 +77,17 @@ export const useAuth = () => {
 			setError(null);
 			await logout();
 		} catch (error) {
-			showError(error, "Failed to sign out");
+			// Error is already set in the store by the auth action
 			throw error;
 		}
-	}, [logout, setError, showError]);
+	}, [logout, setError]);
 
 	return {
 		// State
 		user,
 		isAuthenticated,
 		isLoading,
+		authInitialized,
 		error,
 		isAnonymous: user?.isAnonymous ?? false,
 
@@ -103,5 +99,6 @@ export const useAuth = () => {
 		logout: handleLogout,
 		refreshToken,
 		clearError: () => setError(null),
+		initializeAuth,
 	};
 };

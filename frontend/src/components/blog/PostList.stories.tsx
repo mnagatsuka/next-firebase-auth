@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { HttpResponse, http } from "msw";
 import { PostList } from "./PostList";
+import type { BlogPostSummary } from '../../lib/api/generated/schemas/blogPostSummary';
 
 const meta: Meta<typeof PostList> = {
 	title: "Blog/PostList",
@@ -14,14 +15,13 @@ const meta: Meta<typeof PostList> = {
 export default meta;
 type Story = StoryObj<typeof PostList>;
 
-const mockPosts = [
+const mockPosts: BlogPostSummary[] = [
 	{
 		id: "post-123",
 		title: "Getting Started with Next.js",
 		excerpt: "Learn the basics of Next.js in this comprehensive guide covering SSR, SSG, and CSR.",
 		author: "John Doe",
 		publishedAt: "2024-01-15T10:30:00Z",
-		tags: ["Next.js", "React", "TypeScript"],
 		status: "published",
 	},
 	{
@@ -31,7 +31,6 @@ const mockPosts = [
 			"Explore advanced React patterns including hooks, context, and state management techniques.",
 		author: "Jane Smith",
 		publishedAt: "2024-01-14T09:15:00Z",
-		tags: ["React", "Patterns", "Hooks"],
 		status: "published",
 	},
 	{
@@ -40,7 +39,6 @@ const mockPosts = [
 		excerpt: "Learn TypeScript best practices for building scalable and maintainable applications.",
 		author: "Bob Johnson",
 		publishedAt: "2024-01-13T14:45:00Z",
-		tags: ["TypeScript", "Best Practices"],
 		status: "published",
 	},
 ];

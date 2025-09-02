@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "./useAuth";
 
-export const useRequireAuth = (redirectTo = "/login") => {
+export const useRequireAuth = (redirectTo = "/?auth=1") => {
 	const { isAuthenticated, isLoading, user } = useAuth();
 	const router = useRouter();
 
@@ -23,7 +23,7 @@ export const useRequireAuth = (redirectTo = "/login") => {
 };
 
 // Hook for components that require non-anonymous users
-export const useRequireNonAnonymousAuth = (redirectTo = "/login") => {
+export const useRequireNonAnonymousAuth = (redirectTo = "/?auth=1") => {
 	const { isAuthenticated, isLoading, user } = useAuth();
 	const router = useRouter();
 

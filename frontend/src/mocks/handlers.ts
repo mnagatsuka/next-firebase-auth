@@ -52,11 +52,12 @@ const authHandlers = [
 	http.get("/api/auth/anonymous", ({ request }) => {
 		const url = new URL(request.url);
 		const redirect = url.searchParams.get("redirect") || "/";
-		const loginUrl = new URL("/login", request.url);
-		loginUrl.searchParams.set("anonymous", "true");
-		loginUrl.searchParams.set("redirect", redirect);
+		const authUrl = new URL("/", request.url);
+		authUrl.searchParams.set("auth", "1");
+		authUrl.searchParams.set("anonymous", "true");
+		authUrl.searchParams.set("redirect", redirect);
 
-		return HttpResponse.redirect(loginUrl.toString());
+		return HttpResponse.redirect(authUrl.toString());
 	}),
 ];
 

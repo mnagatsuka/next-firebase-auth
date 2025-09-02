@@ -6,8 +6,35 @@ import { serverEnv } from "../config/env";
 // Use any type to avoid static imports
 type DecodedIdToken = any;
 
-const SESSION_COOKIE_NAME = "session";
-const SESSION_COOKIE_MAX_AGE = 60 * 60 * 24 * 14; // 14 days
+const SESSION_COOKIE_NAME = "__session";
+const DEFAULT_SESSION_COOKIE_MAX_AGE = 60 * 60 * 24 * 14; // 14 days
+
+function getSessionCookieMaxAgeSeconds(): number {
+    // Prefer validated server env; fallback to raw env; else default
+    const fromServerEnv = serverEnv?.SESSION_COOKIE_MAX_AGE;
+    const fromProcess = process.env.SESSION_COOKIE_MAX_AGE;
+
+    const candidate =
+        typeof fromServerEnv === "number"
+            ? fromServerEnv
+            : fromProcess !== undefined
+                ? Number(fromProcess)
+                : undefined;
+
+    if (typeof candidate === "number" && Number.isFinite(candidate) && candidate > 0) {
+        return Math.floor(candidate);
+    }
+
+    if (process.env.NODE_ENV !== "production" && (fromServerEnv !== undefined || fromProcess !== undefined)) {
+        console.warn(
+            "SESSION_COOKIE_MAX_AGE is set but invalid; falling back to default (14 days).",
+        );
+    }
+
+    return DEFAULT_SESSION_COOKIE_MAX_AGE;
+}
+
+const SESSION_COOKIE_MAX_AGE = getSessionCookieMaxAgeSeconds();
 
 export interface SessionCookieOptions {
 	httpOnly?: boolean;
@@ -21,18 +48,19 @@ export interface SessionCookieOptions {
 export async function setSessionCookie(idToken: string): Promise<void> {
 	try {
 		const adminAuth = await getAdminAuth();
+		const isEmulator = !!(serverEnv?.FIREBASE_AUTH_EMULATOR_HOST || process.env.FIREBASE_AUTH_EMULATOR_HOST);
 
-		// Create session cookie
-		const sessionCookie = await adminAuth.createSessionCookie(idToken, {
-			expiresIn: SESSION_COOKIE_MAX_AGE * 1000, // Convert to milliseconds
-		});
+		// In emulator, fall back to using the ID token as the cookie value
+		const cookieValue = isEmulator
+			? idToken
+			: await adminAuth.createSessionCookie(idToken, { expiresIn: SESSION_COOKIE_MAX_AGE * 1000 });
 
 		const cookieStore = await cookies();
 
 		// Set cookie with security options
-		cookieStore.set(SESSION_COOKIE_NAME, sessionCookie, {
+		cookieStore.set(SESSION_COOKIE_NAME, cookieValue, {
 			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
+			secure: process.env.APP_ENV === "production",
 			sameSite: "lax",
 			maxAge: SESSION_COOKIE_MAX_AGE,
 			path: "/",
@@ -54,18 +82,34 @@ export async function verifySessionCookie(): Promise<DecodedIdToken | null> {
 		}
 
 		const adminAuth = await getAdminAuth();
+		const isEmulator = !!(serverEnv?.FIREBASE_AUTH_EMULATOR_HOST || process.env.FIREBASE_AUTH_EMULATOR_HOST);
 
-		// Verify session cookie
-		const decodedClaims = await adminAuth.verifySessionCookie(
-			sessionCookie.value,
-			true, // Check if cookie is revoked
-		);
+		// In emulator, verify the ID token directly; otherwise verify the session cookie
+		const decodedClaims = isEmulator
+			? await adminAuth.verifyIdToken(sessionCookie.value, true)
+			: await adminAuth.verifySessionCookie(sessionCookie.value, true);
 
-		return decodedClaims;
-	} catch (error) {
-		console.error("Error verifying session cookie:", error);
-		return null;
-	}
+        return decodedClaims;
+    } catch (error) {
+        // If verification fails (invalid/revoked/missing user), clear the cookie to avoid noisy loops
+        try {
+            const code = (error as any)?.errorInfo?.code || (error as any)?.code || "";
+            const shouldClear =
+                typeof code === "string" && (
+                    code.includes("invalid-session-cookie") ||
+                    code.includes("session-cookie-revoked") ||
+                    code.includes("user-not-found")
+                );
+            if (shouldClear) {
+                const cookieStore = await cookies();
+                cookieStore.delete(SESSION_COOKIE_NAME);
+            }
+        } catch {}
+        if (process.env.NODE_ENV !== "production") {
+            console.warn("Error verifying session cookie (handled):", error);
+        }
+        return null;
+    }
 }
 
 // Clear session cookie

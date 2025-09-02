@@ -14,7 +14,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 	try {
 		// Get the wrapped response and extract the data property
 		const authHeader = await getServerAuthorizationHeader();
-		const response = await getBlogPostById(postId, authHeader ? { headers: { Authorization: authHeader } } : undefined);
+		const response = await getBlogPostById(
+			postId, 
+			authHeader 
+				? { 
+					headers: { Authorization: authHeader },
+					cache: 'no-store' // Disable Next.js caching for real-time data
+				} 
+				: { cache: 'no-store' } // Disable Next.js caching for real-time data
+		);
 
 		// Extract the actual post data from the response envelope
 		const post = response.data;
@@ -45,7 +53,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 					tags={[]} // TODO: Add tags to BlogPost schema if needed
 					postId={postId}
 					canEdit={canEdit}
-					isFavorited={(post as any).isFavorited ?? false}
+					isFavorited={Boolean((post as unknown as Record<string, unknown>).isFavorited)}
 				/>
 				<CommentsSection postId={postId} />
 			</div>

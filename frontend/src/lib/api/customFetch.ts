@@ -14,8 +14,8 @@ type ApiEnvelope<T = unknown> =
 const getClientAuthHeader = async (): Promise<string | null> => {
 	if (typeof window === "undefined") return null;
 	try {
-		const { useAppStore } = await import("../../stores/app-store");
-		const token = useAppStore.getState().idToken;
+		const { useAuthStore } = await import("@/stores/auth-store");
+		const token = useAuthStore.getState().idToken;
 		return token ? `Bearer ${token}` : null;
 	} catch {
 		return null;
@@ -35,7 +35,15 @@ class FetchError extends Error {
 }
 
 // Simplified, best-practice customFetch: single options object, robust JSON handling, 204/null handling
-export async function customFetch<T = any>(url: string, options: FetcherOptions = {}): Promise<T> {
+// Also handles AbortSignal as second parameter (for orval compatibility)
+export async function customFetch<T = unknown>(
+    url: string, 
+    optionsOrSignal: FetcherOptions | AbortSignal = {}
+): Promise<T> {
+	// Handle orval's signal parameter pattern
+	const options: FetcherOptions = optionsOrSignal instanceof AbortSignal 
+		? { signal: optionsOrSignal }
+		: optionsOrSignal;
 	const {
 		baseURL,
 		timeout = 10000,
@@ -89,13 +97,48 @@ export async function customFetch<T = any>(url: string, options: FetcherOptions 
 	}
 	const timeoutId = setTimeout(() => controller.abort("timeout"), timeout);
 
-	try {
-		const response = await fetch(fullURL, {
-			...rest,
-			headers,
-			body,
-			signal: controller.signal,
-		});
+    // Helper: silent reissue via Firebase currentUser and POST /api/auth/login
+    const trySilentReissue = async (): Promise<boolean> => {
+        if (typeof window === "undefined") return false;
+        try {
+            const { auth } = await import("@/lib/firebase/client");
+            const current = auth.currentUser;
+            if (!current) {
+                // No client user → auto-navigate to login modal per spec
+                try { window.location.href = "/?auth=1"; } catch {}
+                return false;
+            }
+
+            const idToken = await current.getIdToken(true);
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ idToken }),
+                cache: "no-store",
+            });
+            if (!res.ok) return false;
+
+            // Keep client Authorization in sync when present
+            try {
+                const { useAuthStore } = await import("@/stores/auth-store");
+                useAuthStore.getState().setIdToken(idToken);
+            } catch {}
+            return true;
+        } catch (e) {
+            console.error("Silent reissue failed:", e);
+            return false;
+        }
+    };
+
+    let didRetry = false;
+
+    try {
+        let response = await fetch(fullURL, {
+            ...rest,
+            headers,
+            body,
+            signal: controller.signal,
+        });
 
 		clearTimeout(timeoutId);
 		if (userSignal) userSignal.removeEventListener("abort", onUserAbort);
@@ -106,7 +149,7 @@ export async function customFetch<T = any>(url: string, options: FetcherOptions 
 		}
 
 		// Determine content type
-		const contentType = response.headers.get("content-type") || "";
+        let contentType = response.headers.get("content-type") || "";
 
 		// Handle error responses first, regardless of content type
 		if (!response.ok) {
@@ -127,27 +170,47 @@ export async function customFetch<T = any>(url: string, options: FetcherOptions 
 				// If we can't parse the error body, use the status text
 			}
 
-			// Handle auth errors by triggering token refresh
-			if (response.status === 401 || response.status === 403) {
-				if (typeof window !== "undefined") {
-					try {
-						// Try to refresh token
-						const store = require("../../stores/app-store").useAppStore.getState();
-						store.refreshToken().catch(() => {
-							// If refresh fails, trigger re-authentication
-							if (store.user?.isAnonymous) {
-								// For anonymous users, sign in anonymously again
-								store.signInAnonymously().catch(console.error);
-							} else {
-								// For regular users, redirect to login
-								window.location.href = "/login";
-							}
-						});
-					} catch (error) {
-						console.error("Token refresh error:", error);
-					}
-				}
-			}
+            // Handle auth errors: attempt silent reissue, then retry once
+            if ((response.status === 401 || response.status === 403) && !didRetry) {
+                const ok = await trySilentReissue();
+                if (ok) {
+                    didRetry = true;
+                    response = await fetch(fullURL, {
+                        ...rest,
+                        headers,
+                        body,
+                        signal: controller.signal,
+                    });
+                    // Recompute meta for the retried response
+                    if (response.status === 204 || response.status === 205) {
+                        return null as T;
+                    }
+                    contentType = response.headers.get("content-type") || "";
+                    if (response.ok && contentType.includes("application/json")) {
+                        const json = await response.json().catch(() => null);
+                        if (json === null) return null as T;
+                        const maybeEnvelope = json as Partial<ApiEnvelope<T>>;
+                        if (maybeEnvelope?.status === "error") {
+                            const err = maybeEnvelope.error;
+                            throw new FetchError(
+                                err?.message || `HTTP ${response.status}: ${response.statusText}`,
+                                response.status,
+                                response.statusText,
+                                response,
+                            );
+                        }
+                        return json as T;
+                    }
+                    if (response.ok) {
+                        const contentLength = response.headers.get("content-length");
+                        if (!contentType && (!contentLength || contentLength === "0")) {
+                            return null as T;
+                        }
+                    }
+                    // If still not ok, fall through to error handling below
+                    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                }
+            }
 
 			throw new FetchError(errorMessage, response.status, response.statusText, response);
 		}
@@ -256,6 +319,14 @@ export const api = {
 	delete: del,
 	customFetch,
 } as const;
+
+// Orval-compatible wrapper that handles both RequestInit and AbortSignal as second parameter
+export async function orvalFetch<T = any>(
+	url: string,
+	options?: RequestInit
+): Promise<T> {
+	return customFetch<T>(url, options || {});
+}
 
 export { FetchError };
 export type ApiResponse<T = unknown> = ApiEnvelope<T>;

@@ -57,8 +57,10 @@ import type {
   UnauthorizedResponse
 } from './schemas';
 
-import { customFetch } from '../customFetch';
+import { orvalFetch } from '../customFetch';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -87,7 +89,7 @@ export const getGetBlogPostsUrl = (params?: GetBlogPostsParams,) => {
 
 export const getBlogPosts = async (params?: GetBlogPostsParams, options?: RequestInit): Promise<BlogPostListResponse> => {
   
-  return customFetch<BlogPostListResponse>(getGetBlogPostsUrl(params),
+  return orvalFetch<BlogPostListResponse>(getGetBlogPostsUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -103,16 +105,16 @@ export const getGetBlogPostsQueryKey = (params?: GetBlogPostsParams,) => {
     }
 
     
-export const getGetBlogPostsQueryOptions = <TData = Awaited<ReturnType<typeof getBlogPosts>>, TError = BadRequestResponse | Error>(params?: GetBlogPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBlogPosts>>, TError, TData>>, }
+export const getGetBlogPostsQueryOptions = <TData = Awaited<ReturnType<typeof getBlogPosts>>, TError = BadRequestResponse | Error>(params?: GetBlogPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBlogPosts>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetBlogPostsQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBlogPosts>>> = ({ signal }) => getBlogPosts(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBlogPosts>>> = ({ signal }) => getBlogPosts(params, { signal, ...requestOptions });
 
       
 
@@ -132,7 +134,7 @@ export function useGetBlogPosts<TData = Awaited<ReturnType<typeof getBlogPosts>>
           TError,
           Awaited<ReturnType<typeof getBlogPosts>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetBlogPosts<TData = Awaited<ReturnType<typeof getBlogPosts>>, TError = BadRequestResponse | Error>(
@@ -142,11 +144,11 @@ export function useGetBlogPosts<TData = Awaited<ReturnType<typeof getBlogPosts>>
           TError,
           Awaited<ReturnType<typeof getBlogPosts>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetBlogPosts<TData = Awaited<ReturnType<typeof getBlogPosts>>, TError = BadRequestResponse | Error>(
- params?: GetBlogPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBlogPosts>>, TError, TData>>, }
+ params?: GetBlogPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBlogPosts>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -154,7 +156,7 @@ export function useGetBlogPosts<TData = Awaited<ReturnType<typeof getBlogPosts>>
  */
 
 export function useGetBlogPosts<TData = Awaited<ReturnType<typeof getBlogPosts>>, TError = BadRequestResponse | Error>(
- params?: GetBlogPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBlogPosts>>, TError, TData>>, }
+ params?: GetBlogPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBlogPosts>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -188,7 +190,7 @@ export const getCreateBlogPostUrl = () => {
 
 export const createBlogPost = async (createPostRequest: CreatePostRequest, options?: RequestInit): Promise<BlogPostResponse> => {
   
-  return customFetch<BlogPostResponse>(getCreateBlogPostUrl(),
+  return orvalFetch<BlogPostResponse>(getCreateBlogPostUrl(),
   {      
     ...options,
     method: 'POST',
@@ -202,15 +204,15 @@ export const createBlogPost = async (createPostRequest: CreatePostRequest, optio
 
 
 export const getCreateBlogPostMutationOptions = <TError = BadRequestResponse | UnauthorizedResponse | Error | Error,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBlogPost>>, TError,{data: CreatePostRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBlogPost>>, TError,{data: CreatePostRequest}, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createBlogPost>>, TError,{data: CreatePostRequest}, TContext> => {
 
 const mutationKey = ['createBlogPost'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -218,7 +220,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBlogPost>>, {data: CreatePostRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  createBlogPost(data,)
+          return  createBlogPost(data,requestOptions)
         }
 
         
@@ -234,7 +236,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Create Blog Post
  */
 export const useCreateBlogPost = <TError = BadRequestResponse | UnauthorizedResponse | Error | Error,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBlogPost>>, TError,{data: CreatePostRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBlogPost>>, TError,{data: CreatePostRequest}, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createBlogPost>>,
         TError,
@@ -264,7 +266,7 @@ export const getGetBlogPostByIdUrl = (id: string,) => {
 
 export const getBlogPostById = async (id: string, options?: RequestInit): Promise<BlogPostResponse> => {
   
-  return customFetch<BlogPostResponse>(getGetBlogPostByIdUrl(id),
+  return orvalFetch<BlogPostResponse>(getGetBlogPostByIdUrl(id),
   {      
     ...options,
     method: 'GET'
@@ -280,16 +282,16 @@ export const getGetBlogPostByIdQueryKey = (id?: string,) => {
     }
 
     
-export const getGetBlogPostByIdQueryOptions = <TData = Awaited<ReturnType<typeof getBlogPostById>>, TError = NotFoundResponse | Error>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBlogPostById>>, TError, TData>>, }
+export const getGetBlogPostByIdQueryOptions = <TData = Awaited<ReturnType<typeof getBlogPostById>>, TError = NotFoundResponse | Error>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBlogPostById>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetBlogPostByIdQueryKey(id);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBlogPostById>>> = ({ signal }) => getBlogPostById(id, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBlogPostById>>> = ({ signal }) => getBlogPostById(id, { signal, ...requestOptions });
 
       
 
@@ -309,7 +311,7 @@ export function useGetBlogPostById<TData = Awaited<ReturnType<typeof getBlogPost
           TError,
           Awaited<ReturnType<typeof getBlogPostById>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetBlogPostById<TData = Awaited<ReturnType<typeof getBlogPostById>>, TError = NotFoundResponse | Error>(
@@ -319,11 +321,11 @@ export function useGetBlogPostById<TData = Awaited<ReturnType<typeof getBlogPost
           TError,
           Awaited<ReturnType<typeof getBlogPostById>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetBlogPostById<TData = Awaited<ReturnType<typeof getBlogPostById>>, TError = NotFoundResponse | Error>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBlogPostById>>, TError, TData>>, }
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBlogPostById>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -331,7 +333,7 @@ export function useGetBlogPostById<TData = Awaited<ReturnType<typeof getBlogPost
  */
 
 export function useGetBlogPostById<TData = Awaited<ReturnType<typeof getBlogPostById>>, TError = NotFoundResponse | Error>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBlogPostById>>, TError, TData>>, }
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBlogPostById>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -366,7 +368,7 @@ export const getUpdateBlogPostUrl = (id: string,) => {
 export const updateBlogPost = async (id: string,
     createPostRequest: CreatePostRequest, options?: RequestInit): Promise<BlogPostResponse> => {
   
-  return customFetch<BlogPostResponse>(getUpdateBlogPostUrl(id),
+  return orvalFetch<BlogPostResponse>(getUpdateBlogPostUrl(id),
   {      
     ...options,
     method: 'PUT',
@@ -380,15 +382,15 @@ export const updateBlogPost = async (id: string,
 
 
 export const getUpdateBlogPostMutationOptions = <TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error | Error,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBlogPost>>, TError,{id: string;data: CreatePostRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBlogPost>>, TError,{id: string;data: CreatePostRequest}, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateBlogPost>>, TError,{id: string;data: CreatePostRequest}, TContext> => {
 
 const mutationKey = ['updateBlogPost'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -396,7 +398,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBlogPost>>, {id: string;data: CreatePostRequest}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  updateBlogPost(id,data,)
+          return  updateBlogPost(id,data,requestOptions)
         }
 
         
@@ -412,7 +414,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Update Blog Post
  */
 export const useUpdateBlogPost = <TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error | Error,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBlogPost>>, TError,{id: string;data: CreatePostRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBlogPost>>, TError,{id: string;data: CreatePostRequest}, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateBlogPost>>,
         TError,
@@ -443,7 +445,7 @@ export const getDeleteBlogPostUrl = (id: string,) => {
 
 export const deleteBlogPost = async (id: string, options?: RequestInit): Promise<null> => {
   
-  return customFetch<null>(getDeleteBlogPostUrl(id),
+  return orvalFetch<null>(getDeleteBlogPostUrl(id),
   {      
     ...options,
     method: 'DELETE'
@@ -456,15 +458,15 @@ export const deleteBlogPost = async (id: string, options?: RequestInit): Promise
 
 
 export const getDeleteBlogPostMutationOptions = <TError = UnauthorizedResponse | Error | NotFoundResponse | Error,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBlogPost>>, TError,{id: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBlogPost>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteBlogPost>>, TError,{id: string}, TContext> => {
 
 const mutationKey = ['deleteBlogPost'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -472,7 +474,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBlogPost>>, {id: string}> = (props) => {
           const {id} = props ?? {};
 
-          return  deleteBlogPost(id,)
+          return  deleteBlogPost(id,requestOptions)
         }
 
         
@@ -488,7 +490,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Delete Blog Post
  */
 export const useDeleteBlogPost = <TError = UnauthorizedResponse | Error | NotFoundResponse | Error,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBlogPost>>, TError,{id: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBlogPost>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteBlogPost>>,
         TError,
@@ -532,7 +534,7 @@ export const getGetPostCommentsUrl = (id: string,
 export const getPostComments = async (id: string,
     params?: GetPostCommentsParams, options?: RequestInit): Promise<CommentsResponse> => {
   
-  return customFetch<CommentsResponse>(getGetPostCommentsUrl(id,params),
+  return orvalFetch<CommentsResponse>(getGetPostCommentsUrl(id,params),
   {      
     ...options,
     method: 'GET'
@@ -550,16 +552,16 @@ export const getGetPostCommentsQueryKey = (id?: string,
 
     
 export const getGetPostCommentsQueryOptions = <TData = Awaited<ReturnType<typeof getPostComments>>, TError = NotFoundResponse | Error>(id: string,
-    params?: GetPostCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostComments>>, TError, TData>>, }
+    params?: GetPostCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostComments>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetPostCommentsQueryKey(id,params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPostComments>>> = ({ signal }) => getPostComments(id,params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPostComments>>> = ({ signal }) => getPostComments(id,params, { signal, ...requestOptions });
 
       
 
@@ -580,7 +582,7 @@ export function useGetPostComments<TData = Awaited<ReturnType<typeof getPostComm
           TError,
           Awaited<ReturnType<typeof getPostComments>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetPostComments<TData = Awaited<ReturnType<typeof getPostComments>>, TError = NotFoundResponse | Error>(
@@ -591,12 +593,12 @@ export function useGetPostComments<TData = Awaited<ReturnType<typeof getPostComm
           TError,
           Awaited<ReturnType<typeof getPostComments>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetPostComments<TData = Awaited<ReturnType<typeof getPostComments>>, TError = NotFoundResponse | Error>(
  id: string,
-    params?: GetPostCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostComments>>, TError, TData>>, }
+    params?: GetPostCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostComments>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -605,7 +607,7 @@ export function useGetPostComments<TData = Awaited<ReturnType<typeof getPostComm
 
 export function useGetPostComments<TData = Awaited<ReturnType<typeof getPostComments>>, TError = NotFoundResponse | Error>(
  id: string,
-    params?: GetPostCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostComments>>, TError, TData>>, }
+    params?: GetPostCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostComments>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -659,7 +661,7 @@ export const getCreateCommentUrl = (id: string,) => {
 export const createComment = async (id: string,
     createCommentRequest: CreateCommentRequest, options?: RequestInit): Promise<CommentsAcknowledgmentResponse> => {
   
-  return customFetch<CommentsAcknowledgmentResponse>(getCreateCommentUrl(id),
+  return orvalFetch<CommentsAcknowledgmentResponse>(getCreateCommentUrl(id),
   {      
     ...options,
     method: 'POST',
@@ -673,15 +675,15 @@ export const createComment = async (id: string,
 
 
 export const getCreateCommentMutationOptions = <TError = BadRequestResponse | UnauthorizedResponse | NotFoundResponse | Error | Error,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createComment>>, TError,{id: string;data: CreateCommentRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createComment>>, TError,{id: string;data: CreateCommentRequest}, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createComment>>, TError,{id: string;data: CreateCommentRequest}, TContext> => {
 
 const mutationKey = ['createComment'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -689,7 +691,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof createComment>>, {id: string;data: CreateCommentRequest}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  createComment(id,data,)
+          return  createComment(id,data,requestOptions)
         }
 
         
@@ -705,7 +707,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Create Comment
  */
 export const useCreateComment = <TError = BadRequestResponse | UnauthorizedResponse | NotFoundResponse | Error | Error,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createComment>>, TError,{id: string;data: CreateCommentRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createComment>>, TError,{id: string;data: CreateCommentRequest}, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createComment>>,
         TError,
@@ -735,7 +737,7 @@ export const getFavoritePostUrl = (id: string,) => {
 
 export const favoritePost = async (id: string, options?: RequestInit): Promise<null> => {
   
-  return customFetch<null>(getFavoritePostUrl(id),
+  return orvalFetch<null>(getFavoritePostUrl(id),
   {      
     ...options,
     method: 'POST'
@@ -748,15 +750,15 @@ export const favoritePost = async (id: string, options?: RequestInit): Promise<n
 
 
 export const getFavoritePostMutationOptions = <TError = UnauthorizedResponse | NotFoundResponse | Error,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof favoritePost>>, TError,{id: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof favoritePost>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof favoritePost>>, TError,{id: string}, TContext> => {
 
 const mutationKey = ['favoritePost'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -764,7 +766,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof favoritePost>>, {id: string}> = (props) => {
           const {id} = props ?? {};
 
-          return  favoritePost(id,)
+          return  favoritePost(id,requestOptions)
         }
 
         
@@ -780,7 +782,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Add Post to Favorites
  */
 export const useFavoritePost = <TError = UnauthorizedResponse | NotFoundResponse | Error,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof favoritePost>>, TError,{id: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof favoritePost>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof favoritePost>>,
         TError,
@@ -810,7 +812,7 @@ export const getUnfavoritePostUrl = (id: string,) => {
 
 export const unfavoritePost = async (id: string, options?: RequestInit): Promise<null> => {
   
-  return customFetch<null>(getUnfavoritePostUrl(id),
+  return orvalFetch<null>(getUnfavoritePostUrl(id),
   {      
     ...options,
     method: 'DELETE'
@@ -823,15 +825,15 @@ export const unfavoritePost = async (id: string, options?: RequestInit): Promise
 
 
 export const getUnfavoritePostMutationOptions = <TError = UnauthorizedResponse | NotFoundResponse | Error,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unfavoritePost>>, TError,{id: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unfavoritePost>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof unfavoritePost>>, TError,{id: string}, TContext> => {
 
 const mutationKey = ['unfavoritePost'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -839,7 +841,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof unfavoritePost>>, {id: string}> = (props) => {
           const {id} = props ?? {};
 
-          return  unfavoritePost(id,)
+          return  unfavoritePost(id,requestOptions)
         }
 
         
@@ -855,7 +857,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Remove Post from Favorites
  */
 export const useUnfavoritePost = <TError = UnauthorizedResponse | NotFoundResponse | Error,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unfavoritePost>>, TError,{id: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unfavoritePost>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof unfavoritePost>>,
         TError,
@@ -897,7 +899,7 @@ export const getGetUserPostsUrl = (uid: string,
 export const getUserPosts = async (uid: string,
     params?: GetUserPostsParams, options?: RequestInit): Promise<BlogPostListResponse> => {
   
-  return customFetch<BlogPostListResponse>(getGetUserPostsUrl(uid,params),
+  return orvalFetch<BlogPostListResponse>(getGetUserPostsUrl(uid,params),
   {      
     ...options,
     method: 'GET'
@@ -915,16 +917,16 @@ export const getGetUserPostsQueryKey = (uid?: string,
 
     
 export const getGetUserPostsQueryOptions = <TData = Awaited<ReturnType<typeof getUserPosts>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(uid: string,
-    params?: GetUserPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPosts>>, TError, TData>>, }
+    params?: GetUserPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPosts>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetUserPostsQueryKey(uid,params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserPosts>>> = ({ signal }) => getUserPosts(uid,params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserPosts>>> = ({ signal }) => getUserPosts(uid,params, { signal, ...requestOptions });
 
       
 
@@ -945,7 +947,7 @@ export function useGetUserPosts<TData = Awaited<ReturnType<typeof getUserPosts>>
           TError,
           Awaited<ReturnType<typeof getUserPosts>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetUserPosts<TData = Awaited<ReturnType<typeof getUserPosts>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(
@@ -956,12 +958,12 @@ export function useGetUserPosts<TData = Awaited<ReturnType<typeof getUserPosts>>
           TError,
           Awaited<ReturnType<typeof getUserPosts>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetUserPosts<TData = Awaited<ReturnType<typeof getUserPosts>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(
  uid: string,
-    params?: GetUserPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPosts>>, TError, TData>>, }
+    params?: GetUserPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPosts>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -970,7 +972,7 @@ export function useGetUserPosts<TData = Awaited<ReturnType<typeof getUserPosts>>
 
 export function useGetUserPosts<TData = Awaited<ReturnType<typeof getUserPosts>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(
  uid: string,
-    params?: GetUserPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPosts>>, TError, TData>>, }
+    params?: GetUserPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPosts>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -1012,7 +1014,7 @@ export const getGetUserFavoritesUrl = (uid: string,
 export const getUserFavorites = async (uid: string,
     params?: GetUserFavoritesParams, options?: RequestInit): Promise<BlogPostListResponse> => {
   
-  return customFetch<BlogPostListResponse>(getGetUserFavoritesUrl(uid,params),
+  return orvalFetch<BlogPostListResponse>(getGetUserFavoritesUrl(uid,params),
   {      
     ...options,
     method: 'GET'
@@ -1030,16 +1032,16 @@ export const getGetUserFavoritesQueryKey = (uid?: string,
 
     
 export const getGetUserFavoritesQueryOptions = <TData = Awaited<ReturnType<typeof getUserFavorites>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(uid: string,
-    params?: GetUserFavoritesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserFavorites>>, TError, TData>>, }
+    params?: GetUserFavoritesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserFavorites>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetUserFavoritesQueryKey(uid,params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserFavorites>>> = ({ signal }) => getUserFavorites(uid,params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserFavorites>>> = ({ signal }) => getUserFavorites(uid,params, { signal, ...requestOptions });
 
       
 
@@ -1060,7 +1062,7 @@ export function useGetUserFavorites<TData = Awaited<ReturnType<typeof getUserFav
           TError,
           Awaited<ReturnType<typeof getUserFavorites>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetUserFavorites<TData = Awaited<ReturnType<typeof getUserFavorites>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(
@@ -1071,12 +1073,12 @@ export function useGetUserFavorites<TData = Awaited<ReturnType<typeof getUserFav
           TError,
           Awaited<ReturnType<typeof getUserFavorites>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetUserFavorites<TData = Awaited<ReturnType<typeof getUserFavorites>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(
  uid: string,
-    params?: GetUserFavoritesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserFavorites>>, TError, TData>>, }
+    params?: GetUserFavoritesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserFavorites>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -1085,7 +1087,7 @@ export function useGetUserFavorites<TData = Awaited<ReturnType<typeof getUserFav
 
 export function useGetUserFavorites<TData = Awaited<ReturnType<typeof getUserFavorites>>, TError = BadRequestResponse | UnauthorizedResponse | Error | NotFoundResponse | Error>(
  uid: string,
-    params?: GetUserFavoritesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserFavorites>>, TError, TData>>, }
+    params?: GetUserFavoritesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserFavorites>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 

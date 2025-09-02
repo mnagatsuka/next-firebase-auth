@@ -1,6 +1,8 @@
 import type { BlogPostSummary } from "@/lib/api/generated/schemas";
 import { PostCard } from "./PostCard";
 import { PostListSkeleton } from "./PostCardSkeleton";
+import { classNames, gridLayouts } from "@/lib/design/tokens";
+import { cn } from "@/lib/utils/cn";
 
 export interface PostListProps {
     /** Array of blog posts to display */
@@ -28,14 +30,14 @@ export function PostList({
 
 	if (posts.length === 0) {
 		return (
-			<div className="text-center py-12">
-				<p className="text-muted-foreground text-lg">{emptyMessage}</p>
+			<div className={cn("text-center py-12")}>
+				<p className={cn(classNames.textMuted, "text-lg")}>{emptyMessage}</p>
 			</div>
 		);
 	}
 
 	return (
-		<div className="grid gap-6 md:grid-cols-2">
+		<div className={gridLayouts.posts}>
 			{posts.map((post) => (
 				<PostCard
 					key={post.id}
@@ -44,7 +46,7 @@ export function PostList({
 					excerpt={post.excerpt}
 					author={post.author}
 					publishedAt={post.publishedAt}
-					status={showStatus ? (post as any).status ?? "draft" : "published"}
+					status={showStatus ? post.status : "published"}
 					showStatus={showStatus}
 					actions={actions}
 				/>

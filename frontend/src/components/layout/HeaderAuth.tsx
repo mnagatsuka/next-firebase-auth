@@ -1,83 +1,68 @@
 "use client";
 
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { AuthModal } from "@/components/auth/AuthModal";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export function HeaderAuth() {
-	const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
 
-	const handleSignOut = async () => {
-		try {
-			await logout();
-			toast.success("Signed out successfully");
-		} catch (error: any) {
-			toast.error("Sign out failed");
-			console.error("Sign out error:", error);
-		}
-	};
+  // Open modal if URL contains ?auth=1
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("auth") === "1") {
+      setOpen(true);
+    }
+  }, []);
 
-	const getDisplayName = () => {
-		if (!user) return "";
-		return user.displayName || user.email || "User";
-	};
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      try {
+        await fetch("/api/auth/logout", { method: "POST", cache: "no-store" });
+      } catch (e) {
+        // Non-blocking
+        console.warn("Logout session clear failed", e);
+      }
+      toast.success("Signed out successfully");
+      router.refresh();
+    } catch (error: any) {
+      toast.error("Sign out failed");
+      console.error("Sign out error:", error);
+    }
+  };
 
-	const handleUpgradeAccount = () => {
-		// For anonymous users, redirect to signup to upgrade their account
-		window.location.href = "/signup";
-	};
+  const isLoggedIn = isAuthenticated && !!user && !user.isAnonymous;
 
-	if (isAuthenticated && user) {
-		return (
-			<>
-				{!user.isAnonymous && (
-					<Link href="/create-post" className="text-sm font-medium hover:underline">
-						Create Post
-					</Link>
-				)}
-				<div className="flex items-center space-x-3">
-					<div className="flex items-center space-x-2">
-						<span className="text-sm">Welcome, {getDisplayName()}</span>
-						{user.isAnonymous && (
-							<Badge variant="secondary" className="text-xs">
-								Guest
-							</Badge>
-						)}
-					</div>
-					<div className="flex items-center space-x-2">
-						{user.isAnonymous && (
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={handleUpgradeAccount}
-								disabled={isLoading}
-							>
-								Create Account
-							</Button>
-						)}
-						<Button variant="outline" size="sm" onClick={handleSignOut} disabled={isLoading}>
-							{isLoading ? "..." : "Sign Out"}
-						</Button>
-					</div>
-				</div>
-			</>
-		);
-	}
+  return (
+    <>
+      {/* Optional: show Create Post for logged-in users */}
+      {isLoggedIn && (
+        <Link href="/create-post" className="text-sm font-medium hover:underline">
+          Create Post
+        </Link>
+      )}
 
-	return (
-		<div className="flex items-center space-x-2">
-			<Link href="/login">
-				<Button variant="ghost" size="sm">
-					Sign In
-				</Button>
-			</Link>
-			<Link href="/signup">
-				<Button variant="default" size="sm">
-					Sign Up
-				</Button>
-			</Link>
-		</div>
-	);
+      {/* Auth controls */}
+      {isLoggedIn ? (
+        <Button variant="outline" size="sm" onClick={handleSignOut} disabled={isLoading}>
+          {isLoading ? "..." : "Logout"}
+        </Button>
+      ) : (
+        <Button variant="default" size="sm" onClick={() => setOpen(true)} disabled={isLoading}>
+          Login or Signup
+        </Button>
+      )}
+
+      {/* Auth Modal */}
+      <AuthModal open={open} onOpenChange={setOpen} />
+    </>
+  );
 }

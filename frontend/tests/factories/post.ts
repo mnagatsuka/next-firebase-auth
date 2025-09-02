@@ -17,6 +17,7 @@ export function makePostSummary(
 	const excerpt = overrides.excerpt ?? sentence(rng, 14);
 	const author = overrides.author ?? "Test Author";
 	const publishedAt = overrides.publishedAt ?? fixedIso();
+	const status = overrides.status ?? "published";
 
 	return {
 		id,
@@ -24,6 +25,7 @@ export function makePostSummary(
 		excerpt,
 		author,
 		publishedAt,
+		status,
 		...overrides,
 	};
 }

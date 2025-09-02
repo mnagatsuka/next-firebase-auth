@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifySessionCookie } from "@/lib/auth/session";
+const AUTH_COOKIE_NAME = "__session";
 
 export const runtime = "nodejs";
 
@@ -8,12 +9,14 @@ export async function GET() {
 		// Verify session cookie and get user
 		const user = await verifySessionCookie();
 
-		if (!user) {
-			return NextResponse.json(
-				{ success: false, message: "No valid session found" },
-				{ status: 401 },
-			);
-		}
+    	if (!user) {
+        	const res = NextResponse.json(
+            	{ success: false, message: "No valid session found" },
+            	{ status: 401 },
+        	);
+        	try { res.cookies.delete(AUTH_COOKIE_NAME); } catch {}
+        	return res;
+    	}
 
 		// Compute fields from decoded claims
 		const isAnonymous = user?.firebase?.sign_in_provider === "anonymous";

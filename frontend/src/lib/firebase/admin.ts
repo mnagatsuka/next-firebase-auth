@@ -21,25 +21,43 @@ export async function getAdminAuth() {
 			const opts: AppOptions = { projectId: serverEnv?.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID };
 			initializeApp(opts);
 		} else {
-			// Production (Vercel env → cert)
-			console.log("🔥 Initializing Firebase Admin SDK for production");
-			const projectId = serverEnv?.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
-			const clientEmail = serverEnv?.FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_CLIENT_EMAIL;
-			let privateKey = serverEnv?.FIREBASE_PRIVATE_KEY || process.env.FIREBASE_PRIVATE_KEY;
+			// Production (Vercel): prefer a single JSON secret for credentials
+			console.log("🔥 Initializing Firebase Admin SDK for production (JSON secret)");
+			const jsonStr = serverEnv?.FIREBASE_SERVICE_ACCOUNT_JSON || process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
-			if (!projectId || !clientEmail || !privateKey) {
-				// Fallback (ADC)
+			try {
+				if (jsonStr) {
+					const data = JSON.parse(jsonStr);
+					const projectId = data.project_id || serverEnv?.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
+					const clientEmail = data.client_email || serverEnv?.FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_CLIENT_EMAIL;
+					let privateKey: string = data.private_key || serverEnv?.FIREBASE_PRIVATE_KEY || process.env.FIREBASE_PRIVATE_KEY || "";
+					if (privateKey.startsWith('"') && privateKey.endsWith('"')) privateKey = privateKey.slice(1, -1);
+					if (privateKey.includes("\\n")) privateKey = privateKey.replace(/\\n/g, "\n");
+					privateKey = privateKey.replace(/\r\n/g, "\n").trim();
+					if (projectId && clientEmail && privateKey) {
+						initializeApp({ credential: cert({ projectId, clientEmail, privateKey }) });
+					} else {
+						// Fallback to ADC if somehow missing
+						initializeApp({ credential: applicationDefault(), projectId });
+					}
+				} else {
+					// Fallback to individual envs or ADC
+					const projectId = serverEnv?.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
+					const clientEmail = serverEnv?.FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_CLIENT_EMAIL;
+					let privateKey = serverEnv?.FIREBASE_PRIVATE_KEY || process.env.FIREBASE_PRIVATE_KEY;
+					if (projectId && clientEmail && privateKey) {
+						if (privateKey.startsWith('"') && privateKey.endsWith('"')) privateKey = privateKey.slice(1, -1);
+						if (privateKey.includes("\\n")) privateKey = privateKey.replace(/\\n/g, "\n");
+						privateKey = privateKey.replace(/\r\n/g, "\n").trim();
+						initializeApp({ credential: cert({ projectId, clientEmail, privateKey }) });
+					} else {
+						initializeApp({ credential: applicationDefault(), projectId });
+					}
+				}
+			} catch (e) {
+				console.error("[firebase-admin] Failed to initialize from JSON/env; falling back to ADC", e);
+				const projectId = serverEnv?.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
 				initializeApp({ credential: applicationDefault(), projectId });
-			} else {
-				// Safety: strip accidental surrounding quotes
-				if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-					privateKey = privateKey.slice(1, -1);
-				}
-				// Convert \\n to real newlines if needed
-				if (privateKey.includes("\\\\n")) {
-					privateKey = privateKey.replace(/\\\\n/g, "\n");
-				}
-				initializeApp({ credential: cert({ projectId, clientEmail, privateKey }) });
 			}
 		}
 	}

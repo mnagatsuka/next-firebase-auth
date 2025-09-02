@@ -1,8 +1,8 @@
 import type { NextConfig } from 'next'
 
-const env = process.env.NODE_ENV
-const isProd = env === 'production'
-const isStaging = (env as string) === 'staging'
+const appEnv = process.env.APP_ENV
+const isProd = appEnv === 'production'
+const isStaging = appEnv === 'staging'
 
 const securityHeaders = [
   ...(isProd || isStaging
