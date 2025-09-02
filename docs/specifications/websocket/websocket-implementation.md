@@ -29,7 +29,7 @@ This project implements WebSocket communication where:
 
 ### Dependencies
 ```python
-# requirements.txt
+# infrastructure/aws-sam/requirements.txt
 fastapi[all]>=0.104.0
 websockets>=12.0
 ```

@@ -155,7 +155,7 @@ import type { NextRequest } from 'next/server'
 import { verifySessionCookie } from '@/lib/auth/session'
 
 export async function middleware(request: NextRequest) {
-  const sessionCookie = request.cookies.get('session')?.value
+  const sessionCookie = request.cookies.get('__session')?.value
   
   // Protected routes check
   if (isProtectedRoute(request.nextUrl.pathname)) {
@@ -268,7 +268,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { adminAuth } from '@/lib/firebase/admin'
 
-const COOKIE_NAME = 'session'
+const COOKIE_NAME = '__session'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 5 // 5 days
 
 export async function setSessionCookie(
@@ -286,7 +286,7 @@ export async function setSessionCookie(
       value: sessionCookie,
       maxAge: COOKIE_MAX_AGE,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.APP_ENV === 'production',
       sameSite: 'strict',
       path: '/'
     })
@@ -315,7 +315,7 @@ export function clearSessionCookie(response: NextResponse): void {
     value: '',
     maxAge: 0,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.APP_ENV === 'production',
     sameSite: 'strict',
     path: '/'
   })

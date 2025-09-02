@@ -43,6 +43,10 @@ Your `/api/auth/login` route should:
 2. Create a Firebase **session cookie** via Admin SDK.
 3. Set it with the right attributes.
 
+Config
+
+- `SESSION_COOKIE_MAX_AGE` (seconds): optional server-only env to control the session cookie lifetime. Default is `1209600` (14 days). Example: `SESSION_COOKIE_MAX_AGE=86400` for 1 day.
+
 Dev (HTTP `http://localhost:3000`)
 
 * `HttpOnly; Path=/; SameSite=Lax; Secure=false; Max-Age=1209600` (14 days)
@@ -50,7 +54,7 @@ Dev (HTTP `http://localhost:3000`)
 
 Prod (HTTPS)
 
-* `HttpOnly; Path=/; SameSite=Lax; Secure=true; Max-Age=1209600`
+* `HttpOnly; Path=/; SameSite=Lax; Secure=true; Max-Age=<SESSION_COOKIE_MAX_AGE|1209600>`
 * Only use `SameSite=None; Secure=true` if you truly need the cookie across different sites. You don’t—your cookie is only for SSR on the Next.js origin.
 
 Note

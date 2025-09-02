@@ -15,7 +15,7 @@
 
 ## 2. Layout and Structure
 
-This page is composed of the following components. For component details, see the **Storybook**.
+This page is composed of the following components. For component details, see the **Storybook** and individual component specs.
 
 ### Primary Components
 - `ComponentName1` (placement in layout, e.g., "at the top", "main content area")
@@ -24,8 +24,8 @@ This page is composed of the following components. For component details, see th
 - *Add more components as needed, describing their role and placement.*
 
 ### Responsive Behavior
-
-Describe how the layout changes for different screen sizes (e.g., grid on desktop, stacked layout on mobile, specific breakpoints). Detail how elements adapt (e.g., typography scales, images resize, navigation collapses).
+- Describe how the layout changes for different screen sizes (e.g., grid on desktop, stacked layout on mobile, specific breakpoints).
+- Detail how elements adapt (e.g., typography scales, images resize, navigation collapses).
 
 
 ## 3. Actions and Interactions
@@ -43,6 +43,7 @@ This section defines the unique behavior and logic that integrates the component
 3. *Use numbered lists for clarity.*
 
 #### Component Reference
+- List the primary components involved in this action.
 - [Link to relevant Storybook entry](https://storybook-url.com/?path=/story/components-componentname) (e.g., `https://localhost:6006/?path=/story/components-blogpostform`)
 
 
@@ -60,3 +61,20 @@ This section outlines the API endpoints this page interacts with. For complete r
 
 #### API Spec Reference
 - See the `[endpoint name]` endpoint in the [OpenAPI spec](https://link-to-your-openapi-spec) (e.g., `getPostById` endpoint in the [OpenAPI spec](https://link-to-your-openapi-spec))
+
+
+## 5. State & Visibility Rules (Optional)
+
+Describe how the page's appearance or behavior changes based on application state or data fetching.
+
+- **Visibility Rules:** How does the page render for different user roles or states? (e.g., "Admin sections are hidden for non-admin users").
+- **Loading State:** Describe the visual feedback during data fetching (e.g., "Show a skeleton loader for the content area.").
+- **Empty State:** Describe the condition and what is displayed when there is no data (e.g., "When the user has no items, show a message with a call-to-action.").
+- **Error State:** Describe how API or other errors are communicated to the user (e.g., "Show a non-blocking toast notification on failure.").
+
+
+## 6. Accessibility (Optional)
+
+- **Focus Management:** Describe how focus is managed during page load or after asynchronous actions (e.g., "On modal open, focus is trapped inside.").
+- **ARIA Roles:** List key ARIA roles and attributes used to enhance semantics (e.g., `role="dialog"`, `aria-live="polite"`).
+- **Keyboard Navigation:** Ensure all interactive elements are keyboard-operable.

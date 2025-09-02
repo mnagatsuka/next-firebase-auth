@@ -27,7 +27,8 @@ Purpose: Protect end users by attaching appropriate security headers to response
 
 ```ts
 // next.config.ts
-const isProd = process.env.NODE_ENV === 'production'
+// Prefer explicit app environment over NODE_ENV for security toggles
+const isProd = process.env.APP_ENV === 'production'
 
 const securityHeaders = [
   ...(isProd

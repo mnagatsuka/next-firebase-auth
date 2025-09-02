@@ -23,6 +23,15 @@ This section lists the key pages within the application, each with its dedicated
 - [My Posts](/docs/specifications/ui/pages/my-posts.md)
 - [Favorite Posts](/docs/specifications/ui/pages/favorite-posts.md)
 
+### Layout
+
+- [Header](/docs/specifications/ui/pages/header.md)
+- [Footer](/docs/specifications/ui/pages/footer.md)
+
+### Auth Modals
+
+- [Auth Modals (Login / Sign Up)](/docs/specifications/ui/pages/auth-modals.md)
+
 
 ## 🎨 Components and Storybook
 

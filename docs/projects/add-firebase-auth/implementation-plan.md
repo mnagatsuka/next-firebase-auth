@@ -245,7 +245,7 @@ function LoginForm() {
 #### 4. Middleware Pattern
 ```ts
 export function middleware(request: NextRequest) {
-  const sessionCookie = request.cookies.get('session')
+  const sessionCookie = request.cookies.get('__session')
   // Verify and route based on auth status
 }
 ```
