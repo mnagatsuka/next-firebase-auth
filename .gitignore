@@ -68,9 +68,13 @@ blob-report/
 samconfig.development.toml
 **/samconfig.development.toml
 
+# Backend build files (copied from infrastructure)
+backend/requirements.txt
+
 # Firebase
 next-firebase-auth-firebase-service-account.json
 
 # Infrastructure secrets
 infrastructure/**/.env.development
 infrastructure/**/parameters.development.*
+.vercel
