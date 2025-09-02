@@ -1,0 +1,55 @@
+# Production Dockerfile for AWS Lambda with Lambda Web Adapter
+# Build from project root: docker build -f backend/Dockerfile.lambda .
+FROM python:3.13-slim AS base
+
+# Install system dependencies and clean up in single layer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Install Lambda Web Adapter
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
+ENV AWS_LAMBDA_EXEC_WRAPPER=/opt/extensions/lambda-adapter
+
+# Set working directory
+WORKDIR /app
+
+# Copy project config
+COPY pyproject.toml ./
+
+# Install dependencies globally using uv pip
+RUN uv pip install --system --no-cache -e .
+
+# Copy application code
+COPY backend/ ./backend/
+
+# Create non-root user for security and cache directory
+RUN groupadd -r appuser && useradd -r -g appuser appuser \
+    && mkdir -p /tmp/.uv-cache \
+    && chown -R appuser:appuser /app /tmp/.uv-cache
+
+# Switch to non-root user
+USER appuser
+
+# Set environment variables for Lambda Web Adapter
+ENV AWS_LWA_INVOKE_MODE=RESPONSE_STREAM
+ENV AWS_LWA_PORT=8000
+ENV AWS_LWA_ASYNC_INIT=true
+ENV PYTHONPATH=/app/backend/src
+ENV PYTHONUNBUFFERED=1
+ENV UV_CACHE_DIR=/tmp/.uv-cache
+
+# Health check for local testing
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/docs || exit 1
+
+# Expose port for documentation
+EXPOSE 8000
+
+# Change to backend directory and start server
+WORKDIR /app/backend
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

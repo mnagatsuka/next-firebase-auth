@@ -1,6 +1,9 @@
 import logging
+import json
+from datetime import datetime
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 # Import generated code setup (must be before other app imports)
 from app.shared.generated_imports import setup_generated_imports
@@ -22,6 +25,27 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+class CustomJSONResponse(JSONResponse):
+    """Custom JSON response class that properly serializes datetime objects."""
+    
+    def render(self, content) -> bytes:
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+            allow_nan=False,
+            indent=None,
+            separators=(",", ":"),
+            default=self.json_encoder,
+        ).encode("utf-8")
+    
+    @staticmethod
+    def json_encoder(obj):
+        """Custom JSON encoder for datetime objects."""
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
 
@@ -31,10 +55,19 @@ def create_app() -> FastAPI:
         openapi_url="/openapi.json",
         docs_url="/docs",
         redoc_url="/redoc",
+        default_response_class=CustomJSONResponse,  # Use custom JSON response for datetime serialization
     )
 
-    # Note: CORS is handled by Lambda Function URL configuration.
-    # Avoid app-level CORS to prevent conflicting headers.
+    # Add CORS middleware for development environment only
+    # Production: CORS is handled by Lambda Function URL configuration
+    if settings.ENVIRONMENT == "development":
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=settings.ALLOWED_ORIGINS,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     # Initialize Firebase Admin SDK
     try:

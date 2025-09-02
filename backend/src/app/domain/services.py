@@ -40,6 +40,14 @@ class PostRepository(Protocol):
     async def exists_by_id(self, post_id: str) -> bool:
         """Check if a blog post exists."""
         ...
+    
+    async def count_published(self, author: Optional[str] = None) -> int:
+        """Count published blog posts."""
+        ...
+    
+    async def count_by_author(self, author: str, status: Optional[PostStatus] = None) -> int:
+        """Count blog posts by author with optional status filter."""
+        ...
 
 
 class PostService:

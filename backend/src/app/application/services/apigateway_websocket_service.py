@@ -24,7 +24,7 @@ class ApiGatewayWebSocketService:
     def __init__(self):
         self.serverless_endpoint = settings.SERVERLESS_WEBSOCKET_ENDPOINT
         self.session = None
-        logger.info(f"🔧 WebSocket service initialized with endpoint: {self.serverless_endpoint}")
+        logger.info("WebSocket service initialized with endpoint: %s", self.serverless_endpoint)
     
     async def _get_session(self) -> aiohttp.ClientSession:
         """Get or create HTTP session for Serverless API calls."""
@@ -41,19 +41,19 @@ class ApiGatewayWebSocketService:
             json_data = json.dumps(message, cls=DateTimeEncoder)
             
             async with session.post(
-                f"{self.serverless_endpoint}/development/broadcast/comments",
+                f"{self.serverless_endpoint}",
                 data=json_data,
                 headers={"Content-Type": "application/json"}
             ) as response:
                 if response.status == 200:
                     result = await response.json()
-                    logger.info(f"✅ Broadcast successful: {result.get('connectionCount', 0)} connections")
+                    logger.info("Broadcast successful: %d connections", result.get('connectionCount', 0))
                 else:
                     error_text = await response.text()
-                    logger.error(f"❌ Broadcast failed: {response.status} - {error_text}")
+                    logger.error("Broadcast failed: %d - %s", response.status, error_text)
                     
         except Exception as e:
-            logger.error(f"❌ Broadcast error: {str(e)}")
+            logger.error("Broadcast error: %s", str(e))
     
     async def broadcast_comments_list(self, post_id: str, comments: List[Dict[str, Any]]) -> None:
         """Broadcast comments list for a specific post using envelope."""
@@ -79,7 +79,7 @@ class ApiGatewayWebSocketService:
                 "comment": comment,
             },
         }
-        logger.info(f"Broadcasting comment.created for post {post_id}")
+        logger.info("Broadcasting comment.created for post: %s", post_id)
         await self.broadcast_to_all(message)
     
     async def broadcast_comment_update(self, post_id: str, comment_id: str, action: str) -> None:
@@ -93,7 +93,7 @@ class ApiGatewayWebSocketService:
             }
         }
         
-        logger.info(f"Broadcasting comment {action} for post {post_id}")
+        logger.info("Broadcasting comment %s for post: %s", action, post_id)
         await self.broadcast_to_all(message)
     
     async def close(self) -> None:
@@ -104,11 +104,11 @@ class ApiGatewayWebSocketService:
     # Legacy compatibility methods (no-op for Serverless approach)
     async def add_connection(self, connection_id: str) -> None:
         """Legacy method - connections managed by Serverless Framework."""
-        logger.debug(f"Connection management handled by Serverless: {connection_id}")
+        logger.debug("Connection management handled by Serverless: %s", connection_id)
     
     async def remove_connection(self, connection_id: str) -> None:
         """Legacy method - connections managed by Serverless Framework."""
-        logger.debug(f"Connection management handled by Serverless: {connection_id}")
+        logger.debug("Connection management handled by Serverless: %s", connection_id)
     
     def get_connection_count(self) -> int:
         """Legacy method - connection count managed by Serverless Framework."""

@@ -29,13 +29,28 @@ def get_post_repository():
     settings = get_settings()
     provider = (settings.REPOSITORY_PROVIDER or "memory").lower()
     if provider == "dynamodb":
-        return DynamoDBPostRepository(
-            table_name=settings.DYNAMODB_TABLE_POSTS,
-            endpoint_url=settings.AWS_ENDPOINT_URL,
-            region_name=settings.AWS_REGION,
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        )
+        env = (settings.ENVIRONMENT or "development").lower()
+        is_dev = env == "development"
+        
+        # Use local DynamoDB with explicit credentials only in development
+        if is_dev and settings.AWS_ENDPOINT_URL and settings.AWS_ENDPOINT_URL.strip():
+            # Local development with DynamoDB Local
+            return DynamoDBPostRepository(
+                table_name=settings.DYNAMODB_TABLE_POSTS,
+                endpoint_url=settings.AWS_ENDPOINT_URL,
+                region_name=settings.AWS_REGION,
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            )
+        else:
+            # AWS Lambda/Staging/Production - use IAM role
+            return DynamoDBPostRepository(
+                table_name=settings.DYNAMODB_TABLE_POSTS,
+                endpoint_url=None,
+                region_name=settings.AWS_REGION,
+                aws_access_key_id=None,
+                aws_secret_access_key=None,
+            )
     return InMemoryPostRepository()
 
 
@@ -45,13 +60,28 @@ def get_comment_repository():
     settings = get_settings()
     provider = (settings.REPOSITORY_PROVIDER or "memory").lower()
     if provider == "dynamodb":
-        return DynamoDBCommentRepository(
-            table_name=settings.DYNAMODB_TABLE_COMMENTS,
-            endpoint_url=settings.AWS_ENDPOINT_URL,
-            region_name=settings.AWS_REGION,
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        )
+        env = (settings.ENVIRONMENT or "development").lower()
+        is_dev = env == "development"
+        
+        # Use local DynamoDB with explicit credentials only in development
+        if is_dev and settings.AWS_ENDPOINT_URL and settings.AWS_ENDPOINT_URL.strip():
+            # Local development with DynamoDB Local
+            return DynamoDBCommentRepository(
+                table_name=settings.DYNAMODB_TABLE_COMMENTS,
+                endpoint_url=settings.AWS_ENDPOINT_URL,
+                region_name=settings.AWS_REGION,
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            )
+        else:
+            # AWS Lambda/Staging/Production - use IAM role
+            return DynamoDBCommentRepository(
+                table_name=settings.DYNAMODB_TABLE_COMMENTS,
+                endpoint_url=None,
+                region_name=settings.AWS_REGION,
+                aws_access_key_id=None,
+                aws_secret_access_key=None,
+            )
     return InMemoryCommentRepository()
 
 
@@ -78,13 +108,28 @@ def get_favorite_repository():
     settings = get_settings()
     provider = (settings.REPOSITORY_PROVIDER or "memory").lower()
     if provider == "dynamodb":
-        return DynamoDBFavoriteRepository(
-            table_name=settings.DYNAMODB_TABLE_FAVORITES,
-            endpoint_url=settings.AWS_ENDPOINT_URL,
-            region_name=settings.AWS_REGION,
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        )
+        env = (settings.ENVIRONMENT or "development").lower()
+        is_dev = env == "development"
+        
+        # Use local DynamoDB with explicit credentials only in development
+        if is_dev and settings.AWS_ENDPOINT_URL and settings.AWS_ENDPOINT_URL.strip():
+            # Local development with DynamoDB Local
+            return DynamoDBFavoriteRepository(
+                table_name=settings.DYNAMODB_TABLE_FAVORITES,
+                endpoint_url=settings.AWS_ENDPOINT_URL,
+                region_name=settings.AWS_REGION,
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            )
+        else:
+            # AWS Lambda/Staging/Production - use IAM role
+            return DynamoDBFavoriteRepository(
+                table_name=settings.DYNAMODB_TABLE_FAVORITES,
+                endpoint_url=None,
+                region_name=settings.AWS_REGION,
+                aws_access_key_id=None,
+                aws_secret_access_key=None,
+            )
     return InMemoryFavoriteRepository()
 
 

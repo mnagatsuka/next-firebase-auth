@@ -104,21 +104,29 @@ class DynamoDBPostRepository(PostRepository):
         self,
         table_name: str,
         *,
-        endpoint_url: str,
+        endpoint_url: Optional[str] = None,
         region_name: str,
-        aws_access_key_id: str,
-        aws_secret_access_key: str,
+        aws_access_key_id: Optional[str] = None,
+        aws_secret_access_key: Optional[str] = None,
     ) -> None:
         self._table_name = table_name
-        # Create a dedicated resource bound to DynamoDB Local/AWS per settings
-        self._dynamodb: ServiceResource = boto3.resource(
-            "dynamodb",
-            endpoint_url=endpoint_url,
-            region_name=region_name,
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-        )
+        # Create a dedicated resource bound to DynamoDB (local in dev, AWS otherwise)
+        kwargs: Dict[str, Any] = {"region_name": region_name}
+        if endpoint_url:
+            kwargs["endpoint_url"] = endpoint_url
+        if aws_access_key_id:
+            kwargs["aws_access_key_id"] = aws_access_key_id
+        if aws_secret_access_key:
+            kwargs["aws_secret_access_key"] = aws_secret_access_key
+        self._dynamodb: ServiceResource = boto3.resource("dynamodb", **kwargs)
         self._table = self._dynamodb.Table(table_name)
+        print(f"DynamoDB PostRepository initialized with table: {table_name}, region: {region_name}, endpoint: {endpoint_url}")
+        # Verify table exists
+        try:
+            table_status = self._table.table_status
+            print(f"Table {table_name} status: {table_status}")
+        except Exception as e:
+            print(f"Error checking table status: {e}")
 
     # Serialization helpers
     def _post_to_item(self, post: BlogPost) -> Dict[str, Any]:
@@ -161,19 +169,38 @@ class DynamoDBPostRepository(PostRepository):
     async def save(self, post: BlogPost) -> BlogPost:
         post.updated_at = datetime.now(timezone.utc)
         item = self._post_to_item(post)
+        print(f"Attempting to save post: id={post.id}, title='{post.title}', author='{post.author}', status={post.status.value}")
+        print(f"DynamoDB item: {item}")
         try:
-            self._table.put_item(Item=item)
+            response = self._table.put_item(Item=item)
+            print(f"DynamoDB put_item response: {response}")
+            print(f"Post saved successfully: {post.id}")
         except ClientError as e:
+            print(f"DynamoDB put_item error: {e}")
             raise Exception(f"Failed to save post: {e}")
+        except Exception as e:
+            print(f"Unexpected error in save post: {e}")
+            raise
         return post
 
     async def find_by_id(self, post_id: str) -> Optional[BlogPost]:
+        print(f"Attempting to find post by ID: {post_id}")
         try:
             resp = self._table.get_item(Key={"id": post_id})
-        except ClientError:
+            print(f"DynamoDB get_item response: {resp}")
+        except ClientError as e:
+            print(f"DynamoDB get_item error: {e}")
+            return None
+        except Exception as e:
+            print(f"Unexpected error in find_by_id: {e}")
             return None
         item = resp.get("Item")
-        return self._item_to_post(item) if item else None
+        if item:
+            print(f"Post found: {item}")
+            return self._item_to_post(item)
+        else:
+            print(f"Post not found: {post_id}")
+            return None
 
     async def find_by_author(self, author: str, status: Optional[PostStatus] = None) -> List[BlogPost]:
         from boto3.dynamodb.conditions import Attr
@@ -221,14 +248,24 @@ class DynamoDBPostRepository(PostRepository):
     ) -> List[BlogPost]:
         from boto3.dynamodb.conditions import Attr
 
+        print(f"Finding published posts: page={page}, limit={limit}, author={author}")
         filt = Attr("status").eq("published")
         if author:
             filt = filt & Attr("author").eq(author)
         try:
+            print(f"DynamoDB scan with filter: {filt}")
             resp = self._table.scan(FilterExpression=filt)
-        except ClientError:
+            print(f"DynamoDB scan response: {resp}")
+        except ClientError as e:
+            print(f"DynamoDB scan error: {e}")
+            return []
+        except Exception as e:
+            print(f"Unexpected error in find_published: {e}")
             return []
         items = resp.get("Items", [])
+        print(f"Found {len(items)} published posts")
+        if items:
+            print(f"Sample item: {items[0] if items else 'None'}")
         posts = [self._item_to_post(i) for i in items]
         posts.sort(
             key=lambda p: p.published_at or datetime.min.replace(tzinfo=timezone.utc),
@@ -236,12 +273,21 @@ class DynamoDBPostRepository(PostRepository):
         )
         start = (page - 1) * limit
         end = start + limit
-        return posts[start:end]
+        paginated_posts = posts[start:end]
+        print(f"Returning {len(paginated_posts)} posts after pagination")
+        return paginated_posts
 
     async def delete(self, post_id: str) -> None:
+        print(f"Attempting to delete post: {post_id}")
         try:
-            self._table.delete_item(Key={"id": post_id})
-        except ClientError:
+            response = self._table.delete_item(Key={"id": post_id})
+            print(f"DynamoDB delete_item response: {response}")
+            print(f"Post deleted successfully: {post_id}")
+        except ClientError as e:
+            print(f"DynamoDB delete_item error: {e}")
+            return None
+        except Exception as e:
+            print(f"Unexpected error in delete post: {e}")
             return None
 
     async def exists_by_id(self, post_id: str) -> bool:

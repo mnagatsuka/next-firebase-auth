@@ -74,19 +74,20 @@ class DynamoDBCommentRepository:
         self,
         table_name: str,
         *,
-        endpoint_url: str,
+        endpoint_url: Optional[str] = None,
         region_name: str,
-        aws_access_key_id: str,
-        aws_secret_access_key: str,
+        aws_access_key_id: Optional[str] = None,
+        aws_secret_access_key: Optional[str] = None,
     ) -> None:
         self._table_name = table_name
-        self._dynamodb: ServiceResource = boto3.resource(
-            "dynamodb",
-            endpoint_url=endpoint_url,
-            region_name=region_name,
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-        )
+        kwargs = {"region_name": region_name}
+        if endpoint_url:
+            kwargs["endpoint_url"] = endpoint_url
+        if aws_access_key_id:
+            kwargs["aws_access_key_id"] = aws_access_key_id
+        if aws_secret_access_key:
+            kwargs["aws_secret_access_key"] = aws_secret_access_key
+        self._dynamodb: ServiceResource = boto3.resource("dynamodb", **kwargs)
         self._table = self._dynamodb.Table(table_name)
 
     def _comment_to_item(self, comment: Comment) -> Dict[str, Any]:

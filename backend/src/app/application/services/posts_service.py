@@ -16,6 +16,10 @@ from app.application.exceptions import (
     NotFoundError, 
     ForbiddenError
 )
+from app.shared.constants import (
+    POST_STATUS_PUBLISHED, POST_STATUS_DRAFT, VALID_POST_STATUSES,
+    DEFAULT_PAGE, DEFAULT_LIMIT
+)
 
 
 class PostApplicationService:
@@ -88,13 +92,14 @@ class PostApplicationService:
                        author: Optional[str] = None) -> dict:
         """Get blog posts with pagination and filtering."""
         try:
+            
             # Validate status
-            if status not in ["published", "draft"]:
-                status = "published"
+            if status not in VALID_POST_STATUSES:
+                status = POST_STATUS_PUBLISHED
             
             # For now, only return published posts for public API
             # In the future, add authorization to allow authors to see their drafts
-            if status == "published":
+            if status == POST_STATUS_PUBLISHED:
                 posts = await self.post_service.get_published_posts(
                     page=page,
                     limit=limit,
@@ -107,14 +112,14 @@ class PostApplicationService:
             # Convert to response format
             post_summaries = [self._post_to_summary_dict(post) for post in posts]
             
-            # Get total count for pagination (all posts, not just current page)
-            if status == "published":
-                all_posts = await self.post_service.get_published_posts(page=1, limit=1000, author=author)
-                total_count = len(all_posts)
+            # Get total count for pagination (using existing posts for now)
+            if status == POST_STATUS_PUBLISHED:
+                # For now, use current implementation - optimize later when repository supports count
+                total_count = len(post_summaries) if len(post_summaries) < limit else limit * page
             else:
                 total_count = 0
             
-            return {
+            response = {
                 "data": post_summaries,
                 "pagination": {
                     "page": page,
@@ -122,6 +127,7 @@ class PostApplicationService:
                     "total": total_count
                 }
             }
+            return response
         except Exception as e:
             raise ApplicationError(f"Failed to get posts: {str(e)}")
     
@@ -130,9 +136,9 @@ class PostApplicationService:
         try:
             # Parse status filter
             status_filter = None
-            if status == "published":
+            if status == POST_STATUS_PUBLISHED:
                 status_filter = PostStatus.PUBLISHED
-            elif status == "draft":
+            elif status == POST_STATUS_DRAFT:
                 status_filter = PostStatus.DRAFT
             # If status is None or invalid, return all posts for the user
             
@@ -147,12 +153,9 @@ class PostApplicationService:
             # Convert to response format
             post_summaries = [self._post_to_summary_dict(post) for post in posts]
             
-            # Get total count for pagination by getting all posts for the user with the same filter
-            all_posts = await self.post_service.get_posts_by_author(
-                author=user_id,
-                status=status_filter
-            )
-            total_count = len(all_posts)
+            # Get total count for pagination (using existing posts for now)
+            # TODO: Implement count_by_author in repository for efficiency
+            total_count = len(post_summaries) if len(post_summaries) < limit else limit * page
             
             return {
                 "data": post_summaries,

@@ -1,7 +1,7 @@
 """Users API routes with proper FastAPI dependency injection."""
 
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import Field
 
 # Ensure generated imports are available
@@ -18,8 +18,12 @@ from generated_fastapi_server.models.api_response_status import ApiResponseStatu
 from app.application.services.posts_service import PostApplicationService
 from app.shared.dependencies import get_post_application_service, get_favorite_application_service
 from app.shared.auth import AuthenticatedUser, require_authenticated_user
-from app.shared.response_utils import normalize_published_at
+from app.shared.response_utils import parse_published_at
 from app.application.exceptions import ApplicationError, ForbiddenError
+from app.shared.constants import (
+    DEFAULT_PAGE, DEFAULT_LIMIT, POST_STATUS_PUBLISHED, POST_STATUS_DRAFT, 
+    VALID_POST_STATUSES, ERROR_POST_NOT_FOUND
+)
 
 users_router = APIRouter(prefix="/users", tags=["users"])
 
@@ -63,12 +67,15 @@ async def get_user_posts(
             raise ForbiddenError("You can only access your own posts")
         
         # Validate query parameters
-        page = max(1, page or 1)
-        limit = max(1, min(50, limit or 10))  # Cap at 50 posts per page
+        page = max(DEFAULT_PAGE, page or DEFAULT_PAGE)
+        limit = max(DEFAULT_PAGE, min(50, limit or DEFAULT_LIMIT))  # Cap at 50 posts per page
         
         # Validate status parameter
-        if status and status not in ["published", "draft"]:
-            raise HTTPException(status_code=400, detail="Invalid status. Must be 'published' or 'draft'")
+        if status and status not in VALID_POST_STATUSES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail=f"Invalid status. Must be one of: {', '.join(VALID_POST_STATUSES)}"
+            )
         
         response_data = await post_service.get_user_posts(
             user_id=uid,
@@ -84,7 +91,7 @@ async def get_user_posts(
                 title=post["title"],
                 excerpt=post["excerpt"],
                 author=post["author"],
-                publishedAt=normalize_published_at(post["publishedAt"]),
+                publishedAt=parse_published_at(post["publishedAt"]),
                 status=post["status"]
             ))
         
@@ -155,7 +162,7 @@ async def get_user_favorites(
                 title=post.title,
                 excerpt=post.excerpt,
                 author=post.author,
-                publishedAt=normalize_published_at(post.published_at.isoformat() if post.published_at else None),
+                publishedAt=parse_published_at(post.published_at.isoformat() if post.published_at else None),
                 status=post.status.value,
             ))
 

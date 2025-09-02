@@ -1,7 +1,7 @@
 """Posts API routes with proper FastAPI dependency injection."""
 
 from typing import Optional
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from pydantic import Field
 from typing_extensions import Annotated
 
@@ -22,8 +22,11 @@ from generated_fastapi_server.models.api_response_status import ApiResponseStatu
 from app.application.services.posts_service import PostApplicationService
 from app.shared.dependencies import get_post_application_service, get_favorite_application_service
 from app.shared.auth import AuthenticatedUser, get_current_user_optional, require_authenticated_user, require_non_anonymous_user
-from app.shared.response_utils import normalize_published_at
 from app.application.exceptions import ValidationError, NotFoundError, ForbiddenError, ApplicationError, AuthenticationError
+from app.shared.response_utils import create_api_blog_post
+from app.shared.constants import (
+    DEFAULT_PAGE, DEFAULT_LIMIT, POST_STATUS_PUBLISHED, ERROR_POST_NOT_FOUND
+)
 
 posts_router = APIRouter(prefix="/posts", tags=["posts"])
 
@@ -59,15 +62,7 @@ async def create_blog_post(
             status=create_post_request.status
         )
         
-        api_post = ApiBlogPost(
-            id=post_data["id"],
-            title=post_data["title"],
-            content=post_data["content"],
-            excerpt=post_data["excerpt"],
-            author=post_data["author"],
-            publishedAt=normalize_published_at(post_data["publishedAt"]),
-            status=post_data["status"]
-        )
+        api_post = create_api_blog_post(post_data)
         
         return BlogPostResponse(
             status=ApiResponseStatus.SUCCESS,
@@ -75,11 +70,11 @@ async def create_blog_post(
         )
         
     except ValidationError as e:
-        raise HTTPException(status_code=400, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except AuthenticationError as e:
-        raise HTTPException(status_code=401, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.message)
     except ApplicationError as e:
-        raise HTTPException(status_code=500, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e.message)
 
 @posts_router.get(
     "/{id}",
@@ -108,16 +103,7 @@ async def get_blog_post_by_id(
             except Exception:
                 is_favorited = False
 
-        api_post = ApiBlogPost(
-            id=post_data["id"],
-            title=post_data["title"],
-            content=post_data["content"],
-            excerpt=post_data["excerpt"],
-            author=post_data["author"],
-            publishedAt=normalize_published_at(post_data["publishedAt"]),
-            status=post_data["status"],
-            isFavorited=is_favorited
-        )
+        api_post = create_api_blog_post(post_data, is_favorited=is_favorited)
         
         return BlogPostResponse(
             status=ApiResponseStatus.SUCCESS,
@@ -125,9 +111,9 @@ async def get_blog_post_by_id(
         )
         
     except NotFoundError:
-        raise HTTPException(status_code=404, detail="Blog post not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ERROR_POST_NOT_FOUND)
     except ApplicationError as e:
-        raise HTTPException(status_code=500, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e.message)
 
 @posts_router.get(
     "",
@@ -139,8 +125,8 @@ async def get_blog_post_by_id(
     response_model_by_alias=True,
 )
 async def get_blog_posts(
-    page: int = 1,
-    limit: int = 10,
+    page: int = DEFAULT_PAGE,
+    limit: int = DEFAULT_LIMIT,
     status: Optional[str] = None,
     author: Optional[str] = None,
     current_user: Optional[AuthenticatedUser] = Depends(get_current_user_optional),
@@ -148,9 +134,9 @@ async def get_blog_posts(
 ) -> BlogPostListResponse:
     """Get a list of blog posts with filtering and pagination."""
     try:
-        page = page or 1
-        limit = limit or 10
-        status = status or "published"
+        page = page or DEFAULT_PAGE
+        limit = limit or DEFAULT_LIMIT
+        status = status or POST_STATUS_PUBLISHED
         
         response_data = await post_service.get_posts(
             page=page,
@@ -166,7 +152,7 @@ async def get_blog_posts(
                 title=post["title"],
                 excerpt=post["excerpt"],
                 author=post["author"],
-                publishedAt=normalize_published_at(post["publishedAt"]),
+                publishedAt=post["publishedAt"],  # Let Pydantic handle datetime serialization
                 status=post["status"]
             ))
         
@@ -186,13 +172,14 @@ async def get_blog_posts(
             )
         )
         
-        return BlogPostListResponse(
+        final_response = BlogPostListResponse(
             status=ApiResponseStatus.SUCCESS,
             data=data
         )
+        return final_response
         
     except ApplicationError as e:
-        raise HTTPException(status_code=500, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e.message)
 
 @posts_router.put(
     "/{id}",
@@ -217,23 +204,21 @@ async def update_blog_post(
         # Use authenticated user's information
         user_id = current_user.get_identity()
         
-        post_data = await post_service.update_post(
-            post_id=id,
-            user_id=user_id,
-            title=create_post_request.title,
-            content=create_post_request.content,
-            excerpt=create_post_request.excerpt
-        )
+        # Check if status is being changed to published
+        if hasattr(create_post_request, 'status') and create_post_request.status == 'published':
+            # If publishing, use the publish service
+            post_data = await post_service.publish_post(id, user_id)
+        else:
+            # Otherwise, use regular update
+            post_data = await post_service.update_post(
+                post_id=id,
+                user_id=user_id,
+                title=create_post_request.title,
+                content=create_post_request.content,
+                excerpt=create_post_request.excerpt
+            )
         
-        api_post = ApiBlogPost(
-            id=post_data["id"],
-            title=post_data["title"],
-            content=post_data["content"],
-            excerpt=post_data["excerpt"],
-            author=post_data["author"],
-            publishedAt=normalize_published_at(post_data["publishedAt"]),
-            status=post_data["status"]
-        )
+        api_post = create_api_blog_post(post_data)
         
         return BlogPostResponse(
             status=ApiResponseStatus.SUCCESS,
@@ -241,15 +226,15 @@ async def update_blog_post(
         )
         
     except NotFoundError:
-        raise HTTPException(status_code=404, detail="Blog post not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ERROR_POST_NOT_FOUND)
     except ForbiddenError as e:
-        raise HTTPException(status_code=403, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except ValidationError as e:
-        raise HTTPException(status_code=400, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except AuthenticationError as e:
-        raise HTTPException(status_code=401, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.message)
     except ApplicationError as e:
-        raise HTTPException(status_code=500, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e.message)
 
 
 @posts_router.post(
@@ -272,9 +257,9 @@ async def favorite_post(
         await favorite_service.add_favorite(current_user.get_identity(), id)
         return None
     except NotFoundError:
-        raise HTTPException(status_code=404, detail="Blog post not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ERROR_POST_NOT_FOUND)
     except ApplicationError as e:
-        raise HTTPException(status_code=500, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e.message)
 
 
 @posts_router.delete(
@@ -296,41 +281,50 @@ async def unfavorite_post(
         await favorite_service.remove_favorite(current_user.get_identity(), id)
         return None
     except ApplicationError as e:
-        raise HTTPException(status_code=500, detail=e.message)
-async def favorite_post(
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e.message)
+
+@posts_router.post(
+    "/{id}/publish",
+    responses={
+        200: {"model": BlogPostResponse, "description": "Blog post published successfully"},
+        401: {"model": Error, "description": "Unauthorized. Authentication is required."},
+        403: {"model": Error, "description": "Forbidden. User cannot publish this post."},
+        404: {"model": Error, "description": "Blog post not found"},
+        500: {"model": Error, "description": "Internal server error"},
+    },
+    summary="Publish Blog Post",
+    response_model_by_alias=True,
+)
+async def publish_blog_post(
     id: str,
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
-    favorite_service = Depends(get_favorite_application_service),
-):
+    post_service: PostApplicationService = Depends(get_post_application_service)
+) -> BlogPostResponse:
+    """Publish a blog post (change status from draft to published). Requires authentication."""
     try:
-        await favorite_service.add_favorite(current_user.get_identity(), id)
-        return None
+        # Use authenticated user's information
+        user_id = current_user.get_identity()
+        
+        post_data = await post_service.publish_post(id, user_id)
+        
+        api_post = create_api_blog_post(post_data)
+        
+        return BlogPostResponse(
+            status=ApiResponseStatus.SUCCESS,
+            data=api_post
+        )
+        
     except NotFoundError:
-        raise HTTPException(status_code=404, detail="Blog post not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ERROR_POST_NOT_FOUND)
+    except ForbiddenError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+    except AuthenticationError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.message)
     except ApplicationError as e:
-        raise HTTPException(status_code=500, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e.message)
 
-
-@posts_router.delete(
-    "/{id}/favorite",
-    status_code=204,
-    responses={
-        204: {"description": "Post unfavorited"},
-        401: {"model": Error, "description": "Unauthorized. Authentication is required."},
-        500: {"model": Error, "description": "Internal server error"},
-    },
-    summary="Remove Post from Favorites",
-)
-async def unfavorite_post(
-    id: str,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
-    favorite_service = Depends(get_favorite_application_service),
-):
-    try:
-        await favorite_service.remove_favorite(current_user.get_identity(), id)
-        return None
-    except ApplicationError as e:
-        raise HTTPException(status_code=500, detail=e.message)
 
 @posts_router.delete(
     "/{id}",
@@ -356,10 +350,10 @@ async def delete_blog_post(
         await post_service.delete_post(id, user_id)
         return None
     except NotFoundError:
-        raise HTTPException(status_code=404, detail="Blog post not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ERROR_POST_NOT_FOUND)
     except ForbiddenError as e:
-        raise HTTPException(status_code=403, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except AuthenticationError as e:
-        raise HTTPException(status_code=401, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.message)
     except ApplicationError as e:
-        raise HTTPException(status_code=500, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e.message)

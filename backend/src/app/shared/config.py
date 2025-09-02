@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     REPOSITORY_PROVIDER: str = "memory"
 
     # AWS / DynamoDB Local configuration
-    AWS_ENDPOINT_URL: str = "http://localhost:8002"
+    AWS_ENDPOINT_URL: str = "http://localstack:4566"
     AWS_REGION: str = "ap-northeast-1"
     AWS_ACCESS_KEY_ID: str = "test"
     AWS_SECRET_ACCESS_KEY: str = "test"
@@ -53,6 +53,10 @@ class Settings(BaseSettings):
     
     # Firebase Auth Emulator (for development)
     FIREBASE_AUTH_EMULATOR_HOST: Optional[str] = None
+    
+    # Firebase credentials JSON secret (runtime retrieval)
+    # If unset, defaults to f"/blogapp/{ENVIRONMENT}/firebase-credentials"
+    FIREBASE_CREDENTIALS_SECRET_ID: Optional[str] = None
     
     # Serverless WebSocket Configuration
     SERVERLESS_WEBSOCKET_ENDPOINT: str = "http://serverless:3000"
