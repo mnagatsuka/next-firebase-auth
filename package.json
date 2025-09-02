@@ -20,6 +20,7 @@
     "orval": "^7.11.2",
     "playwright": "^1.54.2",
     "typescript": "^5.9.2",
+    "vercel": "^46.0.2",
     "vitest": "^3.2.4"
   },
   "scripts": {
@@ -37,8 +38,8 @@
     "test:all": "pnpm test:frontend && pnpm test:backend && pnpm test:e2e",
     "oas:lint": "pnpm exec redocly lint openapi/spec/openapi.yml",
     "oas:bundle": "mkdir -p openapi/dist && pnpm exec redocly bundle openapi/spec/openapi.yml --remove-unused-components -o openapi/dist/openapi.yml",
-    "oas:docs:project": "redocly preview --product=redoc --project-dir=./ --port=8081",
-    "oas:docs:api": "pnpm oas:bundle && pnpm exec redocly build-docs openapi/dist/openapi.yml -o openapi/dist/index.html && open openapi/dist/index.html",
+    "oas:doc:pj": "redocly preview --product=redoc --project-dir=./ --port=8081",
+    "oas:doc:api": "pnpm oas:bundle && pnpm exec redocly build-docs openapi/dist/openapi.yml -o openapi/dist/index.html && open openapi/dist/index.html",
     "oas:be": "pnpm oas:bundle &&openapi-generator-cli generate -c openapi-generator.config.json",
     "oas:be:skip": "pnpm oas:bundle &&openapi-generator-cli generate -c openapi-generator.config.json --skip-validate-spec",
     "oas:fe": "pnpm oas:bundle && orval --config orval.config.ts",
