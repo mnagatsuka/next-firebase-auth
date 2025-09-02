@@ -8,6 +8,7 @@ value:
         excerpt: "Learn the basics of Next.js in this comprehensive guide covering SSR, SSG, and CSR."
         author: "John Doe"
         publishedAt: "2024-01-15T10:30:00Z"
+        status: "published"
     pagination:
       page: 1
       limit: 1
