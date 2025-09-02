@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ECR Repository Setup for Blog Application
+
+Parameters:
+  Environment:
+    Type: String
+    Default: development
+    AllowedValues: [development, staging, production]
+    Description: Environment name for deployment
+
+Resources:
+  # ECR Repository for FastAPI Lambda Function
+  BlogAPIRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub '${AWS::StackName}-api'
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 7
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: BlogAPI
+
+  # Store ECR Repository URI in Parameter Store
+  ECRRepositoryParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/blogapp/${Environment}/ecr-repository-uri'
+      Type: String
+      Value: !GetAtt BlogAPIRepository.RepositoryUri
+      Description: !Sub 'ECR Repository URI for ${Environment} environment'
+      Tags:
+        Environment: !Ref Environment
+        Application: BlogAPI
+
+Outputs:
+  ECRRepositoryURI:
+    Description: ECR Repository URI for the BlogAPI function
+    Value: !GetAtt BlogAPIRepository.RepositoryUri
+    Export:
+      Name: !Sub '${AWS::StackName}-ECRRepositoryURI'
+      
+  ECRRepositoryName:
+    Description: ECR Repository Name
+    Value: !Ref BlogAPIRepository
+    Export:
+      Name: !Sub '${AWS::StackName}-ECRRepositoryName'

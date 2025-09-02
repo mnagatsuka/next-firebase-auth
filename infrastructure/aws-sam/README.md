@@ -18,7 +18,7 @@ This document describes the refactored AWS SAM infrastructure for the Next.js Fi
 ┌─────────────────────────────────────────────────────────────────┐
 │                     COMPUTE LAYER                               │
 │  FastAPI Lambda ←→ WebSocket Handlers (Connect/Disconnect/     │
-│  (Python + LWA)    Default/Broadcast) - Node.js 20 + SDK v3   │
+│  (Docker + ECR)    Default/Broadcast) - Node.js 20 + SDK v3   │
 └─────────────────────────────────────────────────────────────────┘
                                 ↓
 ┌─────────────────────────────────────────────────────────────────┐
@@ -46,9 +46,9 @@ This document describes the refactored AWS SAM infrastructure for the Next.js Fi
 ### 3. **Compute Layer - Lambda Functions**
 
 #### FastAPI Backend (`BlogAPIFunction`)
-- **Runtime**: Python 3.13 with Lambda Web Adapter
+- **Runtime**: Docker container images with ECR
 - **Purpose**: Main application logic, REST API endpoints
-- **Integration**: HTTP API Gateway with `ANY /{proxy+}`
+- **Integration**: Lambda Function URL (direct HTTP access)
 
 #### WebSocket Handlers (Node.js 20.x + AWS SDK v3)
 - **WebSocketConnectFunction**: Manages new connections
@@ -127,15 +127,25 @@ FIREBASE_PROJECT_ID=your-project-id
 # Build WebSocket handlers
 ./build-websocket-handlers.sh
 
-# Deploy with development parameters
-sam build
-sam deploy --config-file samconfig.toml --config-env development
+# Deploy SAM template (creates ECR repository)
+sam deploy --config-env development
+
+# Build and push Docker image
+ECR_URI=$(aws cloudformation describe-stacks --stack-name blogapp-development --query 'Stacks[0].Outputs[?OutputKey==`ECRRepositoryURI`].OutputValue' --output text)
+aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin $ECR_URI
+cd ../../ && docker build -f backend/Dockerfile.lambda -t $ECR_URI:latest .
+docker push $ECR_URI:latest
+
+# Update Lambda function
+cd infrastructure/aws-sam && sam deploy --config-env development
 ```
 
 ### Production
 ```bash
-# Deploy with production parameters  
-sam deploy --config-file samconfig.toml --config-env production --parameter-overrides Environment=production
+# Same process with production config
+sam deploy --config-env production
+# ... build and push steps ...
+sam deploy --config-env production
 ```
 
 ## Cost Optimization

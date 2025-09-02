@@ -6,8 +6,8 @@ This directory contains all Infrastructure as Code (IaC) for the Next.js Firebas
 
 The application uses a hybrid infrastructure approach:
 
-- **DynamoDB Local (via Serverless)**: Local DynamoDB for development
-- **Serverless Framework**: WebSocket API with TypeScript handlers
+- **LocalStack (DynamoDB)**: Local AWS emulation for DynamoDB in development
+- **Serverless Framework**: WebSocket API with TypeScript handlers (offline for dev)
 - **AWS SAM**: Production deployment of full stack
 
 ## Directory Structure
@@ -31,11 +31,11 @@ infrastructure/
 - `serverless/.env.example` → copy to `serverless/.env.development` for local WebSocket development.
 - `aws-sam/.env.example` → optional convenience for SAM parameter overrides; SAM reads values via flags, not `.env`.
 
-### Start Serverless WebSocket Service (with DynamoDB Local)
+### Start Serverless WebSocket Service (with LocalStack DynamoDB)
 ```bash
 cd infrastructure/serverless/
 pnpm install
-pnpm run dev  # Starts on ws://localhost:3001
+pnpm run dev  # WebSocket: ws://localhost:3001, HTTP: http://localhost:3002
 ```
 
 ### Start Application Services
@@ -112,8 +112,9 @@ The consolidated `aws-sam/template.yml` includes:
 ## Environment Configuration
 
 ### Development
-- DynamoDB Local (via Serverless): `http://websocket:8002` from Docker network, or `http://localhost:8002` if exposed
-- Serverless WebSocket: `ws://localhost:3001`
+- LocalStack (DynamoDB): `http://localstack:4566` from Docker network, or `http://localhost:4566` on host
+- Serverless WebSocket: `ws://localhost:3001` (docker-compose exposes container 3001 → host 3001)
+- Serverless HTTP (offline): `http://localhost:3002` (docker-compose exposes container 3000 → host 3002)
 - FastAPI Backend: `http://localhost:8000`
 - Next.js Frontend: `http://localhost:3000`
 
@@ -174,8 +175,8 @@ sam local start-api         # Test locally
 
 ### Debug Commands
 ```bash
-# Test WebSocket HTTP endpoint
-curl -X POST http://localhost:3001/development/broadcast/comments \
+# Test WebSocket HTTP broadcast endpoint (serverless-offline HTTP runs on host 3002)
+curl -X POST http://localhost:3002/development/broadcast/comments \
   -H "Content-Type: application/json" \
   -d '{"type":"test","data":{}}'
 
@@ -185,6 +186,11 @@ wscat -c ws://localhost:3001
 # SAM local testing
 sam local start-api --port 3001
 ```
+
+### Notes
+- Backend posts to the Serverless offline broadcast endpoint using `APP_SERVERLESS_WEBSOCKET_ENDPOINT`.
+  - This must be a full URL including the stage and path, e.g., `http://serverless:3000/development/broadcast/comments` in Docker (or `http://localhost:3002/development/broadcast/comments` on the host).
+- Regions are standardized to `ap-northeast-1` across backend, Serverless offline, and LocalStack to avoid mismatch.
 
 ## Migration Benefits
 

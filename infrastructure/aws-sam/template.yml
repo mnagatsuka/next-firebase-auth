@@ -24,17 +24,12 @@ Parameters:
     Default: demo-project
     Description: Firebase project ID for authentication
   
-  # Lambda Web Adapter layer version (x86_64). Used to compute the ARN per region.
-  LambdaAdapterLayerVersion:
-    Type: String
-    Default: '25'
-    Description: Version number of AWS Lambda Web Adapter layer (x86_64)
+  
 
 Globals:
   Function:
     Timeout: 30
     MemorySize: 1024
-    Runtime: python3.13
     Architectures:
       - x86_64
     Environment:
@@ -138,8 +133,7 @@ Resources:
       Description: Blog HTTP API Gateway
       ProtocolType: HTTP
       CorsConfiguration:
-        AllowOrigins:
-          - "*"
+        AllowOrigins: !Split [",", !Ref AllowedOrigins]
         AllowHeaders:
           - Authorization
           - Content-Type
@@ -149,7 +143,6 @@ Resources:
           - PUT
           - PATCH
           - DELETE
-          - OPTIONS
         AllowCredentials: false
 
   # (Removed) REST proxy via HTTP API for BlogAPIFunction
@@ -235,29 +228,30 @@ Resources:
   # COMPUTE LAYER - Lambda Functions
   # =============================================================================
   
-  # FastAPI Backend Function (Python + Lambda Web Adapter)
+  # FastAPI Backend Function (Docker + ECR)
   BlogAPIFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub '${AWS::StackName}-api'
-      CodeUri: ../../backend
-      Handler: placeholder
-      Runtime: provided.al2023
-      Architectures:
-        - x86_64
-      Layers:
-        - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayerX86:${LambdaAdapterLayerVersion}
+      PackageType: Image
+      ImageUri: !Sub '{{resolve:ssm:/blogapp/${Environment}/ecr-repository-uri}}:latest'
       Environment:
         Variables:
           APP_ENVIRONMENT: !Ref Environment
-          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
-          PORT: 8000
-          REPOSITORY_PROVIDER: dynamodb
+          APP_REPOSITORY_PROVIDER: dynamodb
           APP_DYNAMODB_TABLE_POSTS: !Ref PostsTable
           APP_DYNAMODB_TABLE_COMMENTS: !Ref CommentsTable
           APP_DYNAMODB_TABLE_FAVORITES: !Ref FavoritesTable
-          AWS_REGION: !Ref AWS::Region
-          AWS_ENDPOINT_URL: ""
+          APP_SERVERLESS_WEBSOCKET_ENDPOINT: !Sub 'https://${BlogHttpApi}.execute-api.${AWS::Region}.amazonaws.com/broadcast/comments'
+          APP_AWS_REGION: !Ref AWS::Region
+          APP_FIREBASE_PROJECT_ID: !Ref FirebaseProjectId
+          # Credentials now loaded at runtime from Secrets Manager JSON
+          # Optional override; leave empty to use default path /blogapp/{Environment}/firebase-credentials
+          APP_FIREBASE_CREDENTIALS_SECRET_ID: ""
+          APP_AWS_ENDPOINT_URL: ""
+          # For Lambda, these should be empty to use IAM roles
+          APP_AWS_ACCESS_KEY_ID: ""
+          APP_AWS_SECRET_ACCESS_KEY: ""
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref PostsTable
@@ -273,6 +267,14 @@ Resources:
                 - logs:CreateLogStream
                 - logs:PutLogEvents
               Resource: '*'
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: 
+                - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/blogapp/${Environment}/firebase-credentials-*'
+    Metadata:
+      Dockerfile: backend/Dockerfile.lambda
+      DockerContext: ../../
 
   # WebSocket Handler Functions (Node.js 20.x with AWS SDK v3)
   WebSocketConnectFunction:
@@ -280,60 +282,43 @@ Resources:
     Properties:
       FunctionName: !Sub '${AWS::StackName}-websocket-connect'
       CodeUri: websocket-handlers/
-      Handler: connect.handler
+      Handler: dist/connect.handler
       Runtime: nodejs20.x
       Environment:
         Variables:
           DYNAMODB_CONNECTIONS_TABLE: !Ref WebSocketConnectionsTable
-          AWS_REGION: !Ref AWS::Region
+          WEBSOCKET_API_ENDPOINT: !Sub 'https://${WebSocketAPI}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
           LOG_LEVEL: !If [IsProd, 'INFO', 'DEBUG']
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref WebSocketConnectionsTable
-      Metadata:
-        BuildMethod: esbuild
-        BuildProperties:
-          Minify: true
-          Target: es2022
-          Sourcemap: true
-          EntryPoints:
-            - connect.ts
 
   WebSocketDisconnectFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub '${AWS::StackName}-websocket-disconnect'
       CodeUri: websocket-handlers/
-      Handler: disconnect.handler
+      Handler: dist/disconnect.handler
       Runtime: nodejs20.x
       Environment:
         Variables:
           DYNAMODB_CONNECTIONS_TABLE: !Ref WebSocketConnectionsTable
-          AWS_REGION: !Ref AWS::Region
+          WEBSOCKET_API_ENDPOINT: !Sub 'https://${WebSocketAPI}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
           LOG_LEVEL: !If [IsProd, 'INFO', 'DEBUG']
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref WebSocketConnectionsTable
-      Metadata:
-        BuildMethod: esbuild
-        BuildProperties:
-          Minify: true
-          Target: es2022
-          Sourcemap: true
-          EntryPoints:
-            - disconnect.ts
 
   WebSocketDefaultFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub '${AWS::StackName}-websocket-default'
       CodeUri: websocket-handlers/
-      Handler: default.handler
+      Handler: dist/default.handler
       Runtime: nodejs20.x
       Environment:
         Variables:
           WEBSOCKET_API_ENDPOINT: !Sub 'https://${WebSocketAPI}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
-          AWS_REGION: !Ref AWS::Region
           LOG_LEVEL: !If [IsProd, 'INFO', 'DEBUG']
       Policies:
         - Version: '2012-10-17'
@@ -342,14 +327,6 @@ Resources:
               Action:
                 - execute-api:ManageConnections
               Resource: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/${Environment}/*/@connections/*'
-      Metadata:
-        BuildMethod: esbuild
-        BuildProperties:
-          Minify: true
-          Target: es2022
-          Sourcemap: true
-          EntryPoints:
-            - default.ts
 
   # WebSocket Broadcast Function (HTTP API endpoint)
   WebSocketBroadcastFunction:
@@ -357,13 +334,12 @@ Resources:
     Properties:
       FunctionName: !Sub '${AWS::StackName}-websocket-broadcast'
       CodeUri: websocket-handlers/
-      Handler: broadcast.handler
+      Handler: dist/broadcast.handler
       Runtime: nodejs20.x
       Environment:
         Variables:
           DYNAMODB_CONNECTIONS_TABLE: !Ref WebSocketConnectionsTable
           WEBSOCKET_API_ENDPOINT: !Sub 'https://${WebSocketAPI}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
-          AWS_REGION: !Ref AWS::Region
           LOG_LEVEL: !If [IsProd, 'INFO', 'DEBUG']
       Policies:
         - DynamoDBCrudPolicy:
@@ -374,14 +350,6 @@ Resources:
               Action:
                 - execute-api:ManageConnections
               Resource: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/${Environment}/*/@connections/*'
-      Metadata:
-        BuildMethod: esbuild
-        BuildProperties:
-          Minify: true
-          Target: es2022
-          Sourcemap: true
-          EntryPoints:
-            - broadcast.ts
 
   # HTTP API Route for WebSocket broadcasting
   BroadcastHttpApiRoute:
@@ -438,15 +406,13 @@ Resources:
       TargetFunctionArn: !Ref BlogAPIFunction
       AuthType: NONE
       Cors:
-        AllowOrigins:
-          - "*"
+        AllowOrigins: !Split [",", !Ref AllowedOrigins]
         AllowMethods:
           - GET
           - POST
           - PUT
           - PATCH
           - DELETE
-          - OPTIONS
         AllowHeaders:
           - Authorization
           - Content-Type

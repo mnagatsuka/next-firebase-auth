@@ -41,7 +41,7 @@ create_table_if_not_exists() {
 posts_table='aws dynamodb create-table \
     --endpoint-url "$LOCALSTACK_ENDPOINT" \
     --region "$AWS_REGION" \
-    --table-name "posts" \
+    --table-name "blogapp-posts-development" \
     --attribute-definitions AttributeName=id,AttributeType=S \
     --key-schema AttributeName=id,KeyType=HASH \
     --billing-mode PAY_PER_REQUEST'
@@ -50,7 +50,7 @@ posts_table='aws dynamodb create-table \
 comments_table='aws dynamodb create-table \
     --endpoint-url "$LOCALSTACK_ENDPOINT" \
     --region "$AWS_REGION" \
-    --table-name "comments" \
+    --table-name "blogapp-comments-development" \
     --attribute-definitions AttributeName=id,AttributeType=S \
     --key-schema AttributeName=id,KeyType=HASH \
     --billing-mode PAY_PER_REQUEST'
@@ -59,7 +59,7 @@ comments_table='aws dynamodb create-table \
 favorites_table='aws dynamodb create-table \
     --endpoint-url "$LOCALSTACK_ENDPOINT" \
     --region "$AWS_REGION" \
-    --table-name "favorites" \
+    --table-name "blogapp-favorites-development" \
     --attribute-definitions \
         AttributeName=user_id,AttributeType=S \
         AttributeName=post_id,AttributeType=S \
@@ -78,9 +78,9 @@ connections_table='aws dynamodb create-table \
     --billing-mode PAY_PER_REQUEST'
 
 # Create all tables
-create_table_if_not_exists "posts" "$posts_table"
-create_table_if_not_exists "comments" "$comments_table"
-create_table_if_not_exists "favorites" "$favorites_table"
+create_table_if_not_exists "blogapp-posts-development" "$posts_table"
+create_table_if_not_exists "blogapp-comments-development" "$comments_table"
+create_table_if_not_exists "blogapp-favorites-development" "$favorites_table"
 create_table_if_not_exists "blogapp-websocket-connections-development" "$connections_table"
 
 # Configure TTL for connections table

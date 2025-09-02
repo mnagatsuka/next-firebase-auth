@@ -52,13 +52,43 @@ Used by SSR/server actions and middleware.
 - `API_BASE_URL` — Server base URL for REST API
   - Set to `FunctionUrlEndpoint` (same as browser)  
     Note: Our middleware/CSP uses this to build `connect-src`.
-- `FIREBASE_PROJECT_ID` — Service account project ID
-- `FIREBASE_CLIENT_EMAIL` — Service account client email
-- `FIREBASE_PRIVATE_KEY` — Service account private key (keep newlines; use `\n` if needed)
+- `FIREBASE_SERVICE_ACCOUNT_JSON` — Full service account JSON (Sensitive)
+  - Minimal shape: `{ "project_id": "...", "client_email": "...", "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n" }`
 - `FIREBASE_API_KEY` — Same Web API key (used by server-side Firebase auth flows)
 
 Development-only (do NOT set on Vercel production/preview):
 - `FIREBASE_AUTH_EMULATOR_HOST`
+
+### Set Service Account JSON via Vercel CLI
+
+```bash
+# From repo root
+# Ensure the project is linked (interactive)
+pnpm vercel link
+
+# Build minimal JSON from your local service account file
+JQ_FILTER='{project_id, client_email, private_key}'
+
+# Production
+jq -c "$JQ_FILTER" ./next-firebase-auth-firebase-service-account.json \
+| pnpm vercel env add FIREBASE_SERVICE_ACCOUNT_JSON production --sensitive
+
+# Preview
+jq -c "$JQ_FILTER" ./next-firebase-auth-firebase-service-account.json \
+| pnpm vercel env add FIREBASE_SERVICE_ACCOUNT_JSON preview --sensitive
+
+# Development
+jq -c "$JQ_FILTER" ./next-firebase-auth-firebase-service-account.json \
+| pnpm vercel env add FIREBASE_SERVICE_ACCOUNT_JSON development --sensitive
+
+# Optional: list and pull to verify
+pnpm vercel env ls
+pnpm vercel env pull .env.staging --environment=preview
+```
+
+Notes:
+- Mark the variable as Sensitive in the Vercel UI if adding manually.
+- You no longer need to set `FIREBASE_PRIVATE_KEY` or `FIREBASE_CLIENT_EMAIL` separately.
 
 ### Why no origin allowlists?
 The backend REST uses a Lambda Function URL configured with CORS Pattern A (`AllowOrigins: "*"`, `AllowCredentials: false`), so you do not need to add every Vercel preview URL after each deployment.
@@ -69,7 +99,37 @@ The backend REST uses a Lambda Function URL configured with CORS Pattern A (`All
 - Development: you can manually deploy or use the Vercel CLI locally.
 
 ### Manual Deployments (CLI)
-From the `frontend` directory:
+
+Add the configuration to disable ESLint during the build process.
+
+This will stop the build from failing on the lint errors and allow your deployment to proceed.
+
+```ts
+// frontend/next.config.ts
+const nextConfig: NextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  // ... other config
+}
+```
+
+frontend/package.json to permanently approve the necessary build scripts for pnpm.
+```json
+// frontend/package.json
+{
+	"pnpm": {
+		"allowed-build-scripts": [
+			"@tailwindcss/oxide",
+			"esbuild",
+			"sharp"
+		]
+	},
+}
+```
+
+
+From the **Project Root** directory:
 ```bash
 # Optional: install CLI locally to pin versions
 pnpm add -D vercel
@@ -77,13 +137,26 @@ pnpm add -D vercel
 # Link local folder to Vercel project
 pnpm vercel link
 
-# Pull env vars to local files
+# specify frontennd/ as source code root for Next.js app
+```
+
+#### Set env vars on Vercel console >> [Settings](https://vercel.com/{TeamName}/{ProjectName}/settings/environment-variables)
+
+Note: Secrets should be **ENABLED** `Sensitive` Option on Vercel Console
+
+Or pull from Vercel
+
+```
+# Pull env vars to local files (Note: This will **OVERWRITE** local env file)
 pnpm vercel env pull .env.development
 pnpm vercel env pull .env.staging --environment=preview
 pnpm vercel env pull .env.production --environment=production
+```
 
+Deploy
+```
 # Create a preview deployment
-pnpm vercel
+pnpm vercel --target=preview
 
 # Create a production deployment (use with caution)
 pnpm vercel --prod

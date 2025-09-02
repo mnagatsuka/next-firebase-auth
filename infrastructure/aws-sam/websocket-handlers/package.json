@@ -10,9 +10,9 @@
     "test": "echo \"No tests yet\""
   },
   "dependencies": {
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.658.1",
     "@aws-sdk/client-dynamodb": "^3.658.1",
-    "@aws-sdk/lib-dynamodb": "^3.658.1",
-    "@aws-sdk/client-apigatewaymanagementapi": "^3.658.1"
+    "@aws-sdk/lib-dynamodb": "^3.658.1"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.145",
@@ -20,6 +20,12 @@
     "esbuild": "^0.23.0",
     "typescript": "^5.0.0"
   },
-  "keywords": ["websocket", "lambda", "aws", "sam", "infrastructure"],
+  "keywords": [
+    "websocket",
+    "lambda",
+    "aws",
+    "sam",
+    "infrastructure"
+  ],
   "license": "MIT"
 }
