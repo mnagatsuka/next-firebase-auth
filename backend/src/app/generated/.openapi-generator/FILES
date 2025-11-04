@@ -8,6 +8,8 @@ pyproject.toml
 requirements.txt
 setup.cfg
 src/generated_fastapi_server/apis/__init__.py
+src/generated_fastapi_server/apis/auth_api.py
+src/generated_fastapi_server/apis/auth_api_base.py
 src/generated_fastapi_server/apis/comments_api.py
 src/generated_fastapi_server/apis/comments_api_base.py
 src/generated_fastapi_server/apis/posts_api.py
@@ -29,6 +31,9 @@ src/generated_fastapi_server/models/create_post_request.py
 src/generated_fastapi_server/models/error.py
 src/generated_fastapi_server/models/error_detail.py
 src/generated_fastapi_server/models/extra_models.py
+src/generated_fastapi_server/models/firebase_account.py
+src/generated_fastapi_server/models/firebase_login_response.py
 src/generated_fastapi_server/models/pagination.py
+src/generated_fastapi_server/models/promote_anonymous_request.py
 src/generated_fastapi_server/security_api.py
 tests/conftest.py

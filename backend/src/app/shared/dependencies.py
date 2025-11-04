@@ -15,9 +15,11 @@ from app.infra.repositories.comments_repository import (
     InMemoryCommentRepository,
     DynamoDBCommentRepository,
 )
+from app.infra.repositories.user_repository import DynamoDBUserRepository
 from app.application.services.posts_service import PostApplicationService
 from app.application.services.comments_service import CommentApplicationService
 from app.application.services.favorites_service import FavoriteApplicationService
+from app.application.services.user_service import UserApplicationService
 from app.application.services.apigateway_websocket_service import get_apigateway_websocket_service_instance
 from app.infra.repositories.favorites_repository import InMemoryFavoriteRepository, DynamoDBFavoriteRepository
 
@@ -144,3 +146,33 @@ def get_favorite_application_service(
 def get_apigateway_websocket_service():
     """FastAPI dependency for API Gateway WebSocket service."""
     return get_apigateway_websocket_service_instance()
+
+
+# User service dependencies
+@lru_cache()
+def get_user_repository():
+    """Get singleton user repository instance."""
+    settings = get_settings()
+    # For now, always use DynamoDB for users as they need persistence
+    env = (settings.ENVIRONMENT or "development").lower()
+    is_dev = env == "development"
+    
+    # Use local DynamoDB with explicit credentials only in development
+    if is_dev and settings.AWS_ENDPOINT_URL and settings.AWS_ENDPOINT_URL.strip():
+        # Local development with DynamoDB Local
+        import boto3
+        return DynamoDBUserRepository(
+            table_name=settings.DYNAMODB_TABLE_USERS or "users"
+        )
+    else:
+        # AWS Lambda/Staging/Production - use IAM role
+        return DynamoDBUserRepository(
+            table_name=settings.DYNAMODB_TABLE_USERS or "users"
+        )
+
+
+def get_user_application_service(
+    user_repository=Depends(get_user_repository)
+) -> UserApplicationService:
+    """FastAPI dependency for user application service."""
+    return UserApplicationService(user_repository)

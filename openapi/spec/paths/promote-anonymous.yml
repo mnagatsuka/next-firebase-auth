@@ -1,0 +1,83 @@
+post:
+  tags:
+    - auth
+  summary: Promote anonymous user to authenticated user
+  description: |
+    Convert an anonymous user to an authenticated user with permanent credentials.
+    
+    This endpoint:
+    - Validates the new permanent Firebase token
+    - Verifies the anonymous user exists in the database
+    - Updates the existing user record with new authentication data
+    - Preserves all existing user data (posts, comments, favorites)
+    
+    The user's UID remains the same to maintain data relationships.
+  security:
+    - firebaseAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/promote-anonymous-request.yml'
+        examples:
+          promoteAnonymous:
+            $ref: '../components/examples/promote-anonymous-request.yml'
+  responses:
+    '200':
+      description: Anonymous user promoted successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/firebase-login-response.yml'
+          examples:
+            promotedUser:
+              $ref: '../components/examples/promote-anonymous-response.yml'
+    '400':
+      $ref: '../components/responses/bad-request.yml'
+    '401':
+      $ref: '../components/responses/unauthorized.yml'
+    '404':
+      description: Anonymous user not found
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/error.yml'
+          examples:
+            userNotFound:
+              value:
+                error: "anonymous_user_not_found"
+                detail: "Anonymous user not found in database"
+    '406':
+      description: Email already exists with different account
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/error.yml'
+          examples:
+            emailConflict:
+              value:
+                error: "email_already_exists"
+                detail: "Email is already associated with another account"
+    '409':
+      description: Account linking conflict
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/error.yml'
+          examples:
+            linkingConflict:
+              value:
+                error: "account_linking_conflict"
+                detail: "Unable to link accounts due to conflicting data"
+    '500':
+      description: Database update failed
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/error.yml'
+          examples:
+            updateFailed:
+              value:
+                error: "database_update_failed"
+                detail: "Failed to update user record in database"

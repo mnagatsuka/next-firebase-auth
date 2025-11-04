@@ -1,0 +1,13 @@
+type: object
+description: Response schema for Firebase authentication endpoints
+required:
+  - msg
+  - account
+properties:
+  msg:
+    type: string
+    description: Success message indicating the operation result
+    example: "Anonymous user logged in"
+  account:
+    $ref: './firebase-account.yml'
+    description: User account information after authentication

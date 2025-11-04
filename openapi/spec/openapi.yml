@@ -9,6 +9,7 @@ info:
     - Blog post creation, retrieval, and management
     - Comment management on blog posts
     - User authentication via Firebase Auth
+    - Anonymous user registration and promotion
     - Pagination and filtering capabilities
     
     ## Authentication
@@ -48,6 +49,8 @@ tags:
     description: Blog post management operations
   - name: comments
     description: Comment management operations
+  - name: auth
+    description: Authentication and user management operations
 
 paths:
   /posts:
@@ -62,6 +65,10 @@ paths:
     $ref: './paths/users@{uid}@posts.yml'
   /users/{uid}/favorites:
     $ref: './paths/users@{uid}@favorites.yml'
+  /auth/anonymous-login:
+    $ref: './paths/anonymous-login.yml'
+  /auth/promote-anonymous:
+    $ref: './paths/promote-anonymous.yml'
 
 components:
   securitySchemes:
@@ -116,6 +123,12 @@ components:
       $ref: './components/schemas/comments-response.yml'
     CommentsAcknowledgmentResponse:
       $ref: './components/schemas/comments-acknowledgment-response.yml'
+    FirebaseLoginResponse:
+      $ref: './components/schemas/firebase-login-response.yml'
+    FirebaseAccount:
+      $ref: './components/schemas/firebase-account.yml'
+    PromoteAnonymousRequest:
+      $ref: './components/schemas/promote-anonymous-request.yml'
     Error:
       $ref: './components/schemas/error.yml'
     ErrorDetail:
@@ -144,6 +157,12 @@ components:
       $ref: './components/examples/create-post-request.yml'
     CreateCommentRequest:
       $ref: './components/examples/create-comment-request.yml'
+    AnonymousLoginResponse:
+      $ref: './components/examples/anonymous-login-response.yml'
+    PromoteAnonymousRequest:
+      $ref: './components/examples/promote-anonymous-request.yml'
+    PromoteAnonymousResponse:
+      $ref: './components/examples/promote-anonymous-response.yml'
     BadRequestError:
       $ref: './components/examples/error-400.yml'
     UnauthorizedError:

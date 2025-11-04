@@ -20,3 +20,4 @@ properties:
 required:
   - title
   - content
+  - excerpt

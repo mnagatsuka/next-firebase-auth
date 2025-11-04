@@ -5,6 +5,7 @@ from app.api.routes.posts import posts_router
 from app.api.routes.comments import comments_router
 from app.api.routes.users import users_router
 from app.api.routes.websocket import websocket_router
+from app.api.routes.auth import auth_router
 
 api_router = APIRouter()
 
@@ -19,3 +20,4 @@ api_router.include_router(posts_router)
 api_router.include_router(comments_router)
 api_router.include_router(users_router)
 api_router.include_router(websocket_router)
+api_router.include_router(auth_router)

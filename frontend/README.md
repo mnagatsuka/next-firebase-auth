@@ -1,5 +1,46 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Directory Structure
+
+```
+frontend/
+├── src/
+│   ├── app/                  # Next.js App Router pages
+│   │   ├── api/             # API routes
+│   │   │   └── auth/        # Authentication endpoints
+│   │   ├── auth/            # Auth-related pages
+│   │   ├── create-post/     # Post creation page
+│   │   ├── my/              # User dashboard pages
+│   │   │   ├── favorites/   # User favorites page
+│   │   │   └── posts/       # User posts page
+│   │   └── posts/           # Blog post pages
+│   │       └── [id]/        # Dynamic post pages
+│   ├── components/          # React components
+│   │   ├── auth/            # Authentication components
+│   │   ├── blog/            # Blog-related components
+│   │   ├── common/          # Shared utility components
+│   │   ├── layout/          # Layout components (Header, Footer)
+│   │   └── ui/              # shadcn/ui components
+│   ├── hooks/               # Custom React hooks
+│   ├── lib/                 # Utility libraries
+│   │   ├── api/             # API client and generated types
+│   │   ├── auth/            # Authentication utilities
+│   │   ├── config/          # Configuration
+│   │   ├── firebase/        # Firebase client setup
+│   │   ├── providers/       # React context providers
+│   │   └── utils/           # General utilities
+│   ├── mocks/               # MSW mock handlers
+│   ├── stores/              # Zustand stores
+│   └── types/               # TypeScript type definitions
+├── tests/                   # Test files
+│   ├── factories/           # Test data factories
+│   ├── integration/         # Integration tests
+│   ├── scenarios/           # Test scenarios
+│   ├── unit/                # Unit tests
+│   └── utils/               # Test utilities
+└── public/                  # Static assets
+```
+
 ## Getting Started
 
 First, run the development server:

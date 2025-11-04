@@ -1,0 +1,4 @@
+## 2025-09-02
+- [Priority: Low] Should we standardize domain entity imports to use the package re-exports (e.g., `from app.domain.entities import BlogPost, Comment, PostStatus, User`) rather than mixing with submodule imports (e.g., `from app.domain.entities.user import User`) to avoid future shadowing issues? [Status: Unresolved]
+- [Priority: Low] For domain services, should we also standardize imports to use the package re-exports (e.g., `from app.domain.services import PostService, CommentService, PostRepository, CommentRepository, UserDomainService`) instead of importing submodules directly? [Status: Unresolved]
+- [Priority: Low] Orval mutator: Do you want the generated frontend client to use our `customFetch` (absolute API base, auth/retry) by fixing the mutator configuration, or is keeping Next.js rewrites for relative paths acceptable for now? I recommend fixing the mutator and keeping rewrites as a dev fallback. [Status: Unresolved]

@@ -25,9 +25,8 @@ export default defineConfig({
           useMutation: true,
         },
         mutator: {
-          // Path is relative to repo root; Orval will adjust imports
           path: "frontend/src/lib/api/customFetch.ts",
-          name: "orvalFetch",
+          name: "customFetch",
         },
         fetch: {
           includeHttpResponseReturnType: false,

@@ -1,0 +1,59 @@
+get:
+  tags:
+    - auth
+  summary: Anonymous user login
+  description: |
+    Authenticate anonymous users and create user records without email verification.
+    
+    This endpoint:
+    - Validates the anonymous Firebase token
+    - Creates a user entity in the backend database if it doesn't exist
+    - Returns user account information for anonymous users
+    
+    Anonymous users have limited functionality and are encouraged to upgrade their accounts.
+  security:
+    - firebaseAuth: []
+  parameters:
+    - name: lang
+      in: query
+      description: Language preference for the user
+      required: false
+      schema:
+        type: string
+        enum: [en, ja]
+        default: en
+      example: en
+  responses:
+    '200':
+      description: Anonymous user authenticated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/firebase-login-response.yml'
+          examples:
+            anonymousLogin:
+              $ref: '../components/examples/anonymous-login-response.yml'
+    '401':
+      $ref: '../components/responses/unauthorized.yml'
+    '406':
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/error.yml'
+          examples:
+            rateLimitExceeded:
+              value:
+                error: "rate_limit_exceeded"
+                detail: "Too many requests. Please try again later."
+    '500':
+      description: User creation failed
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/error.yml'
+          examples:
+            userCreationFailed:
+              value:
+                error: "user_creation_failed"
+                detail: "Failed to create anonymous user entity"

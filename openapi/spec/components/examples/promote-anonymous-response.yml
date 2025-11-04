@@ -1,0 +1,16 @@
+value:
+  msg: "Anonymous user promoted successfully"
+  account:
+    account_type: "user"
+    firebase_uuid: "promoted_firebase_uid_789012"
+    email: "user@example.com"
+    email_verified: true
+    lang: "en"
+    uuid: "promoted_firebase_uid_789012"
+    account_name: "John Doe"
+    name: "John Doe"
+    bio: ""
+    private: false
+    image_url: "https://example.com/images/default-avatar.png"
+    subscription_uuid: ""
+    is_anonymous: false

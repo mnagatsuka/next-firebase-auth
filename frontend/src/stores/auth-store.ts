@@ -148,7 +148,15 @@ export const useAuthStore = create<AuthState>()(
 				set({ isLoading: true, error: null });
 
 				try {
+					// First sign in anonymously with Firebase
 					await signInAnonymously(auth);
+					
+					// Then call backend to create/sync user entity
+					const idToken = await auth.currentUser?.getIdToken();
+					if (idToken) {
+						const { getAuthAnonymousLogin } = await import("@/lib/api/generated/client");
+						await getAuthAnonymousLogin({ lang: "en" });
+					}
 					// User state will be updated via onAuthStateChanged
 				} catch (error) {
 					set({ 
@@ -167,11 +175,38 @@ export const useAuthStore = create<AuthState>()(
 					throw new Error("No anonymous user to link");
 				}
 
+				if (!currentUser.isAnonymous) {
+					throw new Error("User is not anonymous");
+				}
+
 				set({ isLoading: true, error: null });
 
 				try {
+					const anonymousUid = auth.currentUser.uid;
+					
+					// First, link the accounts using Firebase client SDK
 					const credential = EmailAuthProvider.credential(email, password);
-					await linkWithCredential(auth.currentUser, credential);
+					const result = await linkWithCredential(auth.currentUser, credential);
+					
+					// Get the new ID token after linking
+					const newIdToken = await result.user.getIdToken(true);
+					
+					// Call backend promote-anonymous endpoint
+					const { postAuthPromoteAnonymous } = await import("@/lib/api/generated/client");
+					await postAuthPromoteAnonymous({
+						anonymous_firebase_uuid: anonymousUid,
+						lang: "en"
+					});
+					
+					// Refresh session cookie with promoted user token
+					await fetch('/api/auth/login', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({ idToken: newIdToken }),
+					});
+					
 					// User state will be updated via onAuthStateChanged
 				} catch (error) {
 					set({ 

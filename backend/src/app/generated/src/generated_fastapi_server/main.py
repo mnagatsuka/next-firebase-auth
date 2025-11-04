@@ -3,7 +3,7 @@
 """
     Blog Post API
 
-    A comprehensive API for managing blog posts and comments with Firebase Authentication integration.  This API supports: - Blog post creation, retrieval, and management - Comment management on blog posts - User authentication via Firebase Auth - Pagination and filtering capabilities  ## Authentication  All endpoints require Firebase Authentication unless otherwise specified. Include the Firebase ID token in the Authorization header:  ``` Authorization: Bearer <firebase-id-token> ``` 
+    A comprehensive API for managing blog posts and comments with Firebase Authentication integration.  This API supports: - Blog post creation, retrieval, and management - Comment management on blog posts - User authentication via Firebase Auth - Anonymous user registration and promotion - Pagination and filtering capabilities  ## Authentication  All endpoints require Firebase Authentication unless otherwise specified. Include the Firebase ID token in the Authorization header:  ``` Authorization: Bearer <firebase-id-token> ``` 
 
     The version of the OpenAPI document: 1.0.0
     Contact: api-support@example.com
@@ -15,14 +15,16 @@
 
 from fastapi import FastAPI
 
+from generated_fastapi_server.apis.auth_api import router as AuthApiRouter
 from generated_fastapi_server.apis.comments_api import router as CommentsApiRouter
 from generated_fastapi_server.apis.posts_api import router as PostsApiRouter
 
 app = FastAPI(
     title="Blog Post API",
-    description="A comprehensive API for managing blog posts and comments with Firebase Authentication integration.  This API supports: - Blog post creation, retrieval, and management - Comment management on blog posts - User authentication via Firebase Auth - Pagination and filtering capabilities  ## Authentication  All endpoints require Firebase Authentication unless otherwise specified. Include the Firebase ID token in the Authorization header:  &#x60;&#x60;&#x60; Authorization: Bearer &lt;firebase-id-token&gt; &#x60;&#x60;&#x60; ",
+    description="A comprehensive API for managing blog posts and comments with Firebase Authentication integration.  This API supports: - Blog post creation, retrieval, and management - Comment management on blog posts - User authentication via Firebase Auth - Anonymous user registration and promotion - Pagination and filtering capabilities  ## Authentication  All endpoints require Firebase Authentication unless otherwise specified. Include the Firebase ID token in the Authorization header:  &#x60;&#x60;&#x60; Authorization: Bearer &lt;firebase-id-token&gt; &#x60;&#x60;&#x60; ",
     version="1.0.0",
 )
 
+app.include_router(AuthApiRouter)
 app.include_router(CommentsApiRouter)
 app.include_router(PostsApiRouter)

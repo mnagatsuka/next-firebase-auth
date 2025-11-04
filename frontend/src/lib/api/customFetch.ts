@@ -320,14 +320,9 @@ export const api = {
 	customFetch,
 } as const;
 
-// Orval-compatible wrapper that handles both RequestInit and AbortSignal as second parameter
-export async function orvalFetch<T = any>(
-	url: string,
-	options?: RequestInit
-): Promise<T> {
-	return customFetch<T>(url, options || {});
-}
-
 export { FetchError };
 export type ApiResponse<T = unknown> = ApiEnvelope<T>;
 export type { FetcherOptions, ApiEnvelope };
+
+// Provide default export for tooling compatibility (Orval mutator expects named, but default helps envs)
+export default customFetch;

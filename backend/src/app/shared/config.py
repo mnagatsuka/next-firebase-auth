@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     DYNAMODB_TABLE_POSTS: str = "posts"
     DYNAMODB_TABLE_COMMENTS: str = "comments"
     DYNAMODB_TABLE_FAVORITES: str = "favorites"
+    DYNAMODB_TABLE_USERS: str = "users"
 
     # Firebase Auth configuration
     FIREBASE_PROJECT_ID: str = ""

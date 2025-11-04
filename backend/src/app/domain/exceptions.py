@@ -39,3 +39,28 @@ class CommentValidationError(DomainError):
 class UnauthorizedCommentAccessError(DomainError):
     """Raised when a user tries to access/modify a comment they don't have permission for."""
     pass
+
+
+class UserValidationError(DomainError):
+    """Raised when user data validation fails"""
+    pass
+
+
+class UserNotFoundError(DomainError):
+    """Raised when a user is not found"""
+    pass
+
+
+class AnonymousUserNotFoundError(DomainError):
+    """Raised when an anonymous user is not found during promotion"""
+    pass
+
+
+class EmailAlreadyExistsError(DomainError):
+    """Raised when attempting to use an email that already exists"""
+    pass
+
+
+class AccountLinkingConflictError(DomainError):
+    """Raised when account linking encounters conflicts"""
+    pass

@@ -117,7 +117,7 @@ export function BlogPostForm({
 
 				<div className="space-y-2">
 					<label htmlFor="excerpt" className="text-sm font-medium">
-						Excerpt
+						Excerpt *
 					</label>
 					<Textarea
 						id="excerpt"
@@ -126,6 +126,7 @@ export function BlogPostForm({
 						onChange={(e) => handleInputChange("excerpt", e.target.value)}
 						disabled={isLoading}
 						rows={3}
+						required
 					/>
 				</div>
 
@@ -192,7 +193,7 @@ export function BlogPostForm({
 							type="button"
 							variant="secondary"
 							onClick={() => handleSubmit("draft")}
-							disabled={isLoading || !formData.title.trim()}
+							disabled={isLoading || !formData.title.trim() || !formData.excerpt.trim()}
 						>
 							{isLoading ? (
 								<>
@@ -206,7 +207,7 @@ export function BlogPostForm({
 						<Button
 							type="button"
 							onClick={() => handleSubmit("published")}
-							disabled={isLoading || !formData.title.trim() || !formData.content.trim()}
+							disabled={isLoading || !formData.title.trim() || !formData.content.trim() || !formData.excerpt.trim()}
 						>
 							{isLoading ? (
 								<>

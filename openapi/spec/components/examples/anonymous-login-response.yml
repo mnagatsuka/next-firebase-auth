@@ -1,0 +1,16 @@
+value:
+  msg: "Anonymous user logged in"
+  account:
+    account_type: "user"
+    firebase_uuid: "anonymous_firebase_uid_123456"
+    email: null
+    email_verified: false
+    lang: "en"
+    uuid: "anonymous_firebase_uid_123456"
+    account_name: "Guest"
+    name: "Guest"
+    bio: ""
+    private: false
+    image_url: "https://example.com/images/default-avatar.png"
+    subscription_uuid: ""
+    is_anonymous: true

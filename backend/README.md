@@ -7,19 +7,67 @@ This backend is a Python + FastAPI service organized with a simple layered archi
 ```
 backend/
 ├── src/app/
-│   ├── api/            # FastAPI routes, dependencies, DTOs
-│   ├── application/    # Use cases
-│   ├── domain/         # Entities, ports (interfaces)
-│   ├── infra/          # Adapters (e.g., repositories)
-│   └── shared/         # Settings and shared utilities
-├── pyproject.toml
-└── README.md
-
-# Tests live at repo root (not under backend/)
-tests/backend/
-├── unit/
-├── integration/
-└── e2e/
+│   ├── api/                    # FastAPI routes, dependencies, DTOs
+│   │   ├── routes/            # Route modules by feature
+│   │   │   ├── auth.py        # Authentication endpoints
+│   │   │   ├── comments.py    # Comment-related endpoints
+│   │   │   ├── posts.py       # Post-related endpoints
+│   │   │   ├── users.py       # User-related endpoints
+│   │   │   └── websocket.py   # WebSocket endpoints
+│   │   ├── auth_implementation.py
+│   │   └── router.py          # Main API router
+│   ├── application/           # Use cases and services
+│   │   ├── services/         # Application services
+│   │   │   ├── apigateway_websocket_service.py
+│   │   │   ├── comments_service.py
+│   │   │   ├── favorites_service.py
+│   │   │   ├── posts_service.py
+│   │   │   └── user_service.py
+│   │   ├── use_cases/        # Use case implementations
+│   │   └── exceptions.py     # Application exceptions
+│   ├── domain/               # Entities, ports (interfaces)
+│   │   ├── entities/         # Domain entities
+│   │   │   ├── blog_post.py
+│   │   │   ├── comment.py
+│   │   │   └── user.py
+│   │   ├── repositories/     # Repository interfaces
+│   │   ├── services/         # Domain services
+│   │   │   ├── comment_service.py
+│   │   │   ├── post_service.py
+│   │   │   └── user_service.py
+│   │   └── exceptions.py     # Domain exceptions
+│   ├── infra/                # Adapters (e.g., repositories)
+│   │   └── repositories/     # Repository implementations
+│   │       ├── comments_repository.py
+│   │       ├── favorites_repository.py
+│   │       ├── posts_repository.py
+│   │       └── user_repository.py
+│   ├── generated/            # OpenAPI generated code
+│   │   ├── src/             # Generated FastAPI server code
+│   │   └── tests/           # Generated tests
+│   ├── shared/              # Settings and shared utilities
+│   │   ├── auth.py          # Authentication utilities
+│   │   ├── config.py        # Configuration management
+│   │   ├── constants.py     # Application constants
+│   │   ├── dependencies.py  # FastAPI dependencies
+│   │   ├── error_handlers.py # Global error handling
+│   │   ├── firebase.py      # Firebase integration
+│   │   └── response_utils.py # Response utilities
+│   └── main.py              # FastAPI application entry point
+├── scripts/                 # Utility scripts
+│   └── seed_data.py        # Data seeding script
+├── tests/                   # Backend tests
+│   ├── integration/         # Integration tests
+│   │   ├── api/            # API endpoint tests
+│   │   └── infra/          # Infrastructure tests
+│   ├── unit/               # Unit tests
+│   │   ├── application/    # Application layer tests
+│   │   └── domain/         # Domain layer tests
+│   ├── factories/          # Test data factories
+│   └── conftest.py         # Test configuration
+├── Dockerfile              # Docker configuration
+├── Dockerfile.lambda       # Lambda deployment configuration
+└── pyproject.toml          # Python project configuration
 ```
 
 ## Environment Setup

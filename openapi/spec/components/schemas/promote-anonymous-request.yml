@@ -1,0 +1,15 @@
+type: object
+description: Request schema for promoting an anonymous user to authenticated user
+required:
+  - anonymous_firebase_uuid
+properties:
+  anonymous_firebase_uuid:
+    type: string
+    description: The Firebase UID of the anonymous user being promoted
+    example: "anonymous_firebase_uid_123456"
+  lang:
+    type: string
+    description: User's preferred language
+    enum: [en, ja]
+    default: "en"
+    example: "en"

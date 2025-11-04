@@ -8,6 +8,7 @@ This API supports:
 - Blog post creation, retrieval, and management
 - Comment management on blog posts
 - User authentication via Firebase Auth
+- Anonymous user registration and promotion
 - Pagination and filtering capabilities
 
 ## Authentication

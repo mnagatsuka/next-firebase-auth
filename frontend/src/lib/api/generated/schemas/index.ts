@@ -8,6 +8,7 @@ This API supports:
 - Blog post creation, retrieval, and management
 - Comment management on blog posts
 - User authentication via Firebase Auth
+- Anonymous user registration and promotion
 - Pagination and filtering capabilities
 
 ## Authentication
@@ -41,6 +42,12 @@ export * from './createPostRequestStatus';
 export * from './error';
 export * from './errorDetail';
 export * from './errorStatus';
+export * from './firebaseAccount';
+export * from './firebaseAccountAccountType';
+export * from './firebaseAccountLang';
+export * from './firebaseLoginResponse';
+export * from './getAuthAnonymousLoginLang';
+export * from './getAuthAnonymousLoginParams';
 export * from './getBlogPostsParams';
 export * from './getBlogPostsStatus';
 export * from './getPostCommentsParams';
@@ -51,4 +58,6 @@ export * from './limitParameter';
 export * from './notFoundResponse';
 export * from './pageParameter';
 export * from './pagination';
+export * from './promoteAnonymousRequest';
+export * from './promoteAnonymousRequestLang';
 export * from './unauthorizedResponse';

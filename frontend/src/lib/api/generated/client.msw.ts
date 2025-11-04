@@ -8,6 +8,7 @@ This API supports:
 - Blog post creation, retrieval, and management
 - Comment management on blog posts
 - User authentication via Firebase Auth
+- Anonymous user registration and promotion
 - Pagination and filtering capabilities
 
 ## Authentication
@@ -30,7 +31,8 @@ import type {
   BlogPostListResponse,
   BlogPostResponse,
   CommentsAcknowledgmentResponse,
-  CommentsResponse
+  CommentsResponse,
+  FirebaseLoginResponse
 } from './schemas';
 
 
@@ -49,6 +51,10 @@ export const getCreateCommentResponseMock = (): CommentsAcknowledgmentResponse =
 export const getGetUserPostsResponseMock = (): BlogPostListResponse => ({"status":"success","data":{"posts":[{"id":"post-123","title":"Getting Started with Next.js","excerpt":"Learn the basics of Next.js in this comprehensive guide covering SSR, SSG, and CSR.","author":"John Doe","publishedAt":"2024-01-15T10:30:00Z","status":"published"},{"id":"post-124","title":"Advanced React Patterns","excerpt":"Explore advanced React patterns including hooks, context, and state management techniques.","author":"Jane Smith","publishedAt":"2024-01-14T09:15:00Z","status":"published"},{"id":"post-125","title":"TypeScript Best Practices","excerpt":"Learn TypeScript best practices for building scalable and maintainable applications.","author":"Bob Johnson","publishedAt":"2024-01-13T14:45:00Z","status":"published"}],"pagination":{"page":1,"limit":10,"total":3,"hasNext":false}}})
 
 export const getGetUserFavoritesResponseMock = (): BlogPostListResponse => ({"status":"success","data":{"posts":[{"id":"post-123","title":"Getting Started with Next.js","excerpt":"Learn the basics of Next.js in this comprehensive guide covering SSR, SSG, and CSR.","author":"John Doe","publishedAt":"2024-01-15T10:30:00Z","status":"published"},{"id":"post-124","title":"Advanced React Patterns","excerpt":"Explore advanced React patterns including hooks, context, and state management techniques.","author":"Jane Smith","publishedAt":"2024-01-14T09:15:00Z","status":"published"},{"id":"post-125","title":"TypeScript Best Practices","excerpt":"Learn TypeScript best practices for building scalable and maintainable applications.","author":"Bob Johnson","publishedAt":"2024-01-13T14:45:00Z","status":"published"}],"pagination":{"page":1,"limit":10,"total":3,"hasNext":false}}})
+
+export const getGetAuthAnonymousLoginResponseMock = (): FirebaseLoginResponse => ({"msg":"Anonymous user logged in","account":{"account_type":"user","firebase_uuid":"anonymous_firebase_uid_123456","email":null,"email_verified":false,"lang":"en","uuid":"anonymous_firebase_uid_123456","account_name":"Guest","name":"Guest","bio":"","private":false,"image_url":"https://example.com/images/default-avatar.png","subscription_uuid":"","is_anonymous":true}})
+
+export const getPostAuthPromoteAnonymousResponseMock = (): FirebaseLoginResponse => ({"msg":"Anonymous user promoted successfully","account":{"account_type":"user","firebase_uuid":"promoted_firebase_uid_789012","email":"user@example.com","email_verified":true,"lang":"en","uuid":"promoted_firebase_uid_789012","account_name":"John Doe","name":"John Doe","bio":"","private":false,"image_url":"https://example.com/images/default-avatar.png","subscription_uuid":"","is_anonymous":false}})
 
 
 export const getGetBlogPostsMockHandler = (overrideResponse?: BlogPostListResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<BlogPostListResponse> | BlogPostListResponse)) => {
@@ -176,6 +182,30 @@ export const getGetUserFavoritesMockHandler = (overrideResponse?: BlogPostListRe
       })
   })
 }
+
+export const getGetAuthAnonymousLoginMockHandler = (overrideResponse?: FirebaseLoginResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<FirebaseLoginResponse> | FirebaseLoginResponse)) => {
+  return http.get('*/auth/anonymous-login', async (info) => {
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetAuthAnonymousLoginResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  })
+}
+
+export const getPostAuthPromoteAnonymousMockHandler = (overrideResponse?: FirebaseLoginResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<FirebaseLoginResponse> | FirebaseLoginResponse)) => {
+  return http.post('*/auth/promote-anonymous', async (info) => {
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getPostAuthPromoteAnonymousResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  })
+}
 export const getBlogPostAPIMock = () => [
   getGetBlogPostsMockHandler(),
   getCreateBlogPostMockHandler(),
@@ -187,5 +217,7 @@ export const getBlogPostAPIMock = () => [
   getFavoritePostMockHandler(),
   getUnfavoritePostMockHandler(),
   getGetUserPostsMockHandler(),
-  getGetUserFavoritesMockHandler()
+  getGetUserFavoritesMockHandler(),
+  getGetAuthAnonymousLoginMockHandler(),
+  getPostAuthPromoteAnonymousMockHandler()
 ]

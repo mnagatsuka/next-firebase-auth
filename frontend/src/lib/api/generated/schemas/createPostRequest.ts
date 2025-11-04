@@ -8,6 +8,7 @@ This API supports:
 - Blog post creation, retrieval, and management
 - Comment management on blog posts
 - User authentication via Firebase Auth
+- Anonymous user registration and promotion
 - Pagination and filtering capabilities
 
 ## Authentication
@@ -29,7 +30,7 @@ export interface CreatePostRequest {
   /** Full content of the blog post in markdown format */
   content: string;
   /** Short summary or excerpt of the blog post */
-  excerpt?: string;
+  excerpt: string;
   /** Status of the blog post */
   status?: CreatePostRequestStatus;
 }

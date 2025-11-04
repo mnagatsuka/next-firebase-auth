@@ -20,39 +20,51 @@ Our backend follows a **schema-first** approach where all Pydantic models, API r
 backend/src/app/
 ├── generated/                        # 🚫 Auto-generated (don't edit)
 │   └── src/generated_fastapi_server/
-│       ├── models/                   # Pydantic models from OpenAPI
-│       │   ├── blog_post.py          # BlogPost model
-│       │   ├── create_post_request.py # CreatePostRequest model
-│       │   ├── blog_post_response.py  # Response wrappers
-│       │   └── ...                   # Other generated models
-│       ├── apis/                     # Base API classes (not used directly)
-│       └── security_api.py           # Authentication helpers
+│       ├── models/                   # Pydantic models from OpenAPI (e.g., blog_post.py)
+│       ├── apis/                     # Base API classes for endpoints
+│       └── ...
 │
-├── api/                              # API Layer (Controllers)
-│   ├── routes/
-│   │   └── posts.py                  # FastAPI route handlers
-│   ├── router.py                     # Main API router
-│   └── posts_implementation.py       # API implementation bridge
+├── api/                              # API Layer (Controllers) - Handles HTTP requests and responses.
+│   ├── routes/                       # FastAPI route handlers, defines API endpoints.
+│   │   ├── posts.py                  # Endpoints for blog posts
+│   │   ├── users.py                  # Endpoints for users
+│   │   └── ...
+│   ├── router.py                     # Main API router, aggregates all route modules.
+│   └── posts_implementation.py       # Implementation bridge between API routes and application services.
 │
-├── application/                      # Application Layer
-│   ├── services/
-│   │   └── posts_service.py          # Application services
-│   ├── use_cases/                    # Use case implementations
-│   └── exceptions.py                 # Application exceptions
+├── application/                      # Application Layer - Orchestrates domain logic.
+│   ├── services/                     # Application services that execute use cases.
+│   │   ├── posts_service.py
+│   │   └── user_service.py
+│   ├── use_cases/                    # (Currently unused, services handle use cases)
+│   └── exceptions.py                 # Application-specific exceptions.
 │
-├── domain/                           # Domain Layer
-│   ├── entities.py                   # Domain entities (BlogPost)
-│   ├── services.py                   # Domain services
-│   └── exceptions.py                 # Domain exceptions
+├── domain/                           # Domain Layer - Core business logic and entities.
+│   ├── entities/                     # Domain entities with business rules.
+│   │   ├── blog_post.py
+│   │   └── user.py
+│   ├── services/                     # Domain services encapsulating business logic (e.g., post_service.py)
+│   ├── repositories/                 # Abstract repository interfaces (ports).
+│   │   └── user_repository.py
+│   └── exceptions.py                 # Domain-specific exceptions.
 │
-├── infra/                           # Infrastructure Layer
-│   └── repositories/
-│       └── posts_repository.py       # Repository implementations
+├── infra/                            # Infrastructure Layer - External concerns (DB, APIs, etc.).
+│   └── repositories/                 # Concrete repository implementations (adapters).
+│       ├── posts_repository.py
+│       └── user_repository.py
 │
-├── shared/                          # Shared utilities
-│   └── config.py                    # Application settings
+├── shared/                           # Shared utilities used across layers.
+│   ├── auth.py                       # Authentication helpers, middleware, and user identity management.
+│   ├── config.py                     # Application settings management using Pydantic, supports multiple environments.
+│   ├── constants.py                  # Defines application-wide constants (e.g., pagination defaults, error messages).
+│   ├── dependencies.py               # FastAPI dependency injection setup, switches repositories (memory/DynamoDB).
+│   ├── error_handlers.py             # Global exception handling decorator to convert service exceptions to HTTP responses.
+│   ├── firebase.py                   # Firebase Admin SDK initialization and service wrapper.
+│   ├── generated_imports.py          # Utility to make auto-generated code importable.
+│   ├── response_utils.py             # Helpers to create consistent API response models.
+│   └── ...
 │
-└── main.py                          # FastAPI application factory
+└── main.py                           # FastAPI application factory and entry point.
 ```
 
 ## 🔄 Development Workflow
@@ -172,7 +184,7 @@ Bridge generated models with domain logic:
 
 from app.application.services.posts_service import PostApplicationService
 from app.infra.repositories.posts_repository import InMemoryPostRepository
-from app.domain.exceptions import PostNotFoundError, PostValidationError
+from app.domain.exceptions import PostNotFoundError
 
 # Generated models
 from generated_fastapi_server.models.blog_post_response import BlogPostResponse
@@ -208,7 +220,7 @@ class PostsImplementation:
             
         except PostNotFoundError:
             raise HTTPException(status_code=404, detail="Post not found")
-        except PostValidationError as e:
+        except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
     
     def _convert_to_api_model(self, post_data: dict):
@@ -221,53 +233,67 @@ class PostsImplementation:
 
 Implement business logic separate from API concerns:
 
-**Example**: `backend/src/app/domain/entities.py`
+**Example**: `backend/src/app/domain/entities/blog_post.py`
 ```python
-"""Domain entities with business rules."""
+"""Blog post domain entity and status enum."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
-from app.domain.exceptions import PostValidationError
 
 class PostStatus(Enum):
+    """Blog post status enumeration."""
     DRAFT = "draft"
     PUBLISHED = "published"
 
+
 @dataclass
 class BlogPost:
-    """Blog post domain entity with business rules."""
+    """Blog post domain entity with business logic."""
+
     id: str
     title: str
     content: str
     excerpt: str
     author: str
-    status: PostStatus = PostStatus.DRAFT
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     published_at: Optional[datetime] = None
-    
+    status: PostStatus = PostStatus.DRAFT
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    def __post_init__(self):
+        """Basic validation and data cleaning."""
+        if not self.title.strip():
+            raise ValueError("Title cannot be empty")
+        if not self.content.strip():
+            raise ValueError("Content cannot be empty")
+        if not self.excerpt.strip():
+            raise ValueError("Excerpt cannot be empty")
+        if not self.author.strip():
+            raise ValueError("Author cannot be empty")
+
+        # Clean up data
+        self.title = self.title.strip()
+        self.content = self.content.strip()
+        self.excerpt = self.excerpt.strip()
+        self.author = self.author.strip()
+
+        # Set timestamps if not provided
+        now = datetime.now(timezone.utc)
+        if self.created_at is None:
+            self.created_at = now
+        if self.updated_at is None:
+            self.updated_at = now
+
     def publish(self) -> None:
-        """Publish the blog post with business rules validation."""
+        """Publish the blog post."""
         if self.status == PostStatus.PUBLISHED:
-            raise PostValidationError("Post is already published")
-        
+            raise ValueError("Post is already published")
+
         self.status = PostStatus.PUBLISHED
         self.published_at = datetime.now(timezone.utc)
-        self.updated_at = datetime.now(timezone.utc)
-    
-    def update_content(self, title: str, content: str, excerpt: str) -> None:
-        """Update post content with validation."""
-        if not title.strip():
-            raise PostValidationError("Title cannot be empty")
-        if not content.strip():
-            raise PostValidationError("Content cannot be empty")
-        
-        self.title = title.strip()
-        self.content = content.strip()
-        self.excerpt = excerpt.strip()
         self.updated_at = datetime.now(timezone.utc)
 ```
 
@@ -282,7 +308,7 @@ Orchestrate domain logic and coordinate with infrastructure:
 from typing import Dict, Any
 from datetime import datetime, timezone
 
-from app.domain.entities import BlogPost, PostStatus
+from app.domain.entities.blog_post import BlogPost, PostStatus
 from app.domain.services import PostService
 from app.infra.repositories.posts_repository import PostRepository
 
@@ -342,20 +368,22 @@ Following the Test Pyramid principle with three distinct layers:
 ```
 tests/backend/
 ├── unit/                           # Fast, isolated unit tests (70%)
-│   ├── domain/                    # Domain entity and service tests
-│   │   ├── test_blog_post.py      # BlogPost entity tests
-│   │   └── test_post_service.py   # PostService domain logic tests
-│   └── application/               # Application service tests
-│       └── test_posts_service.py  # PostApplicationService tests
-├── integration/                   # Integration tests with real adapters (20%)
-│   ├── infra/                     # Repository and infrastructure tests
+│   ├── domain/                     # Domain entity and service tests
+│   │   ├── test_blog_post.py
+│   │   └── test_post_service.py
+│   └── application/                # Application service tests
+│       ├── test_posts_service.py
+│       └── ...
+├── integration/                    # Integration tests with real adapters (20%)
+│   ├── infra/                      # Repository and infrastructure tests
 │   │   └── test_posts_repository.py
-│   └── api/                       # API endpoint tests
-│       └── test_posts_endpoints.py  # FastAPI route tests
-├── factories/                     # Test data factories
-│   └── post_factory.py           # BlogPost test data factory
-├── conftest.py                   # Pytest configuration and fixtures
-└── requirements-test.txt         # Test dependencies
+│   └── api/                        # API endpoint tests
+│       ├── test_posts_endpoints.py
+│       └── test_users_endpoints.py
+├── factories/                      # Test data factories
+│   └── post_factory.py
+├── conftest.py                     # Pytest configuration and fixtures
+└── requirements-test.txt           # Test dependencies
 ```
 
 ### Unit Tests - Domain Layer
@@ -368,8 +396,7 @@ import pytest
 from freezegun import freeze_time
 from datetime import datetime, timezone
 
-from app.domain.entities import BlogPost, PostStatus
-from app.domain.exceptions import PostValidationError
+from app.domain.entities.blog_post import BlogPost, PostStatus
 
 class TestBlogPost:
     """Test suite for BlogPost entity business rules."""
@@ -409,7 +436,7 @@ class TestBlogPost:
             excerpt="Excerpt", author="author", status=PostStatus.PUBLISHED
         )
         
-        with pytest.raises(PostValidationError, match="Post is already published"):
+        with pytest.raises(ValueError, match="Post is already published"):
             post.publish()
 ```
 
@@ -508,7 +535,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
 
-from app.domain.entities import BlogPost, PostStatus
+from app.domain.entities.blog_post import BlogPost, PostStatus
 
 @dataclass
 class PostFactory:
@@ -644,7 +671,7 @@ class PostsImplementation:
         self.repository = InMemoryPostRepository()  # Infrastructure
         self.service = PostApplicationService(self.repository)  # Application
     
-    async def create_blog_post(self, request: CreatePostRequest):
+    async def create_blog_post(self, request: CreateRequest):
         # Bridge API layer to application layer
         return await self.service.create_post(...)
 
@@ -736,7 +763,7 @@ uv run pytest tests/backend/ --cov=backend --cov-report=html
 - **OpenAPI Specification**: `openapi/spec/openapi.yml`
 - **Generated Models**: `backend/src/app/generated/src/generated_fastapi_server/models/`
 - **API Routes**: `backend/src/app/api/routes/`
-- **Domain Entities**: `backend/src/app/domain/entities.py`
+- **Domain Entities**: `backend/src/app/domain/entities/`
 - **Application Services**: `backend/src/app/application/services/`
 - **Frontend Schema Document**: [Schema-Driven Frontend Development](../frontend/schema-driven-frontend-development.md)
 

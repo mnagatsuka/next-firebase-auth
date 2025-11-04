@@ -11,6 +11,7 @@ info:
     - Blog post creation, retrieval, and management
     - Comment management on blog posts
     - User authentication via Firebase Auth
+    - Anonymous user registration and promotion
     - Pagination and filtering capabilities
 
     ## Authentication
@@ -45,6 +46,8 @@ tags:
   name: posts
 - description: Comment management operations
   name: comments
+- description: Authentication and user management operations
+  name: auth
 paths:
   /posts:
     get:
@@ -678,6 +681,154 @@ paths:
       summary: Get Favorite Posts For User
       tags:
       - posts
+  /auth/anonymous-login:
+    get:
+      description: |
+        Authenticate anonymous users and create user records without email verification.
+
+        This endpoint:
+        - Validates the anonymous Firebase token
+        - Creates a user entity in the backend database if it doesn't exist
+        - Returns user account information for anonymous users
+
+        Anonymous users have limited functionality and are encouraged to upgrade their accounts.
+      parameters:
+      - description: Language preference for the user
+        example: en
+        explode: true
+        in: query
+        name: lang
+        required: false
+        schema:
+          default: en
+          enum:
+          - en
+          - ja
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                anonymousLogin:
+                  $ref: "#/components/examples/anonymous-login-response"
+              schema:
+                $ref: "#/components/schemas/firebase-login-response"
+          description: Anonymous user authenticated successfully
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "406":
+          content:
+            application/json:
+              examples:
+                rateLimitExceeded:
+                  value:
+                    error: rate_limit_exceeded
+                    detail: Too many requests. Please try again later.
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Rate limit exceeded
+        "500":
+          content:
+            application/json:
+              examples:
+                userCreationFailed:
+                  value:
+                    error: user_creation_failed
+                    detail: Failed to create anonymous user entity
+              schema:
+                $ref: "#/components/schemas/error"
+          description: User creation failed
+      security:
+      - firebaseAuth: []
+      summary: Anonymous user login
+      tags:
+      - auth
+  /auth/promote-anonymous:
+    post:
+      description: |
+        Convert an anonymous user to an authenticated user with permanent credentials.
+
+        This endpoint:
+        - Validates the new permanent Firebase token
+        - Verifies the anonymous user exists in the database
+        - Updates the existing user record with new authentication data
+        - Preserves all existing user data (posts, comments, favorites)
+
+        The user's UID remains the same to maintain data relationships.
+      requestBody:
+        content:
+          application/json:
+            examples:
+              promoteAnonymous:
+                $ref: "#/components/examples/promote-anonymous-request"
+            schema:
+              $ref: "#/components/schemas/promote-anonymous-request"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                promotedUser:
+                  $ref: "#/components/examples/promote-anonymous-response"
+              schema:
+                $ref: "#/components/schemas/firebase-login-response"
+          description: Anonymous user promoted successfully
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "404":
+          content:
+            application/json:
+              examples:
+                userNotFound:
+                  value:
+                    error: anonymous_user_not_found
+                    detail: Anonymous user not found in database
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Anonymous user not found
+        "406":
+          content:
+            application/json:
+              examples:
+                emailConflict:
+                  value:
+                    error: email_already_exists
+                    detail: Email is already associated with another account
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Email already exists with different account
+        "409":
+          content:
+            application/json:
+              examples:
+                linkingConflict:
+                  value:
+                    error: account_linking_conflict
+                    detail: Unable to link accounts due to conflicting data
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Account linking conflict
+        "500":
+          content:
+            application/json:
+              examples:
+                updateFailed:
+                  value:
+                    error: database_update_failed
+                    detail: Failed to update user record in database
+              schema:
+                $ref: "#/components/schemas/error"
+          description: Database update failed
+      security:
+      - firebaseAuth: []
+      summary: Promote anonymous user to authenticated user
+      tags:
+      - auth
 components:
   examples:
     blog-post-list-response:
@@ -692,18 +843,21 @@ components:
               \ SSR, SSG, and CSR."
             author: John Doe
             publishedAt: 2024-01-15T10:30:00Z
+            status: published
           - id: post-124
             title: Advanced React Patterns
             excerpt: "Explore advanced React patterns including hooks, context, and\
               \ state management techniques."
             author: Jane Smith
             publishedAt: 2024-01-14T09:15:00Z
+            status: published
           - id: post-125
             title: TypeScript Best Practices
             excerpt: Learn TypeScript best practices for building scalable and maintainable
               applications.
             author: Bob Johnson
             publishedAt: 2024-01-13T14:45:00Z
+            status: published
           pagination:
             page: 1
             limit: 10
@@ -732,6 +886,7 @@ components:
               \ SSR, SSG, and CSR."
             author: John Doe
             publishedAt: 2024-01-15T10:30:00Z
+            status: published
           pagination:
             page: 1
             limit: 1
@@ -868,6 +1023,44 @@ components:
       value:
         status: success
         message: Comment created successfully
+    anonymous-login-response:
+      value:
+        msg: Anonymous user logged in
+        account:
+          account_type: user
+          firebase_uuid: anonymous_firebase_uid_123456
+          email: null
+          email_verified: false
+          lang: en
+          uuid: anonymous_firebase_uid_123456
+          account_name: Guest
+          name: Guest
+          bio: ""
+          private: false
+          image_url: https://example.com/images/default-avatar.png
+          subscription_uuid: ""
+          is_anonymous: true
+    promote-anonymous-request:
+      value:
+        anonymous_firebase_uuid: anonymous_firebase_uid_123456
+        lang: en
+    promote-anonymous-response:
+      value:
+        msg: Anonymous user promoted successfully
+        account:
+          account_type: user
+          firebase_uuid: promoted_firebase_uid_789012
+          email: user@example.com
+          email_verified: true
+          lang: en
+          uuid: promoted_firebase_uid_789012
+          account_name: John Doe
+          name: John Doe
+          bio: ""
+          private: false
+          image_url: https://example.com/images/default-avatar.png
+          subscription_uuid: ""
+          is_anonymous: false
     blog-post:
       summary: Complete blog post example
       value:
@@ -1436,6 +1629,164 @@ components:
       - message
       - status
       title: comments-acknowledgment-response
+      type: object
+    firebase-account:
+      description: Firebase user account information
+      example:
+        account_type: user
+        private: false
+        email_verified: true
+        image_url: https://example.com/images/default-avatar.png
+        bio: Software developer passionate about web technologies
+        firebase_uuid: firebase_uid_123456
+        uuid: firebase_uid_123456
+        is_anonymous: true
+        account_name: Guest
+        name: John Doe
+        subscription_uuid: ""
+        lang: en
+        email: user@example.com
+      properties:
+        account_type:
+          description: Type of account
+          enum:
+          - user
+          example: user
+          title: account_type
+          type: string
+        firebase_uuid:
+          description: Firebase user unique identifier
+          example: firebase_uid_123456
+          title: firebase_uuid
+          type: string
+        email:
+          description: User email address (null for anonymous users)
+          example: user@example.com
+          format: email
+          nullable: true
+          title: email
+          type: string
+        email_verified:
+          description: Whether the email address has been verified
+          example: true
+          title: email_verified
+          type: boolean
+        lang:
+          description: User's preferred language
+          enum:
+          - en
+          - ja
+          example: en
+          title: lang
+          type: string
+        uuid:
+          description: Internal user UUID (typically same as firebase_uuid for compatibility)
+          example: firebase_uid_123456
+          title: uuid
+          type: string
+        account_name:
+          description: User's account display name
+          example: Guest
+          title: account_name
+          type: string
+        name:
+          description: User's full name
+          example: John Doe
+          title: name
+          type: string
+        bio:
+          description: User's biography or description
+          example: Software developer passionate about web technologies
+          title: bio
+          type: string
+        private:
+          description: Whether the user profile is private
+          example: false
+          title: private
+          type: boolean
+        image_url:
+          description: URL to user's profile image
+          example: https://example.com/images/default-avatar.png
+          format: uri
+          title: image_url
+          type: string
+        subscription_uuid:
+          description: User's subscription identifier (empty string if no subscription)
+          example: ""
+          title: subscription_uuid
+          type: string
+        is_anonymous:
+          description: Whether this is an anonymous user account
+          example: true
+          title: is_anonymous
+          type: boolean
+      required:
+      - account_name
+      - account_type
+      - bio
+      - email_verified
+      - firebase_uuid
+      - image_url
+      - is_anonymous
+      - lang
+      - name
+      - private
+      - subscription_uuid
+      - uuid
+      title: firebase-account
+      type: object
+    firebase-login-response:
+      description: Response schema for Firebase authentication endpoints
+      example:
+        msg: Anonymous user logged in
+        account:
+          account_type: user
+          private: false
+          email_verified: true
+          image_url: https://example.com/images/default-avatar.png
+          bio: Software developer passionate about web technologies
+          firebase_uuid: firebase_uid_123456
+          uuid: firebase_uid_123456
+          is_anonymous: true
+          account_name: Guest
+          name: John Doe
+          subscription_uuid: ""
+          lang: en
+          email: user@example.com
+      properties:
+        msg:
+          description: Success message indicating the operation result
+          example: Anonymous user logged in
+          title: msg
+          type: string
+        account:
+          $ref: "#/components/schemas/firebase-account"
+      required:
+      - account
+      - msg
+      title: firebase-login-response
+      type: object
+    promote-anonymous-request:
+      description: Request schema for promoting an anonymous user to authenticated
+        user
+      properties:
+        anonymous_firebase_uuid:
+          description: The Firebase UID of the anonymous user being promoted
+          example: anonymous_firebase_uid_123456
+          title: anonymous_firebase_uuid
+          type: string
+        lang:
+          default: en
+          description: User's preferred language
+          enum:
+          - en
+          - ja
+          example: en
+          title: lang
+          type: string
+      required:
+      - anonymous_firebase_uuid
+      title: promote-anonymous-request
       type: object
   securitySchemes:
     firebaseAuth:

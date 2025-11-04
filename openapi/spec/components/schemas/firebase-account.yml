@@ -1,0 +1,73 @@
+type: object
+description: Firebase user account information
+required:
+  - account_type
+  - firebase_uuid
+  - email_verified
+  - lang
+  - uuid
+  - account_name
+  - name
+  - bio
+  - private
+  - image_url
+  - subscription_uuid
+  - is_anonymous
+properties:
+  account_type:
+    type: string
+    description: Type of account
+    enum: [user]
+    example: "user"
+  firebase_uuid:
+    type: string
+    description: Firebase user unique identifier
+    example: "firebase_uid_123456"
+  email:
+    type: string
+    nullable: true
+    description: User email address (null for anonymous users)
+    format: email
+    example: "user@example.com"
+  email_verified:
+    type: boolean
+    description: Whether the email address has been verified
+    example: true
+  lang:
+    type: string
+    description: User's preferred language
+    enum: [en, ja]
+    example: "en"
+  uuid:
+    type: string
+    description: Internal user UUID (typically same as firebase_uuid for compatibility)
+    example: "firebase_uid_123456"
+  account_name:
+    type: string
+    description: User's account display name
+    example: "Guest"
+  name:
+    type: string
+    description: User's full name
+    example: "John Doe"
+  bio:
+    type: string
+    description: User's biography or description
+    example: "Software developer passionate about web technologies"
+  private:
+    type: boolean
+    description: Whether the user profile is private
+    example: false
+  image_url:
+    type: string
+    description: URL to user's profile image
+    format: uri
+    example: "https://example.com/images/default-avatar.png"
+  subscription_uuid:
+    type: string
+    description: User's subscription identifier (empty string if no subscription)
+    example: ""
+  is_anonymous:
+    type: boolean
+    description: Whether this is an anonymous user account
+    example: true
